@@ -5,10 +5,12 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 import java.sql.SQLException;
-import com.csdlcongty.dba.DBAdmin;
-import com.csdlcongty.dba.NormalUser;
+import com.csdlcongty.dba.DBAdminController;
+import com.csdlcongty.dba.NormalUserController;
 
+// include Login screen and handling for pressing Login button
 public class LoginController extends JFrame implements ActionListener {
+    
     // Declare components
     private final JLabel usernameLabel;
     private final JLabel passwordLabel;
@@ -23,6 +25,7 @@ public class LoginController extends JFrame implements ActionListener {
         setSize(wWidth, wHeight);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        this.setResizable(false);
 
         // Initialize components
         Icon icon = new ImageIcon("./Resources/Logo.png");
@@ -34,6 +37,7 @@ public class LoginController extends JFrame implements ActionListener {
         usernameField = new JTextField(20);
         passwordField = new JPasswordField(20);   
         loginButton = new JButton("Login");
+        
         // Add components to the window
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
@@ -112,11 +116,11 @@ public class LoginController extends JFrame implements ActionListener {
             if (accessGranted) {
                 try {
                     if ("DBA".equals(role)) {
-                        DBAdmin adminSession = new DBAdmin(password);
+                        DBAdminController adminSession = new DBAdminController(password, this);
                         changeTo(adminSession);
                     }
                     else if ("normal".equals(role)) {
-                        NormalUser userSession = new NormalUser(username, password);
+                        NormalUserController userSession = new NormalUserController(username, password, this);
                         changeTo(userSession);
                     }
                 } catch(SQLException ex) {

@@ -8,8 +8,8 @@ import java.io.IOException;
 
 public class AppEntry {
     
-    public static final int wWidth = 1024;
-    public static final int wHeight = 768;
+    public static final int wWidth = 720;
+    public static final int wHeight = 720;
 
     public static void main(String[] args) throws IOException {
         new LoginController(wWidth, wHeight);

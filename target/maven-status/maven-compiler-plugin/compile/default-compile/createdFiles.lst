@@ -1,5 +1,5 @@
-com/csdlcongty/dba/DBAdmin.class
+com/csdlcongty/dba/NormalUserController.class
 com/csdlcongty/AppEntry.class
 com/csdlcongty/DBConnection.class
+com/csdlcongty/dba/DBAdminController.class
 com/csdlcongty/LoginController.class
-com/csdlcongty/dba/NormalUser.class
