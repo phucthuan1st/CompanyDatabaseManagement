@@ -103,7 +103,7 @@ public class LoginController extends JFrame implements ActionListener {
             
             // try to connect to database to check if credentials is true
             try {
-                DBConnection dbc = new DBConnection(username, password);
+                DBManager dbc = new DBManager(username, password);
                 accessGranted = true;
                 JOptionPane.showMessageDialog(this, "Access Granted");  
                 dbc.cnt.close();
