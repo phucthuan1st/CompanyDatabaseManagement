@@ -132,7 +132,7 @@ public class DBAdminController extends JFrame implements ActionListener {
         return new DefaultTableModel(data, columnNames);
     }
     
-    // Update display on right pane
+    // Update display on right pane with table view
     void updateRightPaneTable(int num_rows) throws SQLException {
         JTable table = new JTable(buildTableModel(result, num_rows));
         JScrollPane rightPane = new JScrollPane(table);
@@ -147,6 +147,7 @@ public class DBAdminController extends JFrame implements ActionListener {
             this.dispose();
             this.father.setVisible(true);
         }
+        
         try {
             // Handle Show User list button
             if (e.getSource() == showUserListButton) {

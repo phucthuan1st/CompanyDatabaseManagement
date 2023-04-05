@@ -6,7 +6,7 @@ import java.awt.event.*;
 import java.io.IOException;
 import java.sql.SQLException;
 import com.csdlcongty.dba.DBAdminController;
-import com.csdlcongty.dba.NormalUserController;
+import com.csdlcongty.users.NormalUserController;
 
 // include Login screen and handling for pressing Login button
 public class LoginController extends JFrame implements ActionListener {
