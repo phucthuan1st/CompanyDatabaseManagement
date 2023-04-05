@@ -15,7 +15,6 @@ import java.util.logging.Logger;
 public class DBManager {
     protected static final String DBURL = "jdbc:oracle:thin:@localhost:1521:xe";
     protected Connection cnt;
-    protected ResultSet result;
     protected Statement st;
 
     public DBManager(String username, String password) throws ClassNotFoundException, SQLException {
@@ -23,8 +22,25 @@ public class DBManager {
         cnt = DriverManager.getConnection(DBURL, username, password);
     }
     
+    public int getNumberRowsOf(String entity) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM " + entity;
+        ResultSet resultSet = null;
+        int result = 0;
+        try {
+            st = cnt.createStatement();
+            resultSet = st.executeQuery(sql);
+            resultSet.next();
+            result = resultSet.getInt("COUNT(*)");
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return result;
+    }
+    
     public ResultSet getUserList() {
-        String sql = "SELECT * FROM DBA_USER_LIST";
+        String sql = "SELECT USER_ID, USERNAME, ACCOUNT_STATUS, LAST_LOGIN FROM USER_LIST";
+        ResultSet result = null;
         try {
             st = cnt.createStatement();
             result = st.executeQuery(sql);
@@ -34,4 +50,44 @@ public class DBManager {
         
         return result;
     }
+
+    public ResultSet getRoleList() {
+        String sql = "SELECT ROLE_ID, ROLE, AUTHENTICATION_TYPE, COMMON FROM ROLE_LIST";
+        ResultSet result = null;
+        try {
+            st = cnt.createStatement();
+            result = st.executeQuery(sql);
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return result;
+    }
+    
+    public ResultSet getTableList() {
+        String sql = "SELECT TABLE_NAME, OWNER, STATUS, NUM_ROWS FROM TABLE_LIST";
+        ResultSet result = null;
+        try {
+            st = cnt.createStatement();
+            result = st.executeQuery(sql);
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return result;
+    }
+
+    public ResultSet getViewList() {
+        String sql = "SELECT OWNER, VIEW_NAME, EDITIONING_VIEW, READ_ONLY, HAS_SENSITIVE_COLUMN FROM VIEW_LIST";
+        ResultSet result = null;
+        try {
+            st = cnt.createStatement();
+            result = st.executeQuery(sql);
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return result;
+    }
+    
 }

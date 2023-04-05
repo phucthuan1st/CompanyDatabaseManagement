@@ -43,8 +43,8 @@ public class LoginController extends JFrame implements ActionListener {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.insets = new Insets(10, 10, 10, 10);
         
-        constraints.gridheight = 2;
-        constraints.gridwidth = 2; 
+        constraints.gridheight = 1;
+        constraints.gridwidth = 1; 
         constraints.gridx = 4;
         constraints.gridy = 0;
         constraints.anchor = GridBagConstraints.CENTER;
@@ -108,7 +108,15 @@ public class LoginController extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(this, "Access Granted");  
                 dbc.cnt.close();
             } catch(SQLException ex) {
-                JOptionPane.showMessageDialog(this, "username or password is incorrect!", "Error", JOptionPane.ERROR_MESSAGE);
+                String cause = ex.getMessage();
+                String message;
+                if (cause.contains("could not establish the connection")) {
+                    message = "Cannot access database: database might offline!";
+                }
+                else {
+                    message = "Username or password is not correct";
+                }
+                JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
             } catch (ClassNotFoundException ex) {
                 JOptionPane.showMessageDialog(this, "Unexpected error!", "Error", JOptionPane.ERROR_MESSAGE);
             }
