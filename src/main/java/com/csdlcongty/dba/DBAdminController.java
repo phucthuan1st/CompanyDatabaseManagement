@@ -32,6 +32,7 @@ public class DBAdminController extends JFrame implements ActionListener {
     private final JButton showRoleListButton;
     private final JButton showTableListButton;
     private final JButton showViewListButton;
+    private final JButton checkPrivilegeButton;
     
     public DBAdminController(String password, JFrame father) throws ClassNotFoundException, SQLException {
         dbm = new DBManager("sys as SYSDBA", password);
@@ -88,6 +89,11 @@ public class DBAdminController extends JFrame implements ActionListener {
         constraint.gridy = 2;
         leftPanel.add(showViewListButton, constraint);
         
+        checkPrivilegeButton = new JButton("Check privilege user or role");
+        constraint.gridx = 1;
+        constraint.gridy = 3;
+        leftPanel.add(checkPrivilegeButton, constraint);
+        
         // initilize action on left component
         this.setVisible(true);
         initialActionListener();
@@ -102,7 +108,7 @@ public class DBAdminController extends JFrame implements ActionListener {
         showRoleListButton.addActionListener(this);
         showTableListButton.addActionListener(this);
         showViewListButton.addActionListener(this);
-        
+        checkPrivilegeButton.addActionListener(this);
         // Set action for other compunents
     }
     
@@ -172,6 +178,61 @@ public class DBAdminController extends JFrame implements ActionListener {
                 result = dbm.getViewList();
                 int num_rows = dbm.getNumberRowsOf("VIEW_LIST");
                 updateRightPaneTable(num_rows);
+            }
+            else if(e.getSource() == checkPrivilegeButton) {
+                JFrame frame = new JFrame("Check Role or User Privileges");
+                JPanel panel = new JPanel(new GridBagLayout());
+                JLabel nameLabel = new JLabel("Role or User:");
+                JTextField nameField = new JTextField(20);
+                JButton checkButton = new JButton("Check");
+                GridBagConstraints gbc = new GridBagConstraints();
+                // Tạo panel nhập thông tin role name và nút Check
+                gbc.gridx = 0;
+                gbc.gridy = 0;
+                gbc.insets = new Insets(10, 10, 10, 10);
+                gbc.anchor = GridBagConstraints.WEST;
+                panel.add(nameLabel, gbc);
+
+                gbc.gridx = 1;
+                gbc.gridy = 0;
+                panel.add(nameField, gbc);
+
+                gbc.gridx = 1;
+                gbc.gridy = 2;
+                gbc.anchor = GridBagConstraints.CENTER;
+                panel.add(checkButton, gbc);
+
+                // Xử lý sự kiện khi click nút Check
+                checkButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                    try {
+                            String Name = nameField.getText();
+
+                            // Lấy danh sách quyền của role từ database
+                            result = dbm.checkprivilegeRoleOrUser(Name);    
+                            int num_rows;
+                            num_rows = dbm.getNumberRowsOfName("DBA_TAB_PRIVS",Name);
+                            if(num_rows ==0)
+                            {
+                                JOptionPane.showMessageDialog(null, "Role or user does not exist.");
+                            }
+                            else
+                            {
+                                updateRightPaneTable(num_rows);
+                            }                                
+                        } catch (Exception ex) {
+                            
+                            ex.printStackTrace();
+                            JOptionPane.showMessageDialog(null, "Có lỗi xảy ra: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                });
+
+                // Thiết lập kích thước cho frame và hiển thị UI
+                frame.getContentPane().add(panel);
+                frame.pack();
+                frame.setVisible(true);
             }
         } catch(SQLException ex) {
             String message = "Cannot retrieve data from database: " + ex.getMessage();
