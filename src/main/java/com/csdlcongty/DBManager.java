@@ -38,6 +38,22 @@ public class DBManager {
         return result;
     }
     
+     public int getNumberRowsOfName(String entity, String name) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM " + entity + " WHERE GRANTEE = '"+ name + "'" ;
+        ResultSet resultSet = null;
+        int result = 0;
+        try {
+            st = cnt.createStatement();
+            resultSet = st.executeQuery(sql);
+            resultSet.next();
+            result = resultSet.getInt("COUNT(*)");
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return result;
+    }
+   
     public ResultSet getUserList() {
         String sql = "SELECT USER_ID, USERNAME, ACCOUNT_STATUS, LAST_LOGIN FROM USER_LIST";
         ResultSet result = null;
@@ -87,6 +103,18 @@ public class DBManager {
             Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
         }
         
+        return result;
+    }
+   
+   public ResultSet checkprivilegeRoleOrUser(String name) {
+        String sql = "SELECT * FROM DBA_TAB_PRIVS WHERE GRANTEE = '" + name + "'";
+        ResultSet result = null;
+        try {
+            st = cnt.createStatement();
+            result =st.executeQuery(sql);
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return result;
     }
     
