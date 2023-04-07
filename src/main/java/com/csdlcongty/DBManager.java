@@ -6,7 +6,8 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import java.sql.CallableStatement;
+import java.sql.*;
 /*
    Read note in Resources folder to learn more about ojdbc driver
 */
@@ -16,6 +17,7 @@ public class DBManager {
     protected static final String DBURL = "jdbc:oracle:thin:@localhost:1521:xe";
     protected Connection cnt;
     protected Statement st;
+    protected CallableStatement  cst;
     protected String previousStatement;
 
     public DBManager(String username, String password) throws ClassNotFoundException, SQLException {
@@ -141,4 +143,35 @@ public class DBManager {
         return result;
     }
     
+       public int  createNewUser(String usernm, String pass) {
+        String sql = "{call CREATE_USER(?, ?)}";
+        int resultt= 0;
+        try {
+            cst = cnt.prepareCall(sql);
+            cst.setString(1,usernm);
+            cst.setString(2,pass);
+            cst.execute();
+            resultt=1;
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return resultt;
+    }
+       public int  createNewRole(String roleName) {
+        String sql = "{call CREATE_ROLE(?)}";
+        int hasResult=0;
+        try {
+            cst = cnt.prepareCall(sql);
+            cst.setString(1,roleName);
+            cst.execute();
+            hasResult =1;
+            //System.out.println("Record insert: ");
+        
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return hasResult;
+    }
 }
