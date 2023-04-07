@@ -16,6 +16,7 @@ public class DBManager {
     protected static final String DBURL = "jdbc:oracle:thin:@localhost:1521:xe";
     protected Connection cnt;
     protected Statement st;
+    protected String previousStatement;
 
     public DBManager(String username, String password) throws ClassNotFoundException, SQLException {
         Class.forName("oracle.jdbc.driver.OracleDriver");
@@ -38,13 +39,13 @@ public class DBManager {
         return result;
     }
     
-    public int getNumberRowsOfName(String entity, String name) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM " + entity + " WHERE GRANTEE = '"+ name + "'" ;
+    public int getNumberOfRowsInLastQuery() {
         ResultSet resultSet = null;
         int result = 0;
+        
         try {
             st = cnt.createStatement();
-            resultSet = st.executeQuery(sql);
+            resultSet = st.executeQuery(previousStatement);
             resultSet.next();
             result = resultSet.getInt("COUNT(*)");
         } catch (SQLException ex) {
@@ -64,6 +65,7 @@ public class DBManager {
             Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
         }
         
+        previousStatement = String.format("SELECT COUNT(*) FROM (%s)", sql);
         return result;
     }
 
@@ -77,6 +79,7 @@ public class DBManager {
             Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
         }
         
+        previousStatement = String.format("SELECT COUNT(*) FROM (%s)", sql);
         return result;
     }
     
@@ -90,6 +93,7 @@ public class DBManager {
             Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
         }
         
+        previousStatement = String.format("SELECT COUNT(*) FROM (%s)", sql);
         return result;
     }
 
@@ -103,11 +107,13 @@ public class DBManager {
             Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
         }
         
+        previousStatement = String.format("SELECT COUNT(*) FROM (%s)", sql);
         return result;
     }
    
-     public ResultSet checkprivilegeRoleOrUser(String name) {
-        String sql = "SELECT * FROM DBA_TAB_PRIVS WHERE GRANTEE = '" + name + "'";
+    public ResultSet getTablePrivilegesOfRoleOrUser(String name) {
+        String sql = "SELECT GRANTEE, GRANTOR, TABLE_NAME, GRANTABLE, PRIVILEGE FROM DBA_TAB_PRIVS WHERE GRANTEE = '" + name + "' AND TYPE='TABLE'";
+        
         ResultSet result = null;
         try {
             st = cnt.createStatement();
@@ -115,6 +121,24 @@ public class DBManager {
         } catch (SQLException ex) {
             Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        previousStatement = String.format("SELECT COUNT(*) FROM (%s)", sql);
         return result;
     }
+     
+    public ResultSet getRoleOfUser(String name) {
+        String sql = "SELECT GRANTEE, GRANTED_ROLE, ADMIN_OPTION FROM DBA_ROLE_PRIVS WHERE GRANTEE = '" + name + "'";
+        
+        ResultSet result = null;
+        try {
+            st = cnt.createStatement();
+            result =st.executeQuery(sql);
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        previousStatement = String.format("SELECT COUNT(*) FROM (%s)", sql);
+        return result;
+    }
+    
 }

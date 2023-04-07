@@ -32,7 +32,7 @@ public class DBAdminController extends JFrame implements ActionListener {
     private final JButton showRoleListButton;
     private final JButton showTableListButton;
     private final JButton showViewListButton;
-    private final JButton checkPrivilegeButton;
+    private final JButton showPrivilegeButton;
     
     public DBAdminController(String password, JFrame father) throws ClassNotFoundException, SQLException {
         dbm = new DBManager("sys as SYSDBA", password);
@@ -40,7 +40,7 @@ public class DBAdminController extends JFrame implements ActionListener {
         
         // Set window properties
         this.setTitle("Login");
-        this.setSize(1024, 768);
+        this.setSize(1366, 768);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
         this.setResizable(false);
@@ -50,6 +50,7 @@ public class DBAdminController extends JFrame implements ActionListener {
         */
         panes = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         panes.setResizeWeight(0.6);
+        panes.setDividerLocation(0.6);
         
         GridBagLayout layout = new GridBagLayout();
         JPanel leftPanel = new JPanel(layout);
@@ -69,30 +70,30 @@ public class DBAdminController extends JFrame implements ActionListener {
         constraint.gridy = 0;
         leftPanel.add(logOutButton, constraint);
         
-        showUserListButton = new JButton("Get user list");
+        showUserListButton = new JButton("Show user list");
         constraint.gridx = 0;
         constraint.gridy = 1;
         leftPanel.add(showUserListButton, constraint);
         
-        showRoleListButton = new JButton("Get role list");
+        showRoleListButton = new JButton("Show role list");
         constraint.gridx = 1;
         constraint.gridy = 1;
         leftPanel.add(showRoleListButton, constraint);
         
-        showTableListButton = new JButton("Get table list");
+        showTableListButton = new JButton("Show table list");
         constraint.gridx = 0;
         constraint.gridy = 2;
         leftPanel.add(showTableListButton, constraint);
         
-        showViewListButton = new JButton("Get view list");
+        showViewListButton = new JButton("Show view list");
         constraint.gridx = 1;
         constraint.gridy = 2;
         leftPanel.add(showViewListButton, constraint);
         
-        checkPrivilegeButton = new JButton("Check privilege user or role");
-        constraint.gridx = 1;
+        showPrivilegeButton = new JButton("Show user or role privilege");
+        constraint.gridx = 0;
         constraint.gridy = 3;
-        leftPanel.add(checkPrivilegeButton, constraint);
+        leftPanel.add(showPrivilegeButton, constraint);
         
         // initilize action on left component
         this.setVisible(true);
@@ -108,12 +109,12 @@ public class DBAdminController extends JFrame implements ActionListener {
         showRoleListButton.addActionListener(this);
         showTableListButton.addActionListener(this);
         showViewListButton.addActionListener(this);
-        checkPrivilegeButton.addActionListener(this);
+        showPrivilegeButton.addActionListener(this);
         // Set action for other compunents
     }
     
     // Helper method to convert a ResultSet to a TableModel
-    private static TableModel buildTableModel(ResultSet rs, int num_rows) throws SQLException {
+    private TableModel buildTableModel(ResultSet rs, int numRows) throws SQLException {
         ResultSetMetaData metaData = rs.getMetaData();
 
         // Get number of columns
@@ -126,9 +127,9 @@ public class DBAdminController extends JFrame implements ActionListener {
         }
 
         // Create data array
-        Object[][] data = new Object[num_rows][columns];
+        Object[][] data = new Object[numRows][columns];
         int row = 0;
-        while (rs.next() && row < num_rows) {
+        while (rs.next() && row < numRows) {
             for (int i = 1; i <= columns; i++) {
                 data[row][i - 1] = rs.getObject(i);
             }
@@ -139,9 +140,43 @@ public class DBAdminController extends JFrame implements ActionListener {
     }
     
     // Update display on right pane with table view
-    void updateRightPaneTable(int num_rows) throws SQLException {
-        JTable table = new JTable(buildTableModel(result, num_rows));
+    void displayRightPaneTable(int numRows) throws SQLException {
+        JTable table = new JTable(buildTableModel(this.result, numRows)) {
+            @Override
+            public boolean isCellEditable(int row, int column) {                
+                return false;               
+            }
+        };
+        
         JScrollPane rightPane = new JScrollPane(table);
+        panes.setRightComponent(rightPane);
+    }
+    
+    // Update display on right pane with table view
+    void displayTwoRightPaneTable(int upperNumRows, ResultSet lowerSet, int lowerNumRows) throws SQLException {
+        JSplitPane rightPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        var ratio = (float)(upperNumRows) / (float)(upperNumRows + lowerNumRows);
+        //rightPane.setDividerLocation(ratio);
+        rightPane.setResizeWeight(ratio + 0.1);
+        
+        JTable upperTable = new JTable(buildTableModel(this.result, upperNumRows)) {
+            @Override
+            public boolean isCellEditable(int row, int column) {                
+                return false;               
+            }
+        };
+        JScrollPane upperPane = new JScrollPane(upperTable);
+        rightPane.setTopComponent(upperPane);
+        
+        JTable lowerTable = new JTable(buildTableModel(lowerSet, lowerNumRows)) {
+            @Override
+            public boolean isCellEditable(int row, int column) {                
+                return false;               
+            }
+        };
+        JScrollPane lowerPane = new JScrollPane(lowerTable);
+        rightPane.setBottomComponent(lowerPane);
+        
         panes.setRightComponent(rightPane);
     }
 
@@ -159,80 +194,50 @@ public class DBAdminController extends JFrame implements ActionListener {
             if (e.getSource() == showUserListButton) {
                 result = dbm.getUserList();
                 int num_rows = dbm.getNumberRowsOf("USER_LIST");
-                updateRightPaneTable(num_rows);
+                displayRightPaneTable(num_rows);
             }
             // Handle Show role list button
             else if (e.getSource() == showRoleListButton) {
                 result = dbm.getRoleList();
                 int num_rows = dbm.getNumberRowsOf("ROLE_LIST");
-                updateRightPaneTable(num_rows);
+                displayRightPaneTable(num_rows);
             }
             // Handle Show table list button
             else if (e.getSource() == showTableListButton) {
                 result = dbm.getTableList();
                 int num_rows = dbm.getNumberRowsOf("TABLE_LIST");
-                updateRightPaneTable(num_rows);
+                displayRightPaneTable(num_rows);
             }
             // Handle Show view list button
             else if (e.getSource() == showViewListButton) {
                 result = dbm.getViewList();
                 int num_rows = dbm.getNumberRowsOf("VIEW_LIST");
-                updateRightPaneTable(num_rows);
+                displayRightPaneTable(num_rows);
             }
-            else if(e.getSource() == checkPrivilegeButton) {
-                JFrame frame = new JFrame("Check Role or User Privileges");
-                JPanel panel = new JPanel(new GridBagLayout());
-                JLabel nameLabel = new JLabel("Role or User:");
-                JTextField nameField = new JTextField(20);
-                JButton checkButton = new JButton("Check");
-                GridBagConstraints gbc = new GridBagConstraints();
-                // Tạo panel nhập thông tin role name và nút Check
-                gbc.gridx = 0;
-                gbc.gridy = 0;
-                gbc.insets = new Insets(10, 10, 10, 10);
-                gbc.anchor = GridBagConstraints.WEST;
-                panel.add(nameLabel, gbc);
-
-                gbc.gridx = 1;
-                gbc.gridy = 0;
-                panel.add(nameField, gbc);
-
-                gbc.gridx = 1;
-                gbc.gridy = 2;
-                gbc.anchor = GridBagConstraints.CENTER;
-                panel.add(checkButton, gbc);
-
-                // Xử lý sự kiện khi click nút Check
-                checkButton.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                    try {
-                            String Name = nameField.getText();
-
-                            // Lấy danh sách quyền của role từ database
-                            result = dbm.checkprivilegeRoleOrUser(Name);    
-                            int num_rows;
-                            num_rows = dbm.getNumberRowsOfName("DBA_TAB_PRIVS",Name);
-                            if(num_rows ==0)
-                            {
-                                JOptionPane.showMessageDialog(null, "Role or user does not exist.");
-                            }
-                            else
-                            {
-                                updateRightPaneTable(num_rows);
-                            }                                
-                        } catch (Exception ex) {
-                            
-                            ex.printStackTrace();
-                            JOptionPane.showMessageDialog(null, "Có lỗi xảy ra: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
-                        }
+            else if(e.getSource() == showPrivilegeButton) {
+                String[] option = {"User", "Role"};
+                String message = "Show either role or user?";
+                int choose = JOptionPane.showOptionDialog(this, message,"Selection", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, option, null);
+                String entityType = option[choose];
+                
+                message = "Enter name of " + entityType;
+                String nameOfEntity = JOptionPane.showInputDialog(this, message, entityType + " name", JOptionPane.QUESTION_MESSAGE);
+                
+                result = dbm.getTablePrivilegesOfRoleOrUser(nameOfEntity);
+                int numRows = dbm.getNumberOfRowsInLastQuery();
+                
+                if (numRows == 0) {
+                    JOptionPane.showMessageDialog(this, nameOfEntity + " is not exist", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+                else {
+                    if ("Role".equals(entityType))
+                        this.displayRightPaneTable(numRows);
+                    else if ("User".equals(entityType)) {
+                        ResultSet roleSet = dbm.getRoleOfUser(nameOfEntity);
+                        int lowerNumRows = dbm.getNumberOfRowsInLastQuery();
+                        this.displayTwoRightPaneTable(numRows, roleSet, lowerNumRows);
                     }
-                });
-
-                // Thiết lập kích thước cho frame và hiển thị UI
-                frame.getContentPane().add(panel);
-                frame.pack();
-                frame.setVisible(true);
+                }
             }
         } catch(SQLException ex) {
             String message = "Cannot retrieve data from database: " + ex.getMessage();
