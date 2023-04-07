@@ -2,7 +2,7 @@
  * @project CompanyDatabaseOperation
  * @system_one: DBA
  * @author 20H3T-02
- */
+*/
 package com.csdlcongty.dba;
 
 import com.csdlcongty.DBManager;
@@ -17,6 +17,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+
 
 public class DBAdminController extends JFrame implements ActionListener {
     
@@ -33,6 +34,12 @@ public class DBAdminController extends JFrame implements ActionListener {
     private final JButton showTableListButton;
     private final JButton showViewListButton;
     private final JButton showPrivilegeButton;
+
+    private final JButton createNewUserButton;
+    private final JButton createNewRoleButton;
+    private final JButton createNewTableButton;
+    //private final JFrame create_new_user;
+
     
     public DBAdminController(String password, JFrame father) throws ClassNotFoundException, SQLException {
         dbm = new DBManager("sys as SYSDBA", password);
@@ -90,10 +97,27 @@ public class DBAdminController extends JFrame implements ActionListener {
         constraint.gridy = 2;
         leftPanel.add(showViewListButton, constraint);
         
+
         showPrivilegeButton = new JButton("Show user or role privilege");
         constraint.gridx = 0;
         constraint.gridy = 3;
         leftPanel.add(showPrivilegeButton, constraint);
+
+        createNewUserButton = new JButton("Create new user");
+        constraint.gridx = 1;
+        constraint.gridy = 4;
+        leftPanel.add(createNewUserButton, constraint);
+        
+        createNewRoleButton = new JButton("Create new role");
+        constraint.gridx = 1;
+        constraint.gridy = 3;
+        leftPanel.add(createNewRoleButton, constraint);
+        
+        createNewTableButton = new JButton("Create new table");
+        constraint.gridx = 0;
+        constraint.gridy = 4;
+        leftPanel.add(createNewTableButton, constraint);
+
         
         // initilize action on left component
         this.setVisible(true);
@@ -109,7 +133,13 @@ public class DBAdminController extends JFrame implements ActionListener {
         showRoleListButton.addActionListener(this);
         showTableListButton.addActionListener(this);
         showViewListButton.addActionListener(this);
+
         showPrivilegeButton.addActionListener(this);
+
+        createNewUserButton.addActionListener(this);
+        createNewRoleButton.addActionListener(this);
+        createNewTableButton.addActionListener(this);
+
         // Set action for other compunents
     }
     
@@ -151,7 +181,7 @@ public class DBAdminController extends JFrame implements ActionListener {
         JScrollPane rightPane = new JScrollPane(table);
         panes.setRightComponent(rightPane);
     }
-    
+
     // Update display on right pane with table view
     void displayTwoRightPaneTable(int upperNumRows, ResultSet lowerSet, int lowerNumRows) throws SQLException {
         JSplitPane rightPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
@@ -239,12 +269,56 @@ public class DBAdminController extends JFrame implements ActionListener {
                     }
                 }
             }
+            
+            else if (e.getSource() == createNewUserButton) {
+                //xu li code
+                
+                JTextField username = new JTextField();
+                JTextField password = new JPasswordField();
+                Object[] message = {
+                    "Username:", username,
+                    "Password:", password
+                };
+                int option = JOptionPane.showConfirmDialog(null, message, "Create new user", JOptionPane.OK_CANCEL_OPTION);
+                int result=dbm.createNewUser(username.getText(), password.getText());
+                if (option == JOptionPane.OK_OPTION) {
+                 if(result >0)
+                {
+                    JOptionPane.showMessageDialog(this, "User " + username.getText() +" created", "Message", JOptionPane.INFORMATION_MESSAGE);
+                }
+                else
+                {
+                    JOptionPane.showMessageDialog(this, "User " + username.getText()+" cannot create or exists in database", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+                }
+            }
+            // create new role
+            else if (e.getSource() == createNewRoleButton) {
+                String message = "Enter name of Role "  ;
+                String nameOfRole = JOptionPane.showInputDialog(this, message, "New Role", JOptionPane.QUESTION_MESSAGE);
+                int resultQuery= dbm.createNewRole(nameOfRole);
+                if(resultQuery >0)
+                {
+                    JOptionPane.showMessageDialog(this, "Role " + nameOfRole +" created", "Message", JOptionPane.INFORMATION_MESSAGE);
+                }
+                else
+                {
+                    JOptionPane.showMessageDialog(this, "Role " +nameOfRole +" cannot create or exists in database", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }else if (e.getSource() == createNewTableButton) {
+                //xu li code
+                
+            }
+            
         } catch(SQLException ex) {
-            String message = "Cannot retrieve data from database: " + ex.getMessage();
+            String message = "Cannot create new element: " + ex.getMessage();
             JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
             String message = "Unexpected error occured: " + ex.getMessage();
             JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
         }
+        
     }
+     
+
 }
