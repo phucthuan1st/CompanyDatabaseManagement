@@ -38,7 +38,7 @@ public class DBManager {
         return result;
     }
     
-     public int getNumberRowsOfName(String entity, String name) throws SQLException {
+    public int getNumberRowsOfName(String entity, String name) throws SQLException {
         String sql = "SELECT COUNT(*) FROM " + entity + " WHERE GRANTEE = '"+ name + "'" ;
         ResultSet resultSet = null;
         int result = 0;
@@ -106,7 +106,7 @@ public class DBManager {
         return result;
     }
    
-   public ResultSet checkprivilegeRoleOrUser(String name) {
+     public ResultSet checkprivilegeRoleOrUser(String name) {
         String sql = "SELECT * FROM DBA_TAB_PRIVS WHERE GRANTEE = '" + name + "'";
         ResultSet result = null;
         try {
@@ -117,5 +117,4 @@ public class DBManager {
         }
         return result;
     }
-    
 }
