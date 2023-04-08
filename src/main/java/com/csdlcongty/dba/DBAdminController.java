@@ -17,6 +17,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import java.util.ArrayList; 
 
 
 public class DBAdminController extends JFrame implements ActionListener {
@@ -39,7 +40,6 @@ public class DBAdminController extends JFrame implements ActionListener {
     private final JButton createNewRoleButton;
     private final JButton createNewTableButton;
     //private final JFrame create_new_user;
-
     
     public DBAdminController(String password, JFrame father) throws ClassNotFoundException, SQLException {
         dbm = new DBManager("sys as SYSDBA", password);
@@ -280,9 +280,9 @@ public class DBAdminController extends JFrame implements ActionListener {
                     "Password:", password
                 };
                 int option = JOptionPane.showConfirmDialog(null, message, "Create new user", JOptionPane.OK_CANCEL_OPTION);
-                int result=dbm.createNewUser(username.getText(), password.getText());
+                int resultt=dbm.createNewUser(username.getText(), password.getText());
                 if (option == JOptionPane.OK_OPTION) {
-                 if(result >0)
+                 if(resultt >0)
                 {
                     JOptionPane.showMessageDialog(this, "User " + username.getText() +" created", "Message", JOptionPane.INFORMATION_MESSAGE);
                 }
@@ -305,9 +305,70 @@ public class DBAdminController extends JFrame implements ActionListener {
                 {
                     JOptionPane.showMessageDialog(this, "Role " +nameOfRole +" cannot create or exists in database", "Error", JOptionPane.ERROR_MESSAGE);
                 }
-            }else if (e.getSource() == createNewTableButton) {
-                //xu li code
                 
+            }
+            //create new table
+            else if (e.getSource() == createNewTableButton) {
+                //xu li code
+                Boolean fl=true;
+                JTextField tablename = new JTextField();
+                JTextField numbercolumn = new JTextField();
+                JTextField column = new JTextField();
+                JTextField number = new JTextField();
+                //type of variable
+                String[] typeselect= {" INT "," FLOAT "," VARCHAR2 ", " NVARCHAR2 ", " VARCHAR ", " NVARCHAR ", " DATE "};
+                String[] values= {" NULL ", " NOT NULL ", " PRIMARY KEY "};
+                
+                JComboBox typevar = new JComboBox(typeselect);
+                JComboBox value = new JComboBox(values);
+                Object[] message = {
+                    "Table Name:", tablename,
+                    "Numbers of Column:", numbercolumn
+                };
+                Object[] field = {
+                    "Column Name:", column,
+                    "Type of Column:", typevar,
+                    "Number:", number,
+                    "Is NULL:", value
+                };
+                int option = JOptionPane.showConfirmDialog(null, message, "Create new table", JOptionPane.OK_CANCEL_OPTION);
+                if (option == JOptionPane.OK_OPTION) {
+                    ArrayList<String> varname = new ArrayList<String>();
+                    ArrayList<String> vartype = new ArrayList<String>();
+                    ArrayList<String> varnumber = new ArrayList<String>();
+                    ArrayList<String> varisnull = new ArrayList<String>();
+                    for(int i=0;i<Integer.parseInt(numbercolumn.getText()); i++)
+                    {
+                        int att = JOptionPane.showConfirmDialog(null, field, "Add new field " + (i+1), JOptionPane.OK_CANCEL_OPTION);
+                        if(att==JOptionPane.OK_OPTION)
+                        {
+                        varname.add(column.getText());
+                        vartype.add(typevar.getSelectedItem().toString());
+                        if(number!=null)
+                        {
+                        varnumber.add(number.getText());
+                        }
+                        varisnull.add(value.getSelectedItem().toString());
+                        }
+                        else
+                        {
+                            fl=false;
+                            break;
+                        }
+                    }
+                    if(fl==true)
+                    {
+                        int resultQuery= dbm.createNewTable(tablename.getText(),Integer.parseInt(numbercolumn.getText()), varname, vartype, varnumber, varisnull);
+                        if(resultQuery >0)
+                        {
+                            JOptionPane.showMessageDialog(this, "Table " + tablename.getText() +" created", "Message", JOptionPane.INFORMATION_MESSAGE);
+                        }
+                        else
+                        {
+                            JOptionPane.showMessageDialog(this, "Table " +tablename.getText() +" cannot create or exists in database", "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                }
             }
             
         } catch(SQLException ex) {
