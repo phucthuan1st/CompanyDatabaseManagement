@@ -89,5 +89,33 @@ public class DBManager {
         
         return result;
     }
+
+    public void grantRoleUser(String permission, String table, String role)
+    {
+        String sql="GRANT "+permission+" ON "+table+" TO "+role;
+        try
+        {
+            st=cnt.createStatement();
+            st.executeUpdate(sql);
+        }
+        catch (SQLException ex)
+        {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+         }
+    }
+
+    public void revokeRoleUser(String permission, String table, String role)
+    {
+        String sql="REVOKE "+permission+" ON "+table+" TO "+role;
+        try
+        {
+            st=cnt.createStatement();
+            st.executeUpdate(sql);
+        }
+        catch (SQLException ex)
+        {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+         }
+    }
     
 }

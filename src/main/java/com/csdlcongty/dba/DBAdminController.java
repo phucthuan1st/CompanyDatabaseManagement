@@ -6,6 +6,7 @@
 package com.csdlcongty.dba;
 
 import com.csdlcongty.DBManager;
+
 import java.sql.SQLException;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -32,6 +33,9 @@ public class DBAdminController extends JFrame implements ActionListener {
     private final JButton showRoleListButton;
     private final JButton showTableListButton;
     private final JButton showViewListButton;
+
+    private final JButton showGrantRoleButton;
+    private final JButton showRevokeRoleButton;
     
     public DBAdminController(String password, JFrame father) throws ClassNotFoundException, SQLException {
         dbm = new DBManager("sys as SYSDBA", password);
@@ -87,6 +91,16 @@ public class DBAdminController extends JFrame implements ActionListener {
         constraint.gridx = 1;
         constraint.gridy = 2;
         leftPanel.add(showViewListButton, constraint);
+
+        showGrantRoleButton = new JButton("Grant role/user");
+        constraint.gridx = 0;
+        constraint.gridy = 3;
+        leftPanel.add(showGrantRoleButton, constraint);
+
+        showRevokeRoleButton = new JButton("Revoke role/user");
+        constraint.gridx = 1;
+        constraint.gridy = 3;
+        leftPanel.add(showRevokeRoleButton, constraint);
         
         // initilize action on left component
         this.setVisible(true);
@@ -102,8 +116,10 @@ public class DBAdminController extends JFrame implements ActionListener {
         showRoleListButton.addActionListener(this);
         showTableListButton.addActionListener(this);
         showViewListButton.addActionListener(this);
+        showGrantRoleButton.addActionListener(this);
+        showRevokeRoleButton.addActionListener(this);
         
-        // Set action for other compunents
+        // Set action for other components
     }
     
     // Helper method to convert a ResultSet to a TableModel
@@ -170,6 +186,20 @@ public class DBAdminController extends JFrame implements ActionListener {
             // Handle Show view list button
             else if (e.getSource() == showViewListButton) {
                 result = dbm.getViewList();
+                int num_rows = dbm.getNumberRowsOf("VIEW_LIST");
+                updateRightPaneTable(num_rows);
+            }
+            //Handle show grant role button
+            else if (e.getSource() == showGrantRoleButton) {
+                var grc =new GrantRevokeController(720, 720);
+                dbm.grantRoleUser(grc.permission,grc.table,grc.roleUser);
+                int num_rows = dbm.getNumberRowsOf("VIEW_LIST");
+                updateRightPaneTable(num_rows);
+            }
+            //Handle show revoke role button
+            else if (e.getSource() == showRevokeRoleButton) {
+                var grc =new GrantRevokeController(720, 720);
+                dbm.grantRoleUser(grc.permission,grc.table,grc.roleUser);
                 int num_rows = dbm.getNumberRowsOf("VIEW_LIST");
                 updateRightPaneTable(num_rows);
             }
