@@ -2,6 +2,7 @@ com/csdlcongty/AppEntry.class
 com/csdlcongty/dba/DBAdminController$1.class
 com/csdlcongty/dba/DBAdminController.class
 com/csdlcongty/LoginController.class
+com/csdlcongty/dba/InteractivePanel.class
 com/csdlcongty/users/NormalUserController.class
 com/csdlcongty/dba/DBAdminController$2.class
 com/csdlcongty/DBManager.class
