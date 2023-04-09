@@ -1,9 +1,11 @@
 package com.csdlcongty;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
+import java.net.URL;
 import java.sql.SQLException;
 import com.csdlcongty.dba.DBAdminController;
 import com.csdlcongty.users.NormalUserController;
@@ -28,8 +30,16 @@ public class LoginController extends JFrame implements ActionListener {
         this.setResizable(false);
 
         // Initialize components
-        Icon icon = new ImageIcon("./Resources/Logo.png");
-        companyLogo = new JLabel(icon);
+        URL url = new URL("https://raw.githubusercontent.com/phucthuan1st/CompanyDatabaseManagement/master/Resources/Logo.png");
+        JLabel loginLabel;
+        try {
+            Icon icon = new ImageIcon(url);
+            loginLabel = new JLabel(icon);
+        } catch (Exception ex) {
+            loginLabel = new JLabel("LOGIN");
+        }
+        
+        companyLogo = loginLabel;
         companyLogo.setVisible(true);
 
         usernameLabel = new JLabel("Username:");
@@ -129,7 +139,8 @@ public class LoginController extends JFrame implements ActionListener {
                         changeTo(userSession);
                     }
                 } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(this, "Cannot connect to database!", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Cannot connect to database!", "Error",
+                            JOptionPane.ERROR_MESSAGE);
                 } catch (ClassNotFoundException ex) {
                     JOptionPane.showMessageDialog(this, "Unexpected error!", "Error", JOptionPane.ERROR_MESSAGE);
                 }

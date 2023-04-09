@@ -222,7 +222,7 @@ public class DBAdminController extends JFrame implements ActionListener {
     // Update display on right pane with table view
     void displayTwoRightPaneTable(int upperNumRows, ResultSet lowerSet, int lowerNumRows) throws SQLException {
         JSplitPane rightPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        var ratio = (float) (upperNumRows) / (float) (upperNumRows + lowerNumRows);
+        float ratio = (float) (upperNumRows) / (float) (upperNumRows + lowerNumRows);
         rightPane.setResizeWeight(ratio + 0.1);
 
         JTable upperTable = new JTable(buildTableModel(this.result, upperNumRows)) {
