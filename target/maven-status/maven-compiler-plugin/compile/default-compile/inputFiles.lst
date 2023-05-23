@@ -1,6 +1,6 @@
-/home/pthuan/NetBeansProjects/csdlcongty/src/main/java/com/csdlcongty/dba/InteractivePanel.java
-/home/pthuan/NetBeansProjects/csdlcongty/src/main/java/com/csdlcongty/LoginController.java
-/home/pthuan/NetBeansProjects/csdlcongty/src/main/java/com/csdlcongty/AppEntry.java
-/home/pthuan/NetBeansProjects/csdlcongty/src/main/java/com/csdlcongty/users/NormalUserController.java
-/home/pthuan/NetBeansProjects/csdlcongty/src/main/java/com/csdlcongty/dba/DBAdminController.java
-/home/pthuan/NetBeansProjects/csdlcongty/src/main/java/com/csdlcongty/DBManager.java
+/home/pthuan/Documents/Dev/SecurityInInfomationSystem/CompanyDatabaseManagement/src/main/java/com/csdlcongty/LoginController.java
+/home/pthuan/Documents/Dev/SecurityInInfomationSystem/CompanyDatabaseManagement/src/main/java/com/csdlcongty/AppEntry.java
+/home/pthuan/Documents/Dev/SecurityInInfomationSystem/CompanyDatabaseManagement/src/main/java/com/csdlcongty/DBManager.java
+/home/pthuan/Documents/Dev/SecurityInInfomationSystem/CompanyDatabaseManagement/src/main/java/com/csdlcongty/users/NormalUserController.java
+/home/pthuan/Documents/Dev/SecurityInInfomationSystem/CompanyDatabaseManagement/src/main/java/com/csdlcongty/dba/DBAdminController.java
+/home/pthuan/Documents/Dev/SecurityInInfomationSystem/CompanyDatabaseManagement/src/main/java/com/csdlcongty/dba/InteractivePanel.java

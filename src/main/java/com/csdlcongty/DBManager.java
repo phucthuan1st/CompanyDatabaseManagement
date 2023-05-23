@@ -9,7 +9,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
-import java.util.ArrayList;
 
 /*
    Read note in Resources folder to learn more about ojdbc driver
@@ -25,6 +24,8 @@ public class DBManager {
     protected CallableStatement cst;
     protected PreparedStatement pst;
     protected String previousStatement;
+
+    private static final String COUNTSQL = "SELECT COUNT(*) FROM (%s)";
 
     private void commit() throws SQLException {
         this.st = cnt.createStatement();
@@ -69,7 +70,7 @@ public class DBManager {
     }
 
     public ResultSet getUserList() {
-        String sql = "SELECT USER_ID, USERNAME, ACCOUNT_STATUS, LAST_LOGIN FROM USER_LIST";
+        String sql = "SELECT * FROM USER_LIST";
         ResultSet result = null;
         try {
             st = cnt.createStatement();
@@ -78,56 +79,56 @@ public class DBManager {
             Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        previousStatement = String.format("SELECT COUNT(*) FROM (%s)", sql);
+        previousStatement = String.format(DBManager.COUNTSQL, sql);
         return result;
     }
 
-    public ResultSet getRoleList() throws SQLException, Exception {
-        String sql = "SELECT ROLE_ID, ROLE, AUTHENTICATION_TYPE, COMMON FROM ROLE_LIST";
+    public ResultSet getRoleList() throws SQLException {
+        String sql = "SELECT * FROM ROLE_LIST";
         ResultSet result = null;
 
         st = cnt.createStatement();
         result = st.executeQuery(sql);
 
-        previousStatement = String.format("SELECT COUNT(*) FROM (%s)", sql);
+        previousStatement = String.format(DBManager.COUNTSQL, sql);
         return result;
     }
 
-    public ResultSet getTableList() throws SQLException, Exception {
-        String sql = "SELECT TABLE_NAME, OWNER, STATUS, NUM_ROWS FROM TABLE_LIST ORDER BY TABLE_NAME ASC";
+    public ResultSet getTableList() throws SQLException {
+        String sql = "SELECT * FROM TABLE_LIST ORDER BY TABLE_NAME ASC";
         ResultSet result = null;
         st = cnt.createStatement();
         result = st.executeQuery(sql);
 
-        previousStatement = String.format("SELECT COUNT(*) FROM (%s)", sql);
+        previousStatement = String.format(DBManager.COUNTSQL, sql);
         return result;
     }
 
-    public ResultSet getViewList() throws SQLException, Exception {
-        String sql = "SELECT OWNER, VIEW_NAME, EDITIONING_VIEW, READ_ONLY, HAS_SENSITIVE_COLUMN FROM VIEW_LIST";
+    public ResultSet getViewList() throws SQLException {
+        String sql = "SELECT * FROM VIEW_LIST";
         ResultSet result = null;
 
         st = cnt.createStatement();
         result = st.executeQuery(sql);
 
-        previousStatement = String.format("SELECT COUNT(*) FROM (%s)", sql);
+        previousStatement = String.format(DBManager.COUNTSQL, sql);
         return result;
     }
 
-    public ResultSet getTablePrivilegesOfRoleOrUser(String name) throws SQLException, Exception {
+    public ResultSet getTablePrivilegesOfRoleOrUser(String name) throws SQLException {
         String sql = "SELECT GRANTEE, GRANTOR, TABLE_NAME, GRANTABLE, PRIVILEGE FROM TABLE_PRIVILEGES WHERE GRANTEE = '"
                 + name.toUpperCase() + "'";
 
-        ResultSet result = null;
+        ResultSet result;
 
         st = cnt.createStatement();
         result = st.executeQuery(sql);
 
-        previousStatement = String.format("SELECT COUNT(*) FROM (%s)", sql);
+        previousStatement = String.format(DBManager.COUNTSQL, sql);
         return result;
     }
 
-    public ResultSet getRoleOfUser(String name) throws SQLException, Exception {
+    public ResultSet getRoleOfUser(String name) throws SQLException {
         String sql = "SELECT GRANTEE, GRANTED_ROLE, ADMIN_OPTION FROM ROLE_PRIVILEGES WHERE GRANTEE = '"
                 + name.toUpperCase() + "'";
 
@@ -136,11 +137,11 @@ public class DBManager {
         st = cnt.createStatement();
         result = st.executeQuery(sql);
 
-        previousStatement = String.format("SELECT COUNT(*) FROM (%s)", sql);
+        previousStatement = String.format(DBManager.COUNTSQL, sql);
         return result;
     }
 
-    public int createNewUser(String usernm, String pass) throws SQLException, Exception {
+    public int createNewUser(String usernm, String pass) throws SQLException {
         String sql = "{call CREATE_USER(?, ?)}";
         int successful = 0;
 
@@ -154,7 +155,7 @@ public class DBManager {
         return successful;
     }
 
-    public int createNewRole(String roleName) throws SQLException, Exception {
+    public int createNewRole(String roleName) throws SQLException {
         String sql = "{call CREATE_ROLE(?)}";
 
         int successful = 0;
@@ -168,48 +169,25 @@ public class DBManager {
         return successful;
     }
 
-    public int createNewTable(String nametable, int numbercolumn, ArrayList<String> varname, ArrayList<String> vartype,
-            ArrayList<String> varnumber, ArrayList<String> varvalue) throws SQLException, Exception {
-        String sql = "CREATE TABLE " + nametable + "( ";
+    public int createTable(String tableName, String columnNames, String dataTypes, String primaryKey, String notNullColumn) {
+        try {
+            cst = cnt.prepareCall("{call create_table(?,?,?,?,?)}");
+            cst.setString(1, tableName);
+            cst.setString(2, columnNames);
+            cst.setString(3, dataTypes);
+            cst.setString(4, primaryKey);
+            cst.setString(5, notNullColumn);
+            cst.execute();
+            this.commit();
 
-        for (int i = 0; i < numbercolumn; i++) {
-
-            sql = sql + varname.get(0);
-            varname.remove(0);
-            sql += vartype.get(0);
-
-            if (" VARCHAR ".equals(vartype.get(0)) || " NVARCHAR ".equals(vartype.get(0))
-                    || " VARCHAR2 ".equals(vartype.get(0)) || " NVARCHAR2 ".equals(vartype.get(0))) {
-                sql += "(" + varnumber.get(0) + ")";
-                varnumber.remove(0);
-            }
-
-            vartype.remove(0);
-            if (!" PRIMARY KEY ".equals(varvalue.get(0))) {
-                sql += varvalue.get(0);
-            } else {
-                sql += " CONSTRAINT table_pk " + varvalue.get(0);
-            }
-
-            varvalue.remove(0);
-
-            if (i < numbercolumn - 1) {
-                sql += ", ";
-            }
+            return 1;
+        } catch (SQLException e) {
+            Logger.getLogger("DBManager").log(Level.SEVERE, e.getMessage());
+            return 0;
         }
-        sql += ")";
-
-        int successful = 0;
-
-        pst = cnt.prepareStatement(sql);
-        pst.executeUpdate();
-        commit();
-        successful = 1;
-
-        return successful;
     }
 
-    public ResultSet getColumnsOfTable(String tableName) throws SQLException, Exception {
+    public ResultSet getColumnsOfTable(String tableName) throws SQLException {
         String sql = "SELECT COLUMN_NAME FROM GET_TABLE_COLUMNS('" + tableName + "')";
         ResultSet result = null;
 
@@ -217,11 +195,11 @@ public class DBManager {
         st.execute(sql);
         result = st.getResultSet();
 
-        previousStatement = String.format("SELECT COUNT(*) FROM (%s)", sql);
+        previousStatement = String.format(DBManager.COUNTSQL, sql);
         return result;
     }
 
-    public String entityTypeIdentify(String entityName) throws SQLException, Exception {
+    public String entityTypeIdentify(String entityName) throws SQLException {
         String entityType = "";
         String sql = "{? = call IDENTIFY_ENTITY_TYPE(?)}";
         cst = cnt.prepareCall(sql);
@@ -235,7 +213,7 @@ public class DBManager {
     }
 
     public void grantPrivilegesOnTable(String permission, String table, String roleOrUserName, boolean grantable)
-            throws SQLException, Exception {
+            throws SQLException {
         String sql = "GRANT " + permission + " ON " + table + " TO " + roleOrUserName;
         String entityType = entityTypeIdentify(roleOrUserName);
 
@@ -248,7 +226,7 @@ public class DBManager {
         commit();
     }
 
-    public void grantRoleToUser(String userName, String roleName) throws SQLException, Exception {
+    public void grantRoleToUser(String userName, String roleName) throws SQLException {
         String sql = "{call GRANT_ROLE_TO_USER(?, ?)}";
         cst = cnt.prepareCall(sql);
         cst.setString(1, userName.toUpperCase());
@@ -258,7 +236,7 @@ public class DBManager {
     }
 
     public void revokePrivilegesOnTable(String permission, String table, String roleOrUserName)
-            throws SQLException, Exception {
+            throws SQLException {
         String sql = "REVOKE " + permission + " ON " + table + " FROM " + roleOrUserName;
         st = cnt.createStatement();
         st.executeUpdate(sql);

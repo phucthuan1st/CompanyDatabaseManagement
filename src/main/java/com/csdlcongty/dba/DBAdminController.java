@@ -49,9 +49,11 @@ public class DBAdminController extends JFrame implements ActionListener {
 
     private final JButton grantRoleToUserButton;
     private final JButton revokeRoleFromUserButton;
+    
+    static private final String ERRORTITLE = "ERROR";
 
-    public DBAdminController(String password, JFrame father) throws ClassNotFoundException, SQLException {
-        this.dbm = new DBManager("sys as SYSDBA", password);
+    public DBAdminController(String username, String password, JFrame father) throws ClassNotFoundException, SQLException {
+        this.dbm = new DBManager(username, password);
         this.father = father;
 
         // Set window properties
@@ -309,7 +311,7 @@ public class DBAdminController extends JFrame implements ActionListener {
 
                 if (numRows == 0) {
                     JOptionPane.showMessageDialog(this,
-                            nameOfEntity + " is not exist or doesn't has any privileges yet!", "Error",
+                            nameOfEntity + " is not exist or doesn't has any privileges yet!", DBAdminController.ERRORTITLE,
                             JOptionPane.ERROR_MESSAGE);
                 } else {
                     if ("Role".equals(entityType)) {
@@ -340,7 +342,7 @@ public class DBAdminController extends JFrame implements ActionListener {
                                 JOptionPane.INFORMATION_MESSAGE);
                     } else {
                         JOptionPane.showMessageDialog(this,
-                                "User " + username.getText() + " cannot create or exists in database", "Error",
+                                "User " + username.getText() + " cannot create or exists in database", DBAdminController.ERRORTITLE,
                                 JOptionPane.ERROR_MESSAGE);
                     }
                 }
@@ -380,9 +382,9 @@ public class DBAdminController extends JFrame implements ActionListener {
                 JTextField dataLengthField = new JTextField();
 
                 // type of variable in oracle
-                String[] valueTypeSelection = { " INT ", " FLOAT ", " VARCHAR2 ", " NVARCHAR2 ", " VARCHAR ",
+                String[] valueTypeSelection = { "INT", "FLOAT", "VARCHAR2", "NVARCHAR2", "VARCHAR",
                         " NVARCHAR ", " DATE " };
-                String[] valueNullConstraint = { " NULL ", " NOT NULL ", " PRIMARY KEY " };
+                String[] valueNullConstraint = { "", "NOT NULL", "PRIMARY KEY" };
 
                 JComboBox<String> valueTypeSelectionField = new JComboBox<>(valueTypeSelection);
                 JComboBox<String> valueNullConstraintField = new JComboBox<>(valueNullConstraint);
@@ -395,7 +397,7 @@ public class DBAdminController extends JFrame implements ActionListener {
                 Object[] field = {
                         "Column Name:", columnNameField,
                         "Type of Column:", valueTypeSelectionField,
-                        "Number:", dataLengthField,
+                        "Data Length:", dataLengthField,
                         "Is NULL:", valueNullConstraintField
                 };
 
@@ -409,10 +411,12 @@ public class DBAdminController extends JFrame implements ActionListener {
                 if (numberOfColumnsField.getText().isBlank() || tableNameField.getText().isBlank()) {
                     return;
                 }
+                
                 ArrayList<String> nameOfColumns = new ArrayList<>();
                 ArrayList<String> valueTypeOfColumns = new ArrayList<>();
-                ArrayList<String> lengthOfDataInColumns = new ArrayList<>();
                 ArrayList<String> nullConstraintOfColumns = new ArrayList<>();
+                
+                String primaryKey = "";
 
                 int numberOfColumns = Integer.parseInt(numberOfColumnsField.getText());
 
@@ -429,23 +433,38 @@ public class DBAdminController extends JFrame implements ActionListener {
                     }
 
                     nameOfColumns.add(columnNameField.getText());
-                    valueTypeOfColumns.add(valueTypeSelectionField.getSelectedItem().toString());
+                    String dataType = valueTypeSelectionField.getSelectedItem().toString();
 
                     if (!dataLengthField.getText().isBlank()) {
-                        lengthOfDataInColumns.add(dataLengthField.getText());
+                        dataType += String.format("(%d)", Integer.valueOf(dataLengthField.getText()));
                     }
-
-                    nullConstraintOfColumns.add(valueNullConstraintField.getSelectedItem().toString());
-
+                    
+                    valueTypeOfColumns.add(dataType);
+                    
+                    String constraint = valueNullConstraintField.getSelectedItem().toString();
+                    
+                    if (constraint.equals(valueNullConstraint[2])) {
+                        primaryKey = columnNameField.getText();
+                    }
+                    else {
+                        nullConstraintOfColumns.add(constraint);
+                    }
+                    
                     columnNameField.setText("");
                     dataLengthField.setText("");
                     valueTypeSelectionField.setSelectedIndex(0);
                     valueNullConstraintField.setSelectedIndex(0);
                 }
 
-                int resultQuery = dbm.createNewTable(tableNameField.getText(),
-                        Integer.parseInt(numberOfColumnsField.getText()), nameOfColumns, valueTypeOfColumns,
-                        lengthOfDataInColumns, nullConstraintOfColumns);
+                String columnNames = String.join(", ", nameOfColumns);
+                String dataTypes = String.join(", ", valueTypeOfColumns);
+                String notNullColumns = String.join(", ", nullConstraintOfColumns);
+                 
+                if (primaryKey.isBlank()) {
+                    primaryKey = nameOfColumns.get(0);
+                }
+                
+                int resultQuery = this.dbm.createTable(tableNameField.getText(), columnNames, dataTypes, primaryKey, notNullColumns);
                 if (resultQuery > 0) {
                     JOptionPane.showMessageDialog(this, "Table " + tableNameField.getText() + " created", "Message",
                             JOptionPane.INFORMATION_MESSAGE);

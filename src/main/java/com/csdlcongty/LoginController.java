@@ -99,12 +99,12 @@ public class LoginController extends JFrame implements ActionListener {
             // Implement login logic
             String username = usernameField.getText();
             String password = new String(passwordField.getPassword());
-            String role = "";
+            String role;
             Boolean accessGranted = false;
 
             // normalize username
-            if (username.equals("sys")) {
-                username = "sys as SYSDBA";
+            username = username.toUpperCase();
+            if ("C##CORP".equals(username)) {
                 role = "DBA";
             } else {
                 role = "normal";
@@ -129,10 +129,10 @@ public class LoginController extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(this, "Unexpected error!", "Error", JOptionPane.ERROR_MESSAGE);
             }
 
-            if (accessGranted) {
+            if (accessGranted == true) {
                 try {
                     if ("DBA".equals(role)) {
-                        DBAdminController adminSession = new DBAdminController(password, this);
+                        DBAdminController adminSession = new DBAdminController(username, password, this);
                         changeTo(adminSession);
                     } else if ("normal".equals(role)) {
                         NormalUserController userSession = new NormalUserController(username, password, this);
