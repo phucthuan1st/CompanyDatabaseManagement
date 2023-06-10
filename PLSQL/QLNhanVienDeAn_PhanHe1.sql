@@ -1,3 +1,22 @@
+ALTER SYSTEM SET DB_CREATE_FILE_DEST = '/home/oracle/';
+/*
+DROP PLUGGABLE DATABASE COMPANY INCLUDING DATAFILES;
+*/
+CREATE PLUGGABLE DATABASE COMPANY ADMIN USER master IDENTIFIED BY master;
+ALTER PLUGGABLE DATABASE COMPANY OPEN;
+/* 
+ALTER PLUGGABLE DATABASE COMPANY CLOSE;
+*/
+ALTER SESSION SET CONTAINER = COMPANY;
+
+-- PUBLIC COMPANY schema
+CREATE USER COMPANY_PUBLIC IDENTIFIED BY astrongpassword;
+GRANT CREATE SESSION, CREATE TABLE TO COMPANY_PUBLIC;
+GRANT dba TO COMPANY_PUBLIC WITH ADMIN OPTION;
+GRANT SELECT ANY DICTIONARY TO COMPANY_PUBLIC WITH ADMIN OPTION;
+
+-- change to COMPANY_PUBLIC schema
+ALTER SESSION SET CURRENT_SCHEMA = COMPANY_PUBLIC;
 SET SERVEROUTPUT ON;
 
 CREATE OR REPLACE PROCEDURE remove_user (
@@ -34,28 +53,6 @@ EXCEPTION
 END;
 /
 
-BEGIN
-    remove_user('C##CORP');
-END;
-/
-
-CREATE USER c##corp IDENTIFIED BY astrongpassword;
-/
-
-GRANT
-    CREATE SESSION
-TO c##corp;
-
-GRANT dba TO c##corp WITH ADMIN OPTION;
-
-GRANT
-    SELECT ANY DICTIONARY
-TO c##corp WITH ADMIN OPTION;
-/
-
-CONNECT C##CORP/astrongpassword;
-/
-
 CREATE OR REPLACE VIEW user_list AS
     SELECT
         user_id,
@@ -65,7 +62,9 @@ CREATE OR REPLACE VIEW user_list AS
     FROM
         dba_users
     WHERE
-        username NOT IN ('SYS', 'SYSTEM', 'OUTLN', 'DBSNMP');
+        account_status = 'OPEN'
+        AND authentication_type = 'PASSWORD'
+        AND username NOT IN ( 'SYS', 'SYSTEM', 'OUTLN', 'DBSNMP' );
 /
 
 CREATE OR REPLACE VIEW role_list AS
@@ -76,6 +75,27 @@ CREATE OR REPLACE VIEW role_list AS
         common
     FROM
         dba_roles
+    WHERE COMMON = 'NO'
+/
+
+CREATE OR REPLACE PROCEDURE gather_statistics_for_schema AS
+    v_owner VARCHAR2(30) := 'COMPANY_PUBLIC';
+BEGIN
+    FOR t IN (SELECT table_name FROM all_tables WHERE owner = v_owner) LOOP
+        BEGIN
+            DBMS_STATS.GATHER_TABLE_STATS(
+                ownname => v_owner,
+                tabname => t.table_name,
+                estimate_percent => DBMS_STATS.AUTO_SAMPLE_SIZE,
+                method_opt => 'FOR ALL COLUMNS SIZE AUTO'
+            );
+            DBMS_OUTPUT.PUT_LINE('Statistics gathered for table: ' || t.table_name);
+        EXCEPTION
+            WHEN OTHERS THEN
+                DBMS_OUTPUT.PUT_LINE('Error gathering statistics for table: ' || t.table_name || ' - ' || SQLERRM);
+        END;
+    END LOOP;
+END;
 /
 
 CREATE OR REPLACE VIEW table_list AS
@@ -96,7 +116,7 @@ CREATE OR REPLACE VIEW view_list AS
         has_sensitive_column
     FROM
         all_views
-    where owner = 'C##CORP';
+    where owner = 'COMPANY_PUBLIC';
 /
 
 CREATE OR REPLACE PROCEDURE create_user (
@@ -143,7 +163,7 @@ CREATE OR REPLACE VIEW table_privileges AS
     FROM
         dba_tab_privs
     WHERE
-        type = 'TABLE' and Owner = 'c##corp';
+        type = 'TABLE' and Owner = 'COMPANY_PUBLIC';
 /
 
 CREATE OR REPLACE VIEW role_privileges AS
@@ -244,53 +264,65 @@ BEGIN
 END;
 /
 
-CREATE OR REPLACE PROCEDURE create_table (
-    p_table_name  IN VARCHAR2,
-    p_columns     IN VARCHAR2,
-    p_data_types  IN VARCHAR2,
-    p_primary_key IN VARCHAR2,
-    p_not_null    IN VARCHAR2
+-- Procedure to create a table
+CREATE OR REPLACE PROCEDURE create_table(
+    table_name IN VARCHAR2,
+    column_list IN VARCHAR2, -- comma-separated column names
+    data_types IN VARCHAR2, -- comma-separated data types
+    primary_key_col IN VARCHAR2, -- primary key column
+    not_null_cols IN VARCHAR2 -- comma-separated not null columns
 ) AS
-    l_sql_statement VARCHAR2(4000);
+    query_string VARCHAR2(4000);
 BEGIN
-    l_sql_statement := 'CREATE TABLE '
-                       || SYS_CONTEXT('USERENV', 'SESSION_USER') || '.' || dbms_assert.simple_sql_name(p_table_name)
-                       || ' ('
-                       || dbms_assert.simple_sql_name(p_columns)
-                       || ' '
-                       || dbms_assert.simple_sql_name(p_data_types)
-                       || ', CONSTRAINT '
-                       || dbms_assert.simple_sql_name(p_table_name || '_PK')
-                       || ' PRIMARY KEY ('
-                       || dbms_assert.simple_sql_name(p_primary_key)
-                       || ')';
-
-    IF p_not_null IS NOT NULL THEN
-        l_sql_statement := l_sql_statement
-                           || ', CONSTRAINT '
-                           || dbms_assert.simple_sql_name(p_table_name || '_NN')
-                           || ' CHECK ('
-                           || dbms_assert.simple_sql_name(p_not_null)
-                           || ' IS NOT NULL)';
-
-    END IF;
-
-    l_sql_statement := l_sql_statement || ')';
+    -- Generate the CREATE TABLE statement
+    query_string := 'CREATE TABLE ' || table_name || ' (';
     
-    EXECUTE IMMEDIATE l_sql_statement;
-    COMMIT;
-    dbms_output.put_line('Table created successfully.');
+    -- Process the column list and data types
+    FOR i IN 1..REGEXP_COUNT(column_list, ',') + 1 LOOP
+        query_string := query_string || TRIM(REGEXP_SUBSTR(column_list, '[^,]+', 1, i)) || ' ' ||
+                        TRIM(REGEXP_SUBSTR(data_types, '[^,]+', 1, i));
+        
+        -- Add NOT NULL constraint if applicable
+        IF REGEXP_INSTR(not_null_cols, TRIM(REGEXP_SUBSTR(column_list, '[^,]+', 1, i))) > 0 THEN
+            query_string := query_string || ' NOT NULL';
+        END IF;
+        
+        query_string := query_string || ', ';
+    END LOOP;
+    
+    query_string := RTRIM(query_string, ', ') || ', CONSTRAINT pk_' || table_name ||
+                    ' PRIMARY KEY (' || primary_key_col || '))';
+    
+    -- Execute the CREATE TABLE statement
+    EXECUTE IMMEDIATE query_string;
+    
+    DBMS_OUTPUT.PUT_LINE('Table ' || table_name || ' created successfully.');
 EXCEPTION
     WHEN OTHERS THEN
-        dbms_output.put_line('Error creating table: ' || sqlerrm);
+        DBMS_OUTPUT.PUT_LINE('Error creating table: ' || SQLERRM);
 END;
 /
 
-CONNECT C##CORP/astrongpassword;
+SET SERVEROUTPUT ON
+
+DECLARE
+  v_service_name VARCHAR2(100);
 BEGIN
-    create_table('my_table', 'id, name, age', 'NUMBER, VARCHAR2(100), NUMBER', 'id', 'id');
+  SELECT SYS_CONTEXT('USERENV', 'SERVICE_NAME') INTO v_service_name FROM DUAL;
+  DBMS_OUTPUT.PUT_LINE('Service Name: ' || v_service_name);
 END;
 /
 
+BEGIN
+    create_table(
+        table_name => 'EMPLOYEES',
+        column_list => 'EMPLOYEE_ID, FIRST_NAME, LAST_NAME, EMAIL, PHONE_NUMBER, HIRE_DATE, JOB_ID, SALARY, COMMISSION_PCT, MANAGER_ID, DEPARTMENT_ID',
+        data_types => 'NUMBER, VARCHAR2(50), VARCHAR2(50), VARCHAR2(100), VARCHAR2(20), DATE, VARCHAR2(10), NUMBER, NUMBER, NUMBER, NUMBER',
+        primary_key_col => 'EMPLOYEE_ID',
+        not_null_cols => 'EMPLOYEE_ID, FIRST_NAME, LAST_NAME, HIRE_DATE, JOB_ID, DEPARTMENT_ID'
+    );
+END;
+/
 
 COMMIT;
+ALTER PLUGGABLE DATABASE COMPANY CLOSE;

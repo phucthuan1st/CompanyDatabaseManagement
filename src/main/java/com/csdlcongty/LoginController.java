@@ -1,6 +1,5 @@
 package com.csdlcongty;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -104,7 +103,7 @@ public class LoginController extends JFrame implements ActionListener {
 
             // normalize username
             username = username.toUpperCase();
-            if ("C##CORP".equals(username)) {
+            if ("COMPANY_PUBLIC".equals(username)) {
                 role = "DBA";
             } else {
                 role = "normal";

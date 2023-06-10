@@ -9,6 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
+import java.sql.SQLWarning;
 
 /*
    Read note in Resources folder to learn more about ojdbc driver
@@ -18,7 +19,7 @@ public class DBManager {
 
     private static final String IP = "localhost";
     private static final String PORT = "1521";
-    protected static final String DBURL = String.format("jdbc:oracle:thin:@%s:%s:xe", IP, PORT);
+    protected static final String DBURL = String.format("jdbc:oracle:thin:@%s:%s/COMPANY", IP, PORT);
     protected Connection cnt;
     protected Statement st;
     protected CallableStatement cst;
@@ -95,6 +96,7 @@ public class DBManager {
     }
 
     public ResultSet getTableList() throws SQLException {
+        updateStatisticsForSchema();
         String sql = "SELECT * FROM TABLE_LIST ORDER BY TABLE_NAME ASC";
         ResultSet result = null;
         st = cnt.createStatement();
@@ -168,21 +170,42 @@ public class DBManager {
 
         return successful;
     }
+    
+    private int updateStatisticsForSchema() {
+        try {
+            CallableStatement stmt = cnt.prepareCall("{call gather_statistics_for_schema}");
+            stmt.execute();
+            return 1; // Successful update
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return 0; // Failed update
+    }
 
     public int createTable(String tableName, String columnNames, String dataTypes, String primaryKey, String notNullColumn) {
         try {
-            cst = cnt.prepareCall("{call create_table(?,?,?,?,?)}");
-            cst.setString(1, tableName);
-            cst.setString(2, columnNames);
-            cst.setString(3, dataTypes);
-            cst.setString(4, primaryKey);
-            cst.setString(5, notNullColumn);
-            cst.execute();
-            this.commit();
-
+            CallableStatement cstmt = cnt.prepareCall("{call create_table(?, ?, ?, ?, ?)}");
+            
+            cstmt.setString(1, tableName);
+            cstmt.setString(2, columnNames);
+            cstmt.setString(3, dataTypes);
+            cstmt.setString(4, primaryKey);
+            cstmt.setString(5, notNullColumn);
+            
+            cstmt.execute();
+            
+            // Check if any error occurred during table creation
+            SQLWarning warning = cstmt.getWarnings();
+            if (warning != null) {
+                System.out.println("Error creating table: " + warning.getMessage());
+                return 0;
+            }
+            
+            System.out.println("Table created successfully.");
+            commit();
             return 1;
         } catch (SQLException e) {
-            Logger.getLogger("DBManager").log(Level.SEVERE, e.getMessage());
+            System.out.println("Error creating table: " + e.getMessage());
             return 0;
         }
     }
