@@ -12,7 +12,10 @@ import java.sql.PreparedStatement;
 import java.sql.SQLWarning;
 import com.csdlcongty.CryptographyUtilities;
 import static com.csdlcongty.MockGenerator.generateRecords;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -330,6 +333,68 @@ public class DBManager {
             Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
             Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public List<NhanVienRecord> getDecryptedNhanVienRecords() {
+        List<NhanVienRecord> decryptedRecords = new ArrayList<>();
+
+        try {
+            String query = "SELECT MANV, TENNV, PHAI, NGAYSINH, DIACHI, SODT, LUONG, PHUCAP, VAITRO, MANQL, PHG FROM NHANVIEN";
+            Statement statement = cnt.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+
+            while (resultSet.next()) {
+                String MANV = resultSet.getString("MANV");
+                String TENNV = resultSet.getString("TENNV");
+                String PHAI = resultSet.getString("PHAI");
+                java.sql.Date NGAYSINH = resultSet.getDate("NGAYSINH");
+                String DIACHI = resultSet.getString("DIACHI");
+                String SODT = resultSet.getString("SODT");
+                String encryptedLUONG = resultSet.getString("LUONG");
+                String encryptedPHUCAP = resultSet.getString("PHUCAP");
+                String VAITRO = resultSet.getString("VAITRO");
+                String MANQL = resultSet.getString("MANQL");
+                String PHG = resultSet.getString("PHG");
+
+                String key = CryptographyUtilities.hashMD5(SODT);
+                String LUONG = CryptographyUtilities.decryptAES(encryptedLUONG, key);
+                String PHUCAP = CryptographyUtilities.decryptAES(encryptedPHUCAP, key);
+
+                NhanVienRecord record = new NhanVienRecord(MANV, TENNV, PHAI, NGAYSINH, DIACHI, SODT, LUONG, PHUCAP, VAITRO, MANQL, PHG);
+                decryptedRecords.add(record);
+            }
+
+            resultSet.close();
+            statement.close();
+        } catch (SQLException ex) {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return decryptedRecords;
+    }
+
+    public void writeNhanVienRecordsToFile(List<NhanVienRecord> records, String filePath) {
+        try (FileWriter writer = new FileWriter(filePath)) {
+            // Write header
+            writer.write("MANV,TENNV,PHAI,NGAYSINH,DIACHI,SODT,LUONG,PHUCAP,VAITRO,MANQL,PHG\n");
+
+            // Write records
+            for (NhanVienRecord record : records) {
+                String line = String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+                        record.MANV, record.TENNV, record.PHAI, record.NGAYSINH,
+                        record.DIACHI, record.SODT, record.LUONG, record.PHUCAP,
+                        record.VAITRO, record.MANQL, record.PHG);
+                writer.write(line);
+            }
+
+            System.out.println("Records written to file: " + filePath);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
