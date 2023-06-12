@@ -1,7 +1,5 @@
 CONNECT COMPANY_PUBLIC/astrongpassword@localhost:1521/COMPANY;
 
-/* =========== CAI DAT CO CHE VPD ============= */
--- Tạo role "Nhân viên":
 SET SERVEROUTPUT ON
 
 DECLARE

@@ -1,7 +1,5 @@
 CONNECT COMPANY_PUBLIC/astrongpassword@localhost:1521/COMPANY;
 
-/* =========== CAI DAT CO CHE VPD ============= */
--- Tạo role "Nhân viên":
 SET SERVEROUTPUT ON
 
 DECLARE
@@ -11,6 +9,8 @@ BEGIN
   DBMS_OUTPUT.PUT_LINE('Service Name: ' || v_service_name);
 END;
 /
+
+/* =========== CÀI ĐẶT CÁC CHÍNH SÁCH DÙNG VPD ============= */
 
 -------------------------------------------------------------------------------------------------------------------------------------
 /*
