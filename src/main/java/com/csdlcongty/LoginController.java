@@ -114,6 +114,12 @@ public class LoginController extends JFrame implements ActionListener {
                 DBManager dbc = new DBManager(username, password);
                 accessGranted = true;
                 JOptionPane.showMessageDialog(this, "Access Granted");
+                
+                /*
+                    Nếu trong máy chưa có record nào trong bảng NHANVIEN thì bỏ comment dòng bên dưới
+                */
+                //dbc.insertMockRecordToNhanVien();
+                
                 dbc.cnt.close();
             } catch (SQLException ex) {
                 String cause = ex.getMessage();
@@ -129,6 +135,7 @@ public class LoginController extends JFrame implements ActionListener {
             }
 
             if (accessGranted == true) {
+                
                 try {
                     if ("DBA".equals(role)) {
                         DBAdminController adminSession = new DBAdminController(username, password, this);

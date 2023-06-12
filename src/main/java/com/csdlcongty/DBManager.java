@@ -10,6 +10,12 @@ import java.util.logging.Logger;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLWarning;
+import com.csdlcongty.CryptographyUtilities;
+import static com.csdlcongty.MockGenerator.generateRecords;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 
 /*
    Read note in Resources folder to learn more about ojdbc driver
@@ -143,18 +149,31 @@ public class DBManager {
         return result;
     }
 
-    public int createNewUser(String usernm, String pass) throws SQLException {
+    public int createNewUser(String usernm, String pass) {
         String sql = "{call CREATE_USER(?, ?)}";
-        int successful = 0;
 
-        cst = cnt.prepareCall(sql);
-        cst.setString(1, usernm);
-        cst.setString(2, pass);
-        cst.execute();
-        commit();
-        successful = 1;
-
-        return successful;
+        try {
+            cst = cnt.prepareCall(sql);
+            cst.setString(1, usernm);
+            cst.setString(2, pass);
+            cst.execute();
+        
+            sql = "{call INSERT_DANGNHAP_RECORD(?, ?, ?)";
+            cst = cnt.prepareCall(sql);
+            String salt = CryptographyUtilities.generateSalt(16);
+            
+            cst.setString(1, usernm);
+            cst.setString(2, salt);
+            cst.setString(3, CryptographyUtilities.hashSHA1(pass, salt));
+            cst.execute();
+            commit();
+            
+            return 1;
+        }
+        catch (SQLException | NoSuchAlgorithmException ex) {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+            return 0;
+        }
     }
 
     public int createNewRole(String roleName) throws SQLException {
@@ -274,4 +293,44 @@ public class DBManager {
 
         cst.execute();
     }
+    
+    public void insertMockRecordToNhanVien() {
+        var data = generateRecords(300);
+
+        String sql = "{call INSERT_NHANVIEN_RECORD(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+
+        try {
+            cst = cnt.prepareCall(sql);
+
+            for (NhanVienRecord record : data) {
+                cst.setString(1, record.MANV);
+                cst.setString(2, record.TENNV);
+                cst.setString(3, record.PHAI);
+                cst.setDate(4, new java.sql.Date(record.NGAYSINH.getTime()));
+                cst.setString(5, record.DIACHI);
+                cst.setString(6, record.SODT);
+
+                // Encrypt LUONG and PHUCAP using AES in CryptographyUtilities
+                String md5Hash = CryptographyUtilities.hashMD5(record.SODT);
+                String encryptedLuong = CryptographyUtilities.encryptAES(record.LUONG, md5Hash);
+                String encryptedPhuCap = CryptographyUtilities.encryptAES(record.PHUCAP, md5Hash);
+
+                cst.setString(7, encryptedLuong);
+                cst.setString(8, encryptedPhuCap);
+                cst.setString(9, record.VAITRO);
+                cst.setString(10, record.MANQL);
+                cst.setString(11, record.PHG);
+
+                cst.execute();
+            }
+
+            commit();
+            System.out.println("Records inserted successfully.");
+        } catch (SQLException | NoSuchAlgorithmException ex) {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
 }
