@@ -300,10 +300,10 @@ public class DBManager {
     public void insertMockRecordToNhanVien() {
         var data = generateRecords(300);
 
-        String sql = "{call INSERT_NHANVIEN_RECORD(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+        String sqlNhanVien = "{call INSERT_NHANVIEN_RECORD(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
 
         try {
-            cst = cnt.prepareCall(sql);
+            cst = cnt.prepareCall(sqlNhanVien);
 
             for (NhanVienRecord record : data) {
                 cst.setString(1, record.MANV);
@@ -324,6 +324,27 @@ public class DBManager {
                 cst.setString(10, record.MANQL);
                 cst.setString(11, record.PHG);
 
+                cst.execute();
+            }
+
+            commit();
+            System.out.println("Records inserted successfully.");
+        } catch (SQLException | NoSuchAlgorithmException ex) {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        sqlNhanVien = "{call INSERT_LUUTRU_RECORD(?, ?, ?)}";
+
+        try {
+            cst = cnt.prepareCall(sqlNhanVien);
+
+            for (NhanVienRecord record : data) {
+                String salt = CryptographyUtilities.generateSalt(16);
+                cst.setString(1, record.MANV);
+                cst.setString(2, salt);
+                cst.setString(3,  CryptographyUtilities.hashMD5(record.SODT));
                 cst.execute();
             }
 

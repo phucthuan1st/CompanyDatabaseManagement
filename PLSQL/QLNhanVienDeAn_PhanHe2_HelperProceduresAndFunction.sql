@@ -1,0 +1,60 @@
+CONNECT COMPANY_PUBLIC/astrongpassword@localhost:1521/COMPANY;
+
+/*
+    Check connection availability
+*/
+SET SERVEROUTPUT ON
+
+DECLARE
+  v_service_name VARCHAR2(100);
+BEGIN
+  SELECT SYS_CONTEXT('USERENV', 'SERVICE_NAME') INTO v_service_name FROM DUAL;
+  DBMS_OUTPUT.PUT_LINE('Service Name: ' || v_service_name);
+END;
+/
+
+-- Procedure to insert a record into the NHANVIEN table
+CREATE OR REPLACE PROCEDURE INSERT_NHANVIEN_RECORD(
+    p_MANV     IN VARCHAR2,
+    p_TENNV    IN VARCHAR2,
+    p_PHAI     IN VARCHAR2,
+    p_NGAYSINH IN DATE,
+    p_DIACHI   IN VARCHAR2,
+    p_SODT     IN VARCHAR2,
+    p_LUONG    IN VARCHAR2,
+    p_PHUCAP   IN VARCHAR2,
+    p_VAITRO   IN VARCHAR2,
+    p_MANQL    IN VARCHAR2,
+    p_PHG      IN VARCHAR2
+) AS
+BEGIN
+    INSERT INTO NHANVIEN (MANV, TENNV, PHAI, NGAYSINH, DIACHI, SODT, LUONG, PHUCAP, VAITRO, MANQL, PHG)
+    VALUES (p_MANV, p_TENNV, p_PHAI, p_NGAYSINH, p_DIACHI, p_SODT, p_LUONG, p_PHUCAP, p_VAITRO, p_MANQL, p_PHG);
+    
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Handle the exception or log the error
+        DBMS_OUTPUT.PUT_LINE('Error inserting NHANVIEN record: ' || SQLERRM);
+        ROLLBACK;
+END;
+/
+
+-- Create a procedure to insert a record into DANGNHAP
+CREATE OR REPLACE PROCEDURE INSERT_LUUTRU_RECORD(
+  p_MANV IN LUUTRU.MANV%TYPE,
+  p_SALT IN LUUTRU.SALT%TYPE,
+  p_SECRET_KEY IN LUUTRU.SECRET_KEY%TYPE
+) AS
+BEGIN
+  INSERT INTO LUUTRU (MANV, SALT, SECRET_KEY)
+  VALUES (p_MANV, p_SALT, p_SECRET_KEY);
+  
+  COMMIT;
+  DBMS_OUTPUT.PUT_LINE('Record inserted successfully.');
+EXCEPTION
+  WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('Error inserting record: ' || SQLERRM);
+    ROLLBACK;
+END;
+/
