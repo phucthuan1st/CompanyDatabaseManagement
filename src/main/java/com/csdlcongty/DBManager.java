@@ -16,9 +16,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 /*
    Read note in Resources folder to learn more about ojdbc driver
@@ -161,19 +159,19 @@ public class DBManager {
             cst.setString(2, pass);
             cst.execute();
         
-            sql = "{call INSERT_DANGNHAP_RECORD(?, ?, ?)";
-            cst = cnt.prepareCall(sql);
-            String salt = CryptographyUtilities.generateSalt(16);
-            
-            cst.setString(1, usernm);
-            cst.setString(2, salt);
-            cst.setString(3, CryptographyUtilities.hashSHA1(pass, salt));
-            cst.execute();
+//            sql = "{call INSERT_DANGNHAP_RECORD(?, ?, ?)";
+//            cst = cnt.prepareCall(sql);
+//            String salt = CryptographyUtilities.generateSalt(16);
+//            
+//            cst.setString(1, usernm);
+//            cst.setString(2, salt);
+//            cst.setString(3, CryptographyUtilities.hashSHA1(pass, salt));
+//            cst.execute();
             commit();
             
             return 1;
         }
-        catch (SQLException | NoSuchAlgorithmException ex) {
+        catch (SQLException ex) {
             Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
             return 0;
         }
@@ -335,26 +333,26 @@ public class DBManager {
             Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        sqlNhanVien = "{call INSERT_LUUTRU_RECORD(?, ?, ?)}";
-
-        try {
-            cst = cnt.prepareCall(sqlNhanVien);
-
-            for (NhanVienRecord record : data) {
-                String salt = CryptographyUtilities.generateSalt(16);
-                cst.setString(1, record.MANV);
-                cst.setString(2, salt);
-                cst.setString(3,  CryptographyUtilities.hashMD5(record.SODT));
-                cst.execute();
-            }
-
-            commit();
-            System.out.println("Records inserted successfully.");
-        } catch (SQLException | NoSuchAlgorithmException ex) {
-            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (Exception ex) {
-            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
-        }
+//        sqlNhanVien = "{call INSERT_LUUTRU_RECORD(?, ?, ?)}";
+//
+//        try {
+//            cst = cnt.prepareCall(sqlNhanVien);
+//
+//            for (NhanVienRecord record : data) {
+//                String salt = CryptographyUtilities.generateSalt(16);
+//                cst.setString(1, record.MANV);
+//                cst.setString(2, salt);
+//                cst.setString(3,  CryptographyUtilities.hashMD5(record.SODT));
+//                cst.execute();
+//            }
+//
+//            commit();
+//            System.out.println("Records inserted successfully.");
+//        } catch (SQLException | NoSuchAlgorithmException ex) {
+//            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (Exception ex) {
+//            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+//        }
     }
     
     public List<NhanVienRecord> getDecryptedNhanVienRecords() {

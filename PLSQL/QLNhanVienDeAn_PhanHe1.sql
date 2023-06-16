@@ -104,20 +104,12 @@ CREATE OR REPLACE VIEW view_list AS
 CREATE OR REPLACE PROCEDURE create_user (
     user_name VARCHAR2,
     pass      VARCHAR2
-) AS
-    strsql VARCHAR2(3000);
+) 
+AS
 BEGIN
-    strsql := 'ALTER SESSION SET "_ORACLE_SCRIPT"=TRUE';
-    EXECUTE IMMEDIATE ( strsql );
-    strsql := ' CREATE USER '
-              || user_name
-              || ' IDENTIFIED BY '
-              || pass;
-    EXECUTE IMMEDIATE ( strsql );
-    strsql := ' GRANT CONNECT TO ' || user_name;
-    EXECUTE IMMEDIATE ( strsql );
-    strsql := 'ALTER SESSION SET "_ORACLE_SCRIPT"=FALSE';
-    EXECUTE IMMEDIATE ( strsql );
+    EXECUTE IMMEDIATE ('CREATE USER ' || user_name || ' IDENTIFIED BY ' || pass);
+    EXECUTE IMMEDIATE ('GRANT CONNECT TO ' || user_name);
+    EXECUTE IMMEDIATE ('GRANT CREATE SESSION TO ' || user_name);
 END;
 /
 
@@ -126,11 +118,7 @@ CREATE OR REPLACE PROCEDURE create_role (
 ) AS
     strsql VARCHAR2(3000);
 BEGIN
-    strsql := 'ALTER SESSION SET "_ORACLE_SCRIPT"=TRUE';
-    EXECUTE IMMEDIATE ( strsql );
     strsql := ' CREATE ROLE ' || role_name;
-    EXECUTE IMMEDIATE ( strsql );
-    strsql := 'ALTER SESSION SET "_ORACLE_SCRIPT"=FALSE';
     EXECUTE IMMEDIATE ( strsql );
 END;
 /
