@@ -64,3 +64,19 @@ CS#6: Những người dùng có VAITRO là “Trưởng đề án” cho biết
 đề án. Một người dùng là “Trưởng đề án” có quyền được mô tả như sau:
 - Có quyền như là một nhân viên thông thường (vai trò “Nhân viên”).
 - Được quyền thêm, xóa, cập nhật trên quan hệ ĐEAN.
+
+# Build instruction:
+## Build database
+- Using SQL Developer or any SQL Tool that could connect to Oracle Database
+- Connect to database as SYS as SYSDBA
+- Run all script in QLNhanVienDeAn_Open_Connect_To_PDB.sql
+- Run all script in QLNhanVienDeAn_PhanHe1.sql
+- Run all script in QLNhanVienDeAn_PhanHe2_TableStructure.sql
+- Run all script in QLNhanVienDeAn_PhanHe2_TablesRecords.sql (Optional)
+- Run all script in QLNhanVienDeAn_PhanHe2_HelperProceduresAndFunctions.sql
+- Run all script in QLNhanVienDeAn_PhanHe2_Policies.sql
+
+## Build application
+
+## Wrap jar to exe
+
