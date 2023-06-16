@@ -67,7 +67,8 @@ CS#6: Những người dùng có VAITRO là “Trưởng đề án” cho biết
 
 # Build instruction:
 ## Build database
-- Using SQL Developer or any SQL Tool that could connect to Oracle Database
+
+Using SQL Developer or any SQL Tool that could connect to Oracle Database
 - Connect to database as SYS as SYSDBA
 - Run all script in QLNhanVienDeAn_Open_Connect_To_PDB.sql
 - Run all script in QLNhanVienDeAn_PhanHe1.sql
@@ -75,6 +76,9 @@ CS#6: Những người dùng có VAITRO là “Trưởng đề án” cho biết
 - Run all script in QLNhanVienDeAn_PhanHe2_TablesRecords.sql (Optional)
 - Run all script in QLNhanVienDeAn_PhanHe2_HelperProceduresAndFunctions.sql
 - Run all script in QLNhanVienDeAn_PhanHe2_Policies.sql
+
+Nơ you can connect to database using the application or anything
+Notice that the dba user for our database (for test purpose) is COMPANY_PUBLIC with pasword astrongpassword
 
 ## Build application
 
