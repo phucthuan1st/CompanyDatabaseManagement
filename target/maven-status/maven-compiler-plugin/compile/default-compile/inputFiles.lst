@@ -2,6 +2,7 @@
 /home/pthuan/Documents/Dev/SecurityInfomationSystem/CompanyDatabaseManagement/src/main/java/com/csdlcongty/NhanVienRecord.java
 /home/pthuan/Documents/Dev/SecurityInfomationSystem/CompanyDatabaseManagement/src/main/java/com/csdlcongty/MockGenerator.java
 /home/pthuan/Documents/Dev/SecurityInfomationSystem/CompanyDatabaseManagement/src/main/java/com/csdlcongty/users/NormalUserController.java
+/home/pthuan/Documents/Dev/SecurityInfomationSystem/CompanyDatabaseManagement/src/main/java/com/csdlcongty/users/nhanvien/NhanVienController.java
 /home/pthuan/Documents/Dev/SecurityInfomationSystem/CompanyDatabaseManagement/src/main/java/com/csdlcongty/AppEntry.java
 /home/pthuan/Documents/Dev/SecurityInfomationSystem/CompanyDatabaseManagement/src/main/java/com/csdlcongty/CryptographyUtilities.java
 /home/pthuan/Documents/Dev/SecurityInfomationSystem/CompanyDatabaseManagement/src/main/java/com/csdlcongty/DBManager.java

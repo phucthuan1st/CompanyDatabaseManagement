@@ -49,7 +49,7 @@ public class DBAdminController extends JFrame implements ActionListener {
 
     private final JButton grantRoleToUserButton;
     private final JButton revokeRoleFromUserButton;
-    
+
     static private final String ERRORTITLE = "ERROR";
 
     public DBAdminController(String username, String password, JFrame father) throws ClassNotFoundException, SQLException {
@@ -266,321 +266,369 @@ public class DBAdminController extends JFrame implements ActionListener {
         }
 
         try {
-            // Handle Show User list button
+
             if (e.getSource() == showUserListButton) {
-                result = dbm.getUserList();
-                int num_rows = dbm.getNumberRowsOf("USER_LIST");
-                displayRightPaneTable(num_rows);
-            } // Handle Show role list button
-            else if (e.getSource() == showRoleListButton) {
-                result = dbm.getRoleList();
-                int num_rows = dbm.getNumberRowsOf("ROLE_LIST");
-                displayRightPaneTable(num_rows);
-            } // Handle Show table list button
-            else if (e.getSource() == showTableListButton) {
-                result = dbm.getTableList();
-                int num_rows = dbm.getNumberRowsOf("TABLE_LIST");
-                displayRightPaneTable(num_rows);
-            } // Handle Show view list button
-            else if (e.getSource() == showViewListButton) {
-                result = dbm.getViewList();
-                int num_rows = dbm.getNumberRowsOf("VIEW_LIST");
-                displayRightPaneTable(num_rows);
+                this.handleShowUserListButton();
+            } else if (e.getSource() == showRoleListButton) {
+                this.handleShowRoleListButton();
+            } else if (e.getSource() == showTableListButton) {
+                this.handleShowTableListButton();
+            } else if (e.getSource() == showViewListButton) {
+                this.handleShowViewListButton();
             } else if (e.getSource() == showPrivilegeButton) {
-                String[] option = { "User", "Role" };
-                String message = "Show either role or user?";
-                int choose = JOptionPane.showOptionDialog(this, message, "Selection", JOptionPane.DEFAULT_OPTION,
-                        JOptionPane.PLAIN_MESSAGE, null, option, null);
-
-                if (choose < 0) {
-                    return;
-                }
-
-                String entityType = option[choose];
-                message = "Enter name of " + entityType;
-
-                String nameOfEntity = JOptionPane.showInputDialog(this, message, entityType + " name",
-                        JOptionPane.QUESTION_MESSAGE);
-
-                if (nameOfEntity.isBlank()) {
-                    return;
-                }
-
-                result = dbm.getTablePrivilegesOfRoleOrUser(nameOfEntity);
-                int numRows = dbm.getNumberOfRowsInLastQuery();
-
-                if (numRows == 0) {
-                    JOptionPane.showMessageDialog(this,
-                            nameOfEntity + " is not exist or doesn't has any privileges yet!", DBAdminController.ERRORTITLE,
-                            JOptionPane.ERROR_MESSAGE);
-                } else {
-                    if ("Role".equals(entityType)) {
-                        this.displayRightPaneTable(numRows);
-                    } else if ("User".equals(entityType)) {
-                        ResultSet roleSet = dbm.getRoleOfUser(nameOfEntity);
-                        int lowerNumRows = dbm.getNumberOfRowsInLastQuery();
-                        this.displayTwoRightPaneTable(numRows, roleSet, lowerNumRows);
-                    }
-                }
+                this.handleShowPrivilegeButton();
             } else if (e.getSource() == createNewUserButton) {
-                JTextField username = new JTextField();
-                JTextField password = new JPasswordField();
-
-                Object[] message = {
-                        "Username: ", username,
-                        "Password: ", password
-                };
-
-                int choose = JOptionPane.showConfirmDialog(this, message, "Create new user",
-                        JOptionPane.OK_CANCEL_OPTION);
-
-                if (choose == JOptionPane.OK_OPTION) {
-                    int successfull = dbm.createNewUser(username.getText(), password.getText());
-
-                    if (successfull > 0) {
-                        JOptionPane.showMessageDialog(this, "User " + username.getText() + " created", "Message",
-                                JOptionPane.INFORMATION_MESSAGE);
-                    } else {
-                        JOptionPane.showMessageDialog(this,
-                                "User " + username.getText() + " cannot create or exists in database", DBAdminController.ERRORTITLE,
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-                }
+                this.handleCreateNewUserButton();
             } else if (e.getSource() == createNewRoleButton) {
-                JTextField rolename = new JTextField();
-
-                Object[] message = { "Enter name of Role ", rolename };
-
-                int choose = JOptionPane.showConfirmDialog(this, message, "Create new role",
-                        JOptionPane.OK_CANCEL_OPTION);
-
-                if (choose != JOptionPane.OK_OPTION) {
-                    return;
-                }
-
-                String nameOfRole = rolename.getText();
-
-                if (nameOfRole.isBlank()) {
-                    return;
-                }
-
-                int resultQuery = dbm.createNewRole(nameOfRole);
-
-                if (resultQuery > 0) {
-                    JOptionPane.showMessageDialog(this, "Role " + nameOfRole + " created", "Message",
-                            JOptionPane.INFORMATION_MESSAGE);
-                } else {
-                    JOptionPane.showMessageDialog(this, "Role " + nameOfRole + " cannot create or exists in database",
-                            "Error", JOptionPane.ERROR_MESSAGE);
-                }
-
+                this.handleCreateNewRoleButton();
             } else if (e.getSource() == createNewTableButton) {
-                JTextField tableNameField = new JTextField();
-                JTextField numberOfColumnsField = new JTextField();
-
-                JTextField columnNameField = new JTextField();
-                JTextField dataLengthField = new JTextField();
-
-                // type of variable in oracle
-                String[] valueTypeSelection = { "INT", "FLOAT", "VARCHAR2", "NVARCHAR2", "VARCHAR",
-                        " NVARCHAR ", " DATE " };
-                String[] valueNullConstraint = { "", "NOT NULL", "PRIMARY KEY" };
-
-                JComboBox<String> valueTypeSelectionField = new JComboBox<>(valueTypeSelection);
-                JComboBox<String> valueNullConstraintField = new JComboBox<>(valueNullConstraint);
-
-                Object[] message = {
-                        "Table Name:", tableNameField,
-                        "Numbers of Column:", numberOfColumnsField
-                };
-
-                Object[] field = {
-                        "Column Name:", columnNameField,
-                        "Type of Column:", valueTypeSelectionField,
-                        "Data Length:", dataLengthField,
-                        "Is NULL:", valueNullConstraintField
-                };
-
-                int choose = JOptionPane.showConfirmDialog(this, message, "Create new table",
-                        JOptionPane.OK_CANCEL_OPTION);
-
-                if (choose != JOptionPane.OK_OPTION) {
-                    return;
-                }
-
-                if (numberOfColumnsField.getText().isBlank() || tableNameField.getText().isBlank()) {
-                    return;
-                }
-                
-                ArrayList<String> nameOfColumns = new ArrayList<>();
-                ArrayList<String> valueTypeOfColumns = new ArrayList<>();
-                ArrayList<String> nullConstraintOfColumns = new ArrayList<>();
-                
-                String primaryKey = "";
-
-                int numberOfColumns = Integer.parseInt(numberOfColumnsField.getText());
-
-                for (int i = 0; i < numberOfColumns; i++) {
-                    choose = JOptionPane.showConfirmDialog(this, field, "Field " + (i + 1),
-                            JOptionPane.OK_CANCEL_OPTION);
-
-                    if (choose != JOptionPane.OK_OPTION) {
-                        return;
-                    }
-
-                    if (columnNameField.getText().isBlank()) {
-                        return;
-                    }
-
-                    nameOfColumns.add(columnNameField.getText());
-                    String dataType = valueTypeSelectionField.getSelectedItem().toString();
-
-                    if (!dataLengthField.getText().isBlank()) {
-                        dataType += String.format("(%d)", Integer.valueOf(dataLengthField.getText()));
-                    }
-                    
-                    valueTypeOfColumns.add(dataType);
-                    
-                    String constraint = valueNullConstraintField.getSelectedItem().toString();
-                    
-                    if (constraint.equals(valueNullConstraint[2])) {
-                        primaryKey = columnNameField.getText();
-                    }
-                    else {
-                        nullConstraintOfColumns.add(constraint);
-                    }
-                    
-                    columnNameField.setText("");
-                    dataLengthField.setText("");
-                    valueTypeSelectionField.setSelectedIndex(0);
-                    valueNullConstraintField.setSelectedIndex(0);
-                }
-
-                String columnNames = String.join(", ", nameOfColumns);
-                String dataTypes = String.join(", ", valueTypeOfColumns);
-                String notNullColumns = String.join(", ", nullConstraintOfColumns);
-                 
-                if (primaryKey.isBlank()) {
-                    primaryKey = nameOfColumns.get(0);
-                }
-                
-                int resultQuery = this.dbm.createTable(tableNameField.getText(), columnNames, dataTypes, primaryKey, notNullColumns);
-                if (resultQuery > 0) {
-                    JOptionPane.showMessageDialog(this, "Table " + tableNameField.getText() + " created", "Message",
-                            JOptionPane.INFORMATION_MESSAGE);
-                } else {
-                    JOptionPane.showMessageDialog(this,
-                            "Table " + tableNameField.getText() + " cannot create or exists in database", "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                }
+                this.handleCreateNewTableButton();
             } else if (e.getSource() == grantPrivilegeButton) {
-                setRightPanelToInteracionMode();
-                grantRevokeButton.setText("GRANT");
-
+                this.setInteractionModeTo("GRANT");
             } else if (e.getSource() == revokePrivilegeButton) {
-                InteractivePanel panel = setRightPanelToInteracionMode();
-                panel.grantOptionCheckBox.setVisible(false);
-                grantRevokeButton.setText("REVOKE");
+                this.setInteractionModeTo("REVOKE");
             } else if (e.getSource() == grantRevokeButton) {
-                InteractivePanel panel = (InteractivePanel) this.panes.getRightComponent();
-                String operator = panel.grantRevokeButton.getText();
-                String permission = "";
-
-                if (panel.selectPermissionsCheckBox.isSelected()) {
-                    permission = "SELECT";
-                }
-
-                if (panel.insertPermissionsCheckBox.isSelected()) {
-                    if (permission.isBlank()) {
-                        permission = "INSERT";
-                    } else {
-                        permission += ", INSERT";
-                    }
-                }
-                if (panel.updatePermissionsCheckBox.isSelected()) {
-                    if (permission.isBlank()) {
-                        permission = "UPDATE";
-                    } else {
-                        permission += ", UPDATE";
-                    }
-                }
-                if (panel.deletePermissionsCheckBox.isSelected()) {
-                    if (permission.isBlank()) {
-                        permission = "DELETE";
-                    } else {
-                        permission += ", DELETE";
-                    }
-                }
-
-                if (!permission.contains("INSERT") && !permission.contains("DELETE")) {
-                    if (!panel.columnsOfTable.getSelectedItem().toString().isBlank()) {
-                        permission += " (" + panel.columnsOfTable.getSelectedItem().toString() + ")";
-                    }
-                }
-
-                String tableName = panel.tableNameComboBox.getSelectedItem().toString();
-                String userOrRoleName = panel.userOrRoleTextField.getText();
-
-                if (operator.equals("GRANT")) {
-                    boolean grantable = panel.grantOptionCheckBox.isSelected();
-                    dbm.grantPrivilegesOnTable(permission, tableName, userOrRoleName, grantable);
-                } else {
-                    dbm.revokePrivilegesOnTable(permission, tableName, userOrRoleName);
-                }
-
-                JOptionPane.showMessageDialog(this, operator + " successfullly", operator,
-                        JOptionPane.INFORMATION_MESSAGE);
+                this.handleGrantRevokeButtonInteractionPanel();
             } else if (e.getSource() == grantRoleToUserButton) {
-                JTextField username = new JTextField();
-                JTextField rolename = new JTextField();
-
-                Object[] message = {
-                        "Username: ", username,
-                        "Role: ", rolename
-                };
-
-                int choose = JOptionPane.showConfirmDialog(this, message, "Grant role to user",
-                        JOptionPane.OK_CANCEL_OPTION);
-
-                if (choose != JOptionPane.OK_OPTION)
-                    return;
-
-                if (username.getText().isBlank() || rolename.getText().isBlank())
-                    return;
-
-                dbm.grantRoleToUser(username.getText(), rolename.getText());
-                JOptionPane.showMessageDialog(this, "Grant successfullly", "Successful",
-                        JOptionPane.INFORMATION_MESSAGE);
+                this.handleGrantRoleToUserButton();
             } else if (e.getSource() == revokeRoleFromUserButton) {
-                JTextField username = new JTextField();
-                JTextField rolename = new JTextField();
-
-                Object[] message = {
-                        "Username: ", username,
-                        "Role: ", rolename
-                };
-
-                int choose = JOptionPane.showConfirmDialog(this, message, "Revoke role from user",
-                        JOptionPane.OK_CANCEL_OPTION);
-
-                if (choose != JOptionPane.OK_OPTION)
-                    return;
-
-                if (username.getText().isBlank() || rolename.getText().isBlank())
-                    return;
-
-                dbm.revokeRoleFromUser(username.getText(), rolename.getText());
-                JOptionPane.showMessageDialog(this, "Revoke successfullly", "Successful",
-                        JOptionPane.INFORMATION_MESSAGE);
+                this.handleRevokeRoleFromUser();
             }
         } catch (SQLException ex) {
-            String message = "Cannot create new element: " + ex.getMessage();
+            String message = "Error when communicate with database: " + ex.getMessage();
             JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
             String message = "Unexpected error occured: " + ex.getMessage();
             JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
         }
 
+    }
+
+    void handleShowUserListButton() throws SQLException {
+        result = dbm.getUserList();
+        int num_rows = dbm.getNumberRowsOf("USER_LIST");
+        displayRightPaneTable(num_rows);
+    }
+
+    void handleShowRoleListButton() throws SQLException {
+        result = dbm.getRoleList();
+        int num_rows = dbm.getNumberRowsOf("ROLE_LIST");
+        displayRightPaneTable(num_rows);
+    }
+
+    private void handleShowTableListButton() throws SQLException {
+        result = dbm.getTableList();
+        int num_rows = dbm.getNumberRowsOf("TABLE_LIST");
+        displayRightPaneTable(num_rows);
+    }
+
+    private void handleShowViewListButton() throws SQLException {
+        result = dbm.getViewList();
+        int num_rows = dbm.getNumberRowsOf("VIEW_LIST");
+        displayRightPaneTable(num_rows);
+    }
+
+    private void handleShowPrivilegeButton() throws SQLException {
+        String[] option = {"User", "Role"};
+        String message = "Show either role or user?";
+        int choose = JOptionPane.showOptionDialog(this, message, "Selection", JOptionPane.DEFAULT_OPTION,
+                JOptionPane.PLAIN_MESSAGE, null, option, null);
+
+        if (choose < 0) {
+            return;
+        }
+
+        String entityType = option[choose];
+        message = "Enter name of " + entityType;
+
+        String nameOfEntity = JOptionPane.showInputDialog(this, message, entityType + " name",
+                JOptionPane.QUESTION_MESSAGE);
+
+        if (nameOfEntity.isBlank()) {
+            return;
+        }
+
+        result = dbm.getTablePrivilegesOfRoleOrUser(nameOfEntity);
+        int numRows = dbm.getNumberOfRowsInLastQuery();
+
+        if (numRows == 0) {
+            JOptionPane.showMessageDialog(this,
+                    nameOfEntity + " is not exist or doesn't has any privileges yet!", DBAdminController.ERRORTITLE,
+                    JOptionPane.ERROR_MESSAGE);
+        } else {
+            if ("Role".equals(entityType)) {
+                this.displayRightPaneTable(numRows);
+            } else if ("User".equals(entityType)) {
+                ResultSet roleSet = dbm.getRoleOfUser(nameOfEntity);
+                int lowerNumRows = dbm.getNumberOfRowsInLastQuery();
+                this.displayTwoRightPaneTable(numRows, roleSet, lowerNumRows);
+            }
+        }
+    }
+
+    private void handleCreateNewUserButton() {
+        JTextField username = new JTextField();
+        JTextField password = new JPasswordField();
+
+        Object[] message = {
+            "Username: ", username,
+            "Password: ", password
+        };
+
+        int choose = JOptionPane.showConfirmDialog(this, message, "Create new user",
+                JOptionPane.OK_CANCEL_OPTION);
+
+        if (choose == JOptionPane.OK_OPTION) {
+            int successfull = dbm.createNewUser(username.getText(), password.getText());
+
+            if (successfull > 0) {
+                JOptionPane.showMessageDialog(this, "User " + username.getText() + " created", "Message",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "User " + username.getText() + " cannot create or exists in database", DBAdminController.ERRORTITLE,
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void handleCreateNewRoleButton() throws SQLException {
+        JTextField rolename = new JTextField();
+
+        Object[] message = {"Enter name of Role ", rolename};
+
+        int choose = JOptionPane.showConfirmDialog(this, message, "Create new role",
+                JOptionPane.OK_CANCEL_OPTION);
+
+        if (choose != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        String nameOfRole = rolename.getText();
+
+        if (nameOfRole.isBlank()) {
+            return;
+        }
+
+        int resultQuery = dbm.createNewRole(nameOfRole);
+
+        if (resultQuery > 0) {
+            JOptionPane.showMessageDialog(this, "Role " + nameOfRole + " created", "Message",
+                    JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this, "Role " + nameOfRole + " cannot create or exists in database",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+
+    }
+
+    private void handleCreateNewTableButton() {
+        JTextField tableNameField = new JTextField();
+        JTextField numberOfColumnsField = new JTextField();
+
+        JTextField columnNameField = new JTextField();
+        JTextField dataLengthField = new JTextField();
+
+        // type of variable in oracle
+        String[] valueTypeSelection = {"INT", "FLOAT", "VARCHAR2", "NVARCHAR2", "VARCHAR",
+            " NVARCHAR ", " DATE "};
+        String[] valueNullConstraint = {"", "NOT NULL", "PRIMARY KEY"};
+
+        JComboBox<String> valueTypeSelectionField = new JComboBox<>(valueTypeSelection);
+        JComboBox<String> valueNullConstraintField = new JComboBox<>(valueNullConstraint);
+
+        Object[] message = {
+            "Table Name:", tableNameField,
+            "Numbers of Column:", numberOfColumnsField
+        };
+
+        Object[] field = {
+            "Column Name:", columnNameField,
+            "Type of Column:", valueTypeSelectionField,
+            "Data Length:", dataLengthField,
+            "Is NULL:", valueNullConstraintField
+        };
+
+        int choose = JOptionPane.showConfirmDialog(this, message, "Create new table",
+                JOptionPane.OK_CANCEL_OPTION);
+
+        if (choose != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        if (numberOfColumnsField.getText().isBlank() || tableNameField.getText().isBlank()) {
+            return;
+        }
+
+        ArrayList<String> nameOfColumns = new ArrayList<>();
+        ArrayList<String> valueTypeOfColumns = new ArrayList<>();
+        ArrayList<String> nullConstraintOfColumns = new ArrayList<>();
+
+        String primaryKey = "";
+
+        int numberOfColumns = Integer.parseInt(numberOfColumnsField.getText());
+
+        for (int i = 0; i < numberOfColumns; i++) {
+            choose = JOptionPane.showConfirmDialog(this, field, "Field " + (i + 1),
+                    JOptionPane.OK_CANCEL_OPTION);
+
+            if (choose != JOptionPane.OK_OPTION) {
+                return;
+            }
+
+            if (columnNameField.getText().isBlank()) {
+                return;
+            }
+
+            nameOfColumns.add(columnNameField.getText());
+            String dataType = valueTypeSelectionField.getSelectedItem().toString();
+
+            if (!dataLengthField.getText().isBlank()) {
+                dataType += String.format("(%d)", Integer.valueOf(dataLengthField.getText()));
+            }
+
+            valueTypeOfColumns.add(dataType);
+
+            String constraint = valueNullConstraintField.getSelectedItem().toString();
+
+            if (constraint.equals(valueNullConstraint[2])) {
+                primaryKey = columnNameField.getText();
+            } else {
+                nullConstraintOfColumns.add(constraint);
+            }
+
+            columnNameField.setText("");
+            dataLengthField.setText("");
+            valueTypeSelectionField.setSelectedIndex(0);
+            valueNullConstraintField.setSelectedIndex(0);
+        }
+
+        String columnNames = String.join(", ", nameOfColumns);
+        String dataTypes = String.join(", ", valueTypeOfColumns);
+        String notNullColumns = String.join(", ", nullConstraintOfColumns);
+
+        if (primaryKey.isBlank()) {
+            primaryKey = nameOfColumns.get(0);
+        }
+
+        int resultQuery = this.dbm.createTable(tableNameField.getText(), columnNames, dataTypes, primaryKey, notNullColumns);
+        if (resultQuery > 0) {
+            JOptionPane.showMessageDialog(this, "Table " + tableNameField.getText() + " created", "Message",
+                    JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "Table " + tableNameField.getText() + " cannot create or exists in database", "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void handleRevokeRoleFromUser() throws Exception {
+        JTextField username = new JTextField();
+        JTextField rolename = new JTextField();
+
+        Object[] message = {
+            "Username: ", username,
+            "Role: ", rolename
+        };
+
+        int choose = JOptionPane.showConfirmDialog(this, message, "Revoke role from user",
+                JOptionPane.OK_CANCEL_OPTION);
+
+        if (choose != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        if (username.getText().isBlank() || rolename.getText().isBlank()) {
+            return;
+        }
+
+        dbm.revokeRoleFromUser(username.getText(), rolename.getText());
+        JOptionPane.showMessageDialog(this, "Revoke successfullly", "Successful",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void handleGrantRevokeButtonInteractionPanel() throws SQLException {
+        InteractivePanel panel = (InteractivePanel) this.panes.getRightComponent();
+        String operator = panel.grantRevokeButton.getText();
+        String permission = "";
+
+        if (panel.selectPermissionsCheckBox.isSelected()) {
+            permission = "SELECT";
+        }
+
+        if (panel.insertPermissionsCheckBox.isSelected()) {
+            if (permission.isBlank()) {
+                permission = "INSERT";
+            } else {
+                permission += ", INSERT";
+            }
+        }
+        if (panel.updatePermissionsCheckBox.isSelected()) {
+            if (permission.isBlank()) {
+                permission = "UPDATE";
+            } else {
+                permission += ", UPDATE";
+            }
+        }
+        if (panel.deletePermissionsCheckBox.isSelected()) {
+            if (permission.isBlank()) {
+                permission = "DELETE";
+            } else {
+                permission += ", DELETE";
+            }
+        }
+
+        if (!permission.contains("INSERT") && !permission.contains("DELETE")) {
+            if (!panel.columnsOfTable.getSelectedItem().toString().isBlank()) {
+                permission += " (" + panel.columnsOfTable.getSelectedItem().toString() + ")";
+            }
+        }
+
+        String tableName = panel.tableNameComboBox.getSelectedItem().toString();
+        String userOrRoleName = panel.userOrRoleTextField.getText();
+
+        if (operator.equals("GRANT")) {
+            boolean grantable = panel.grantOptionCheckBox.isSelected();
+            dbm.grantPrivilegesOnTable(permission, tableName, userOrRoleName, grantable);
+        } else {
+            dbm.revokePrivilegesOnTable(permission, tableName, userOrRoleName);
+        }
+
+        JOptionPane.showMessageDialog(this, operator + " successfullly", operator,
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void handleGrantRoleToUserButton() throws SQLException {
+        JTextField username = new JTextField();
+        JTextField rolename = new JTextField();
+
+        Object[] message = {
+            "Username: ", username,
+            "Role: ", rolename
+        };
+
+        int choose = JOptionPane.showConfirmDialog(this, message, "Grant role to user",
+                JOptionPane.OK_CANCEL_OPTION);
+
+        if (choose != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        if (username.getText().isBlank() || rolename.getText().isBlank()) {
+            return;
+        }
+
+        dbm.grantRoleToUser(username.getText(), rolename.getText());
+        JOptionPane.showMessageDialog(this, "Grant successfullly", "Successful",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void setInteractionModeTo(String operation) {
+        InteractivePanel panel = setRightPanelToInteracionMode();
+        grantRevokeButton.setText(operation);
+        if ("REVOKE".equals(operation)) {
+            panel.grantOptionCheckBox.setVisible(false);
+        }
     }
 
 }
