@@ -10,7 +10,8 @@ BEGIN
 END;
 /
 
-/* =========== CÀI ĐẶT CÁC CHÍNH SÁCH DÙNG VPD ============= */
+
+/* =========== CÀI ĐẶT CÁC CHÍNH SÁCH DÙNG VPD VÀ RBAC ============= */
 
 -------------------------------------------------------------------------------------------------------------------------------------
 /*
@@ -21,89 +22,96 @@ như sau:
 − Xem trên toàn bộ quan hệ NHANVIEN và PHANCONG, có thể sửa trên thuộc tính LUONG
 và PHUCAP (thừa hành ban giám đốc).
 */
--- 1. Quyền SELECT
-CREATE OR REPLACE FUNCTION TAICHINH_PERMISSION_CONSTRAINTS (
-  schema_name   IN VARCHAR2,
-  object_name   IN VARCHAR2
-)
-RETURN VARCHAR2
-IS
-  vaitro NVARCHAR2(20);
+--tạo role TAI_CHINH
 BEGIN
-        -- Lấy vai trò của user hiện tại
-    SELECT VAITRO INTO vaitro FROM COMPANY_PUBLIC.NHANVIEN WHERE MANV = SYS_CONTEXT('USERENV', 'SESSION_USER');
+    EXECUTE IMMEDIATE 'CREATE ROLE TAI_CHINH';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Role already exists');
+END;
+/
+-------------------------------------------------------
+--GRANT QUYỀN CHO ROLE TÀI CHÍNH (DÙNG RBAC)
+--xem được trên cả 4 bảng
+GRANT SELECT ON COMPANY_PUBLIC.NHANVIEN TO TAI_CHINH;
+GRANT SELECT ON COMPANY_PUBLIC.PHANCONG TO TAI_CHINH;
+GRANT SELECT ON COMPANY_PUBLIC.PHONGBAN TO TAI_CHINH;
+GRANT SELECT ON COMPANY_PUBLIC.DEAN TO TAI_CHINH;
+
+--GRANT UPDATE PRIV
+GRANT UPDATE ON COMPANY_PUBLIC.NHANVIEN TO TAI_CHINH;
+--CHECK LAI
+-------------------------------------------------------
+--TẠO POLICY (DÙNG VDP)
+CREATE OR REPLACE FUNCTION a_CS_TAICHINH_1( 
+P_SCHEMA IN VARCHAR2,
+P_OBJ  IN VARCHAR2)
+RETURN VARCHAR2
+IS  
+    ROL VARCHAR2(20);
+    USR VARCHAR2(100);
+    STR VARCHAR2(100);
+BEGIN
+    USR:= SYS_CONTEXT('USERENV', 'SESSION_USER');
+    SELECT NV.VAITRO INTO ROL FROM COMPANY_PUBLIC.NHANVIEN NV WHERE MANV= USR;
     
-    -- tùy ý truy cập phòng ban và đề án như nhân viên
-    IF object_name = 'PHONGBAN' or object_name = 'DEAN' THEN
-        IF vaitro = 'Tài chính' THEN
-            RETURN '1=1'
+    IF ROL ='Tài chính' THEN
+        IF P_OBJ = 'NHANVIEN' THEN
+            STR := 'MANV= SYS_CONTEXT(''USERENV'', ''SESSION_USER'')';
+            RETURN STR;
         END IF;
     END IF;
-
-    --tùy ý truy cập nhân viên, phân công
-    ELSIF object_name = 'NHANVIEN' or object_name = 'PHANCONG' THEN
-        IF vaitro = 'Tài chính' THEN
+    RETURN NULL;
+END;
+/
+--function cho policy TAICHINH có thể sửa LUONG và PHUCAP trên NHANVIEN
+CREATE OR REPLACE FUNCTION a_CS_TAICHINH_2 (
+P_SCHEMA IN VARCHAR2,
+P_OBJ  IN VARCHAR2)
+RETURN VARCHAR2
+IS  
+    ROL VARCHAR2(20);
+    USR VARCHAR2(100);
+BEGIN
+    USR:= SYS_CONTEXT('USERENV', 'SESSION_USER');
+    SELECT NV.VAITRO INTO ROL FROM COMPANY_PUBLIC.NHANVIEN NV WHERE MANV= USR;
+    IF ROL ='Tài chính' THEN
+        IF P_OBJ = 'NHANVIEN' THEN
             RETURN '1=1';
         END IF;
     END IF;
-  
-  RETURN NULL;
+    RETURN NULL;
 END;
 /
-
 -- *NOTE: đối với hàm chính sách, return NULL để có vô hiệu hóa điều kiện, để có thể gắn thêm các chính sách khác (các CS2 --> 6)
 
 BEGIN
-    -- Có thể xem dữ liệu của toàn bộ quan hệ PHONGBAN và DEAN như nhân viên.
+    --có quyền như NHAN_VIEN
+        --QUYEN UPDATE trên NGAYSINH, DIACHI, SODT
     DBMS_RLS.ADD_POLICY(
-        object_schema    => 'COMPANY_PUBLIC',
-        object_name      => 'PHONGBAN',
-        policy_name      => 'TAICHINH_SELECT_PHONGBAN_POLICY',
-        function_schema  => 'COMPANY_PUBLIC',
-        policy_function  => 'TAICHINH_PERMISSION_CONSTRAINTS',
-        statement_types  => 'SELECT'
-    );
-    
-    DBMS_RLS.ADD_POLICY(
-        object_schema    => 'COMPANY_PUBLIC',
-        object_name      => 'DEAN',
-        policy_name      => 'TAICHINH_SELECT_DEAN_POLICY',
-        function_schema  => 'COMPANY_PUBLIC',
-        policy_function  => 'TAICHINH_PERMISSION_CONSTRAINTS',
-        statement_types  => 'SELECT'
-    );
-
-    ---------------------------------------------------------------------------------------------------------
-    -- Có thể xem dữ liệu của toàn bộ quan hệ NHANVIEN và PHANCONG.
-    DBMS_RLS.ADD_POLICY(
-        object_schema    => 'COMPANY_PUBLIC',
-        object_name      => 'NHANVIEN',
-        policy_name      => 'TAICHINH_SELECT_NHANVIEN_POLICY',
-        function_schema  => 'COMPANY_PUBLIC',
-        policy_function  => 'TAICHINH_PERMISSION_CONSTRAINTS',
-        statement_types  => 'SELECT'
-    );
-    
-    DBMS_RLS.ADD_POLICY(
-        object_schema    => 'COMPANY_PUBLIC',
-        object_name      => 'PHANCONG',
-        policy_name      => 'TAICHINH_SELECT_PHANCONG_POLICY',
-        function_schema  => 'COMPANY_PUBLIC',
-        policy_function  => 'TAICHINH_PERMISSION_CONSTRAINTS',
-        statement_types  => 'SELECT'
-    );
-    
-    ----------------------------------------------------------------------------------------
-    -- Có thể sửa trên các thuộc tính LUONG, PHUCAP.
-    DBMS_RLS.ADD_POLICY(
-        object_schema    => 'COMPANY_PUBLIC',
-        object_name      => 'NHANVIEN',
-        policy_name      => 'TAICHINH_UPDATE_NHANVIEN_POLICY',
-        function_schema  => 'COMPANY_PUBLIC',
-        policy_function  => 'TAICHINH_PERMISSION_CONSTRAINTS',
-        statement_types  => 'UPDATE',
-        sec_relevant_cols => 'LUONG,PHUCAP'
-    );
+        OBJECT_SCHEMA => 'COMPANY_PUBLIC',
+        OBJECT_NAME => 'NHANVIEN',
+        POLICY_NAME => 'TAICHINH_SELECT_NHANVIEN_PC',
+        POLICY_FUNCTION => 'a_CS_TAICHINH_1',
+        STATEMENT_TYPES => 'UPDATE',
+        SEC_RELEVANT_COLS=> 'NGAYSINH, DIACHI, SODT',
+        UPDATE_CHECK => TRUE, 
+        ENABLE => TRUE
+        );
+END;
+/
+    -- quyền được update trên LUONG, PHUCAP của cả bảng NHANVIEN
+BEGIN
+     DBMS_RLS.ADD_POLICY(
+        OBJECT_SCHEMA => 'COMPANY_PUBLIC',
+        OBJECT_NAME => 'NHANVIEN',
+        POLICY_NAME => 'TAICHINH_SELECT_PHANCONG_PC',
+        POLICY_FUNCTION => 'a_CS_TAICHINH_2',
+        STATEMENT_TYPES => 'UPDATE',
+        SEC_RELEVANT_COLS=> 'LUONG, PHUCAP' ,
+        UPDATE_CHECK => TRUE, 
+        ENABLE => TRUE
+        );
 END;
 /
 -------------------------------------------------------------------------------------------------------------------------------------
