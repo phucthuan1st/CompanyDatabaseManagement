@@ -10,7 +10,7 @@ BEGIN
 END;
 /
 
-/* =========== CÀI ĐẶT CÁC CHÍNH SÁCH DÙNG VPD ============= */
+/* =========== CÀI ĐẶT CÁC CHÍNH SÁCH DÙNG VPD VÀ RBAC ============= */
 
 -------------------------------------------------------------------------------------------------------------------------------------
 /*
@@ -19,89 +19,89 @@ CS#6: Những người dùng có VAITRO là “Trưởng đề án” cho biết
 − Có quyền như là một nhân viên thông thường (vai trò “Nhân viên”).
 − Được quyền thêm, xóa, cập nhật trên quan hệ ĐEAN.
 */
-CREATE OR REPLACE FUNCTION TRUONGDEAN_PERMISSION_CONSTRAINTS (
-  schema_name   IN VARCHAR2,
-  object_name   IN VARCHAR2
-)
-RETURN VARCHAR2
-IS
-  vaitro NVARCHAR2(20);
-BEGIN
-        -- Lấy vai trò của user hiện tại
-    SELECT VAITRO INTO vaitro FROM COMPANY_PUBLIC.NHANVIEN WHERE MANV = SYS_CONTEXT('USERENV', 'SESSION_USER');
 
-      -- Truy cập dòng liên quan đến nhân viên đó
-    IF object_name = 'NHANVIEN' THEN
-        IF vaitro = 'Trưởng đề án' THEN
-             RETURN 'MANV = SYS_CONTEXT(''USERENV'', ''SESSION_USER'')';
-        END IF;
+BEGIN
+    EXECUTE IMMEDIATE 'CREATE ROLE TRUONG_DEAN';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Role already exists');
+END;
+/
+-------------------------------------------------------
+--GRANT QUYỀN CHO ROLE TRƯỞNG ĐỀ ÁN (DÙNG RBAC)
+GRANT SELECT, UPDATE                    ON COMPANY_PUBLIC.NHANVIEN TO TRUONG_DEAN;
+GRANT SELECT                            ON COMPANY_PUBLIC.PHANCONG TO TRUONG_DEAN;
+GRANT SELECT                            ON COMPANY_PUBLIC.PHANCONG TO TRUONG_DEAN;
+GRANT SELECT, INSERT, UPDATE, DELETE    ON COMPANY_PUBLIC.DEAN TO TRUONG_DEAN;
+
+-----------------------------------------------------
+---CẤP CHÍNH SÁCH VDP TRÊN 1 SỐ YÊU CẦU KAHSC
+--function dùng cho TAICHINH có quyền update trên chính dòng của họ như Nhân viên
+CREATE OR REPLACE FUNCTION a_CS_TRUONGDEAN_1( 
+P_SCHEMA IN VARCHAR2,
+P_OBJ  IN VARCHAR2)
+RETURN VARCHAR2
+IS  
+    ROL VARCHAR2(20);
+    USR VARCHAR2(100);
+    STR VARCHAR2(100);
+BEGIN
+    USR:= SYS_CONTEXT('USERENV', 'SESSION_USER');
+    SELECT NV.VAITRO INTO ROL FROM COMPANY_PUBLIC.NHANVIEN NV WHERE MANV= USR;
     
-    -- Truy cập dòng liên quan đến nhân viên đó
-    ELSIF object_name = 'PHANCONG' THEN
-        IF vaitro = 'Trưởng đề án' THEN
-             RETURN 'MANV = SYS_CONTEXT(''USERENV'', ''SESSION_USER'')';
-        END IF;
-    
-    -- tùy ý truy cập phòng ban và đề án
-    ELSIF object_name = 'PHONGBAN' or object_name = 'DEAN' THEN
-        IF vaitro = 'Trưởng đề án' THEN
-            RETURN '1=1';
+    IF ROL ='Trưởng đề án' THEN
+        IF (P_OBJ = 'NHANVIEN' OR P_OBJ ='PHANCONG') THEN
+            STR := 'MANV= SYS_CONTEXT(''USERENV'', ''SESSION_USER'')';
+            RETURN STR;
         END IF;
     END IF;
-  
-  RETURN NULL;
+    RETURN NULL;
 END;
 /
 -- *NOTE: đối với hàm chính sách, return NULL để có vô hiệu hóa điều kiện, để có thể gắn thêm các chính sách khác (các CS2 --> 6)
 
 BEGIN
-    -- Có thê xem dữ liệu của toàn bộ quan hệ PHONGBAN và DEAN như nhân viên.
-    DBMS_RLS.ADD_POLICY(
-        object_schema    => 'COMPANY_PUBLIC',
-        object_name      => 'PHONGBAN',
-        policy_name      => 'TRUONGDEAN_SELECT_PHONGBAN_POLICY',
-        function_schema  => 'COMPANY_PUBLIC',
-        policy_function  => 'TRUONGDEAN_PERMISSION_CONSTRAINTS',
-        statement_types  => 'SELECT'
-    );
-
-    DBMS_RLS.ADD_POLICY(
-        object_schema    => 'COMPANY_PUBLIC',
-        object_name      => 'DEAN',
-        policy_name      => 'TRUONGDEAN_SELECT_DEAN_POLICY',
-        function_schema  => 'COMPANY_PUBLIC',
-        policy_function  => 'TRUONGDEAN_PERMISSION_CONSTRAINTS',
-        statement_types  => 'SELECT'
-    );
-    
-    -- Có thể xem dữ liệu của toàn bô quan hệ NHANVIEN và PHANCONG liên quan đến nhân viên đó
-    DBMS_RLS.ADD_POLICY(
-        object_schema    => 'COMPANY_PUBLIC',
-        object_name      => 'NHANVIEN',
-        policy_name      => 'TRUONGDEAN_SELECT_NHANVIEN_POLICY',
-        function_schema  => 'COMPANY_PUBLIC',
-        policy_function  => 'TRUONGDEAN_PERMISSION_CONSTRAINTS',
-        statement_types  => 'SELECT'
-    );
-
-    DBMS_RLS.ADD_POLICY(
-        object_schema    => 'COMPANY_PUBLIC',
-        object_name      => 'PHANCONG',
-        policy_name      => 'TRUONGDEAN_SELECT_PHANCONG_POLICY',
-        function_schema  => 'COMPANY_PUBLIC',
-        policy_function  => 'TRUONGDEAN_PERMISSION_CONSTRAINTS',
-        statement_types  => 'SELECT'
-    );
-
-    -- Có thể thêm,xoá,cập nhật trên quan hệ DEAN
-    DBMS_RLS.ADD_POLICY(
-        object_schema    => 'COMPANY_PUBLIC',
-        object_name      => 'DEAN',
-        policy_name      => 'TRUONGDEAN_INSERT_DELETE_UPDATE_DEAN_POLICY',
-        function_schema  => 'COMPANY_PUBLIC',
-        policy_function  => 'TRUONGDEAN_PERMISSION_CONSTRAINTS',
-        statement_types  => 'INSERT,DELETE,UPDATE',
-    );
+-------------------------------------------------------------------
+-- QUYỀN NHƯ NHÂN VIÊN
+    -- có quyền xem thông tin của mình trong quan hệ NHANVIEN
+        DBMS_RLS.ADD_POLICY(
+            OBJECT_SCHEMA => 'COMPANY_PUBLIC',
+            OBJECT_NAME => 'NHANVIEN',
+            POLICY_NAME => 'TRUONGDEAN_SELECT_NHANVIEN_PC',
+            POLICY_FUNCTION => 'a_CS_TRUONGDEAN_1',
+            STATEMENT_TYPES => 'SELECT',
+            UPDATE_CHECK => TRUE, 
+            ENABLE => TRUE
+            );
 END;
 /
+BEGIN
+     DBMS_RLS.ADD_POLICY(
+            OBJECT_SCHEMA => 'COMPANY_PUBLIC',
+            OBJECT_NAME => 'NHANVIEN',
+            POLICY_NAME => 'TRUONGDEAN_UPDATE_TRUONGDEAN_PC',
+            POLICY_FUNCTION => 'a_CS_TRUONGDEAN_1',
+            STATEMENT_TYPES => 'UPDATE',
+            UPDATE_CHECK => TRUE, 
+            SEC_RELEVANT_COLS=> 'NGAYSINH, DIACHI, SODT', 
+            ENABLE => TRUE
+            );
+END;
+/
+BEGIN            
+      DBMS_RLS.ADD_POLICY(
+            OBJECT_SCHEMA => 'COMPANY_PUBLIC',
+            OBJECT_NAME => 'PHANCONG',
+            POLICY_NAME => 'TRUONGDEAN_SELECT_PHANCONG_PC',
+            POLICY_FUNCTION => 'a_CS_TRUONGDEAN_1',
+            STATEMENT_TYPES => 'SELECT',
+            UPDATE_CHECK => TRUE, 
+            ENABLE => TRUE
+            );      
+            
+--------------------------------------------------------------------
+END;
+/
+
+            
 -------------------------------------------------------------------------------------------------------------------------------------
