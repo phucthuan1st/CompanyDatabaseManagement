@@ -10,8 +10,10 @@ import java.util.logging.Logger;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLWarning;
-import com.csdlcongty.CryptographyUtilities;
-import static com.csdlcongty.MockGenerator.generateRecords;
+import com.csdlcongty.helper.CryptographyUtilities;
+import com.csdlcongty.helper.NhanVienRecord;
+
+import static com.csdlcongty.helper.MockGenerator.generateRecords;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -27,7 +29,7 @@ public class DBManager {
     private static final String IP = "localhost";
     private static final String PORT = "1521";
     protected static final String DBURL = String.format("jdbc:oracle:thin:@%s:%s/COMPANY", IP, PORT);
-    protected Connection cnt;
+    public Connection cnt;
     protected Statement st;
     protected CallableStatement cst;
     protected PreparedStatement pst;

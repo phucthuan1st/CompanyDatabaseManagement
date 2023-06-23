@@ -1,4 +1,4 @@
-package com.csdlcongty;
+package com.csdlcongty.helper;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

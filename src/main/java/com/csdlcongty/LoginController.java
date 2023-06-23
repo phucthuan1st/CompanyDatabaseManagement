@@ -12,13 +12,9 @@ import com.csdlcongty.users.NormalUserController;
 // include Login screen and handling for pressing Login button
 public class LoginController extends JFrame implements ActionListener {
 
-    // Declare components
-    private final JLabel usernameLabel;
-    private final JLabel passwordLabel;
     private final JTextField usernameField;
     private final JPasswordField passwordField;
     private final JButton loginButton;
-    private final JLabel companyLogo;
 
     public LoginController(int wWidth, int wHeight) throws IOException {
         // Set window properties
@@ -37,12 +33,13 @@ public class LoginController extends JFrame implements ActionListener {
         } catch (Exception ex) {
             loginLabel = new JLabel("LOGIN");
         }
-        
-        companyLogo = loginLabel;
+
+        JLabel companyLogo = loginLabel;
         companyLogo.setVisible(true);
 
-        usernameLabel = new JLabel("Username:");
-        passwordLabel = new JLabel("Password:");
+        // Declare components
+        JLabel usernameLabel = new JLabel("Username:");
+        JLabel passwordLabel = new JLabel("Password:");
         usernameField = new JTextField(20);
         passwordField = new JPasswordField(20);
         loginButton = new JButton("Login");
@@ -99,7 +96,7 @@ public class LoginController extends JFrame implements ActionListener {
             String username = usernameField.getText();
             String password = new String(passwordField.getPassword());
             String role;
-            Boolean accessGranted = false;
+            boolean accessGranted = false;
 
             // normalize username
             username = username.toUpperCase();
@@ -135,13 +132,13 @@ public class LoginController extends JFrame implements ActionListener {
                 JOptionPane.showMessageDialog(this, "Unexpected error!", "Error", JOptionPane.ERROR_MESSAGE);
             }
 
-            if (accessGranted == true) {
+            if (accessGranted) {
                 
                 try {
                     if ("DBA".equals(role)) {
                         DBAdminController adminSession = new DBAdminController(username, password, this);
                         changeTo(adminSession);
-                    } else if ("normal".equals(role)) {
+                    } else {
                         NormalUserController userSession = new NormalUserController(username, password, this);
                         changeTo(userSession);
                     }

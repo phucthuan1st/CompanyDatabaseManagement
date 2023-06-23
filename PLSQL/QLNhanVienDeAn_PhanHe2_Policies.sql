@@ -48,7 +48,7 @@ BEGIN
     -- tùy ý truy cập phòng ban và đề án
     ELSIF object_name = 'PHONGBAN' or object_name = 'DEAN' THEN
         IF vaitro = 'Nhân viên' THEN
-            RETURN '1=1'
+            RETURN '1=1';
         END IF;
     END IF;
   
@@ -161,7 +161,6 @@ BEGIN
         statement_types  => 'SELECT'
     );     
 END;
-
 /
 -------------------------------------------------------------------------------------------------------------------------------------
 
@@ -184,29 +183,29 @@ RETURN VARCHAR2
 IS
   vaitro NVARCHAR2(20);
 BEGIN
-        -- Lấy vai trò của user hiện tại
+    -- Lấy vai trò của user hiện tại
     SELECT VAITRO INTO vaitro FROM COMPANY_PUBLIC.NHANVIEN WHERE MANV = SYS_CONTEXT('USERENV', 'SESSION_USER');
 
-      -- Truy cập dòng liên quan đến nhân viên đó và liên quan đến các nhân viên thuộc phòng ban mà T làm trưởng phòng
+    -- Truy cập dòng liên quan đến nhân viên đó và liên quan đến các nhân viên thuộc phòng ban mà T làm trưởng phòng
     IF object_name = 'NHANVIEN' THEN
         IF vaitro = 'Trưởng phòng' THEN
-             RETURN 'MANV = SYS_CONTEXT(''USERENV'', ''SESSION_USER'') OR (MANV IN (SELECT MANV FROM COMPANY_PUBLIC.NHANVIEN WHERE PHG = (SELECT PHG FROM COMPANY_PUBLIC.NHANVIEN WHERE MANV = SYS_CONTEXT(''USERENV'', ''SESSION_USER''))) AND COLUMN_NAME NOT IN (''LUONG'', ''PHUCAP''))';
+            RETURN 'MANV = SYS_CONTEXT(''USERENV'', ''SESSION_USER'') OR (MANV IN (SELECT MANV FROM COMPANY_PUBLIC.NHANVIEN WHERE PHG = (SELECT PHG FROM COMPANY_PUBLIC.NHANVIEN WHERE MANV = SYS_CONTEXT(''USERENV'', ''SESSION_USER''))) AND COLUMN_NAME NOT IN (''LUONG'', ''PHUCAP''))';
         END IF;
     
     -- Truy cập dòng liên quan đến nhân viên đó và liên quan đến các nhân viên thuộc phòng ban mà T làm trưởng phòng.
     ELSIF object_name = 'PHANCONG' THEN
         IF vaitro = 'Trưởng phòng' THEN
-             RETURN 'MANV = SYS_CONTEXT(''USERENV'', ''SESSION_USER'') OR (MANV IN (SELECT MANV FROM COMPANY_PUBLIC.NHANVIEN WHERE PHG = (SELECT PHG FROM COMPANY_PUBLIC.NHANVIEN WHERE MANV = SYS_CONTEXT(''USERENV'', ''SESSION_USER''))))';
+            RETURN 'MANV = SYS_CONTEXT(''USERENV'', ''SESSION_USER'') OR (MANV IN (SELECT MANV FROM COMPANY_PUBLIC.NHANVIEN WHERE PHG = (SELECT PHG FROM COMPANY_PUBLIC.NHANVIEN WHERE MANV = SYS_CONTEXT(''USERENV'', ''SESSION_USER''))))';
         END IF;
     
     -- tùy ý truy cập phòng ban và đề án
     ELSIF object_name = 'PHONGBAN' or object_name = 'DEAN' THEN
         IF vaitro = 'Trưởng phòng' THEN
-            RETURN '1=1'
+            RETURN '1=1';
         END IF;
     END IF;
   
-  RETURN NULL;
+    RETURN NULL;
 END;
 /
 
@@ -250,7 +249,10 @@ BEGIN
         policy_function  => 'TRUONGPHONG_PERMISSION_CONSTRAINTS',
         statement_types  => 'SELECT'
     );
+END;
+/
 
+BEGIN
     -- Có thể thêm,xoá,cập nhật trên quan hệ PHANCONG liên quan đến các nhân viên thuộc phòng ban mà T làm trưởng phòng.
     DBMS_RLS.ADD_POLICY(
     object_schema    => 'COMPANY_PUBLIC',
@@ -294,7 +296,7 @@ BEGIN
     --tùy ý truy cập nhân viên, phân công
     ELSIF object_name = 'NHANVIEN' or object_name = 'PHANCONG' THEN
         IF vaitro = 'Tài chính' THEN
-            RETURN '1=1'
+            RETURN '1=1';
         END IF;
     END IF;
   
@@ -395,7 +397,7 @@ BEGIN
     -- tùy ý truy cập phòng ban và đề án
     ELSIF object_name = 'PHONGBAN' or object_name = 'DEAN' THEN
         IF vaitro = 'Nhân sự' THEN
-            RETURN '1=1'
+            RETURN '1=1';
         END IF;
     END IF;
   
@@ -502,7 +504,7 @@ BEGIN
     -- tùy ý truy cập phòng ban và đề án
     ELSIF object_name = 'PHONGBAN' or object_name = 'DEAN' THEN
         IF vaitro = 'Trưởng đề án' THEN
-            RETURN '1=1'
+            RETURN '1=1';
         END IF;
     END IF;
   

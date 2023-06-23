@@ -16,6 +16,7 @@ END;
 /*
     Create database's table
 */
+
 CREATE TABLE NHANVIEN (
     MANV     VARCHAR2(10),
     TENNV     VARCHAR2(50),
@@ -25,11 +26,16 @@ CREATE TABLE NHANVIEN (
     SODT      VARCHAR2(20),
     LUONG     VARCHAR2(100),
     PHUCAP    VARCHAR2(100),
-    VAITRO    VARCHAR2(20),
     MANQL     VARCHAR2(10),
     PHG       VARCHAR2(10),
     CONSTRAINT PK_NHANVIEN PRIMARY KEY (MANV)
 );
+
+CREATE TABLE VAITRO_NHANVIEN (
+    MANV VARCHAR2(10),
+    VAITRO VARCHAR2(20),
+    CONSTRAINT PK_NHANVIEN_VAITRO PRIMARY KEY (MANV)
+)
 
 CREATE TABLE PHONGBAN (
     MAPB   VARCHAR2(10),
@@ -61,16 +67,5 @@ CREATE TABLE LUUTRU (
       SECRET_KEY VARCHAR2(100),
       CONSTRAINT PK_DANGNHAP PRIMARY KEY ( MANV )
 );
-
-SELECT * FROM NHANVIEN;
--- -----------------------------------------------------------------------------------------------------
-SELECT * FROM PHANCONG;
--- -----------------------------------------------------------------------------------------------------
-SELECT * FROM PHONGBAN;
--- -----------------------------------------------------------------------------------------------------
-SELECT * FROM DEAN;
--- -----------------------------------------------------------------------------------------------------
-SELECT * FROM LUUTRU;
--- -----------------------------------------------------------------------------------------------------
 
 COMMIT;
