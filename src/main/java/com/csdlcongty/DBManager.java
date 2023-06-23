@@ -8,12 +8,13 @@ import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
 import java.sql.SQLWarning;
 import com.csdlcongty.helper.CryptographyUtilities;
 import com.csdlcongty.helper.NhanVienRecord;
 
+import static com.csdlcongty.helper.MockGenerator.generateQLRecords;
 import static com.csdlcongty.helper.MockGenerator.generateRecords;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -32,7 +33,6 @@ public class DBManager {
     public Connection cnt;
     protected Statement st;
     protected CallableStatement cst;
-    protected PreparedStatement pst;
     protected String previousStatement;
 
     private static final String COUNTSQL = "SELECT COUNT(*) FROM (%s)";
@@ -47,9 +47,9 @@ public class DBManager {
         cnt = DriverManager.getConnection(DBURL, username, password);
     }
 
-    public int getNumberRowsOf(String entity) throws SQLException {
+    public int getNumberRowsOf(String entity) {
         String sql = "SELECT COUNT(*) FROM " + entity;
-        ResultSet resultSet = null;
+        ResultSet resultSet;
         int result = 0;
         try {
             st = cnt.createStatement();
@@ -64,7 +64,7 @@ public class DBManager {
     }
 
     public int getNumberOfRowsInLastQuery() {
-        ResultSet resultSet = null;
+        ResultSet resultSet;
         int result = 0;
 
         try {
@@ -95,7 +95,7 @@ public class DBManager {
 
     public ResultSet getRoleList() throws SQLException {
         String sql = "SELECT * FROM ROLE_LIST";
-        ResultSet result = null;
+        ResultSet result;
 
         st = cnt.createStatement();
         result = st.executeQuery(sql);
@@ -107,7 +107,7 @@ public class DBManager {
     public ResultSet getTableList() throws SQLException {
         updateStatisticsForSchema();
         String sql = "SELECT * FROM TABLE_LIST ORDER BY TABLE_NAME ASC";
-        ResultSet result = null;
+        ResultSet result;
         st = cnt.createStatement();
         result = st.executeQuery(sql);
 
@@ -117,7 +117,7 @@ public class DBManager {
 
     public ResultSet getViewList() throws SQLException {
         String sql = "SELECT * FROM VIEW_LIST";
-        ResultSet result = null;
+        ResultSet result;
 
         st = cnt.createStatement();
         result = st.executeQuery(sql);
@@ -143,7 +143,7 @@ public class DBManager {
         String sql = "SELECT GRANTEE, GRANTED_ROLE, ADMIN_OPTION FROM ROLE_PRIVILEGES WHERE GRANTEE = '"
                 + name.toUpperCase() + "'";
 
-        ResultSet result = null;
+        ResultSet result;
 
         st = cnt.createStatement();
         result = st.executeQuery(sql);
@@ -182,7 +182,7 @@ public class DBManager {
     public int createNewRole(String roleName) throws SQLException {
         String sql = "{call CREATE_ROLE(?)}";
 
-        int successful = 0;
+        int successful;
 
         cst = cnt.prepareCall(sql);
         cst.setString(1, roleName);
@@ -193,15 +193,13 @@ public class DBManager {
         return successful;
     }
     
-    private int updateStatisticsForSchema() {
+    private void updateStatisticsForSchema() {
         try {
             CallableStatement stmt = cnt.prepareCall("{call gather_statistics_for_schema}");
             stmt.execute();
-            return 1; // Successful update
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-        return 0; // Failed update
     }
 
     public int createTable(String tableName, String columnNames, String dataTypes, String primaryKey, String notNullColumn) {
@@ -234,7 +232,7 @@ public class DBManager {
 
     public ResultSet getColumnsOfTable(String tableName) throws SQLException {
         String sql = "SELECT COLUMN_NAME FROM GET_TABLE_COLUMNS('" + tableName + "')";
-        ResultSet result = null;
+        ResultSet result;
 
         st = cnt.createStatement();
         st.execute(sql);
@@ -245,7 +243,7 @@ public class DBManager {
     }
 
     public String entityTypeIdentify(String entityName) throws SQLException {
-        String entityType = "";
+        String entityType;
         String sql = "{? = call IDENTIFY_ENTITY_TYPE(?)}";
         cst = cnt.prepareCall(sql);
         cst.setString(2, entityName.toUpperCase());
@@ -299,6 +297,7 @@ public class DBManager {
     
     public void insertMockRecordToNhanVien() {
         var data = generateRecords(300);
+        data.addAll(generateQLRecords(20));
 
         String sqlNhanVien = "{call INSERT_NHANVIEN_RECORD(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
 
@@ -328,40 +327,35 @@ public class DBManager {
             }
 
             commit();
-            System.out.println("Records inserted successfully.");
+            System.out.println("Records inserted to NHANVIEN successfully.");
         } catch (SQLException | NoSuchAlgorithmException ex) {
             Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        sqlNhanVien = "{call INSERT_LUUTRU_RECORD(?, ?)}";
+        try {
+            cst = cnt.prepareCall(sqlNhanVien);
+
+            for (NhanVienRecord record : data) {
+                cst.setString(1, record.MANV);
+                cst.setString(2,  CryptographyUtilities.hashMD5(record.SODT));
+                cst.execute();
+            }
+
+            commit();
+            System.out.println("Records inserted to LUUTRU successfully.");
         } catch (Exception ex) {
             Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-//        sqlNhanVien = "{call INSERT_LUUTRU_RECORD(?, ?, ?)}";
-//
-//        try {
-//            cst = cnt.prepareCall(sqlNhanVien);
-//
-//            for (NhanVienRecord record : data) {
-//                String salt = CryptographyUtilities.generateSalt(16);
-//                cst.setString(1, record.MANV);
-//                cst.setString(2, salt);
-//                cst.setString(3,  CryptographyUtilities.hashMD5(record.SODT));
-//                cst.execute();
-//            }
-//
-//            commit();
-//            System.out.println("Records inserted successfully.");
-//        } catch (SQLException | NoSuchAlgorithmException ex) {
-//            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (Exception ex) {
-//            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
-//        }
     }
     
     public List<NhanVienRecord> getDecryptedNhanVienRecords() {
         List<NhanVienRecord> decryptedRecords = new ArrayList<>();
 
         try {
-            String query = "SELECT MANV, TENNV, PHAI, NGAYSINH, DIACHI, SODT, LUONG, PHUCAP, VAITRO, MANQL, PHG FROM NHANVIEN";
+            String query = "SELECT MANV, TENNV, PHAI, NGAYSINH, DIACHI, SODT, LUONG, PHUCAP, MANQL, PHG FROM NHANVIEN";
             Statement statement = cnt.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
 
@@ -374,7 +368,6 @@ public class DBManager {
                 String SODT = resultSet.getString("SODT");
                 String encryptedLUONG = resultSet.getString("LUONG");
                 String encryptedPHUCAP = resultSet.getString("PHUCAP");
-                String VAITRO = resultSet.getString("VAITRO");
                 String MANQL = resultSet.getString("MANQL");
                 String PHG = resultSet.getString("PHG");
 
@@ -382,16 +375,12 @@ public class DBManager {
                 String LUONG = CryptographyUtilities.decryptAES(encryptedLUONG, key);
                 String PHUCAP = CryptographyUtilities.decryptAES(encryptedPHUCAP, key);
 
-                NhanVienRecord record = new NhanVienRecord(MANV, TENNV, PHAI, NGAYSINH, DIACHI, SODT, LUONG, PHUCAP, VAITRO, MANQL, PHG);
+                NhanVienRecord record = new NhanVienRecord(MANV, TENNV, PHAI, NGAYSINH, DIACHI, SODT, LUONG, PHUCAP, "", MANQL, PHG);
                 decryptedRecords.add(record);
             }
 
             resultSet.close();
             statement.close();
-        } catch (SQLException ex) {
-            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NoSuchAlgorithmException ex) {
-            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
             Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -402,14 +391,14 @@ public class DBManager {
     public void writeNhanVienRecordsToFile(List<NhanVienRecord> records, String filePath) {
         try (FileWriter writer = new FileWriter(filePath)) {
             // Write header
-            writer.write("MANV,TENNV,PHAI,NGAYSINH,DIACHI,SODT,LUONG,PHUCAP,VAITRO,MANQL,PHG\n");
+            writer.write("MANV,TENNV,PHAI,NGAYSINH,DIACHI,SODT,LUONG,PHUCAP,MANQL,PHG\n");
 
             // Write records
             for (NhanVienRecord record : records) {
-                String line = String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+                String line = String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
                         record.MANV, record.TENNV, record.PHAI, record.NGAYSINH,
                         record.DIACHI, record.SODT, record.LUONG, record.PHUCAP,
-                        record.VAITRO, record.MANQL, record.PHG);
+                        record.MANQL, record.PHG);
                 writer.write(line);
             }
 

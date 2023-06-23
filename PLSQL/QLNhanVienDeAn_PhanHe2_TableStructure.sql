@@ -60,10 +60,9 @@ CREATE TABLE PHANCONG (
 );
 
 -- ten DN la MANV, khoa Bi Mat dung de ma hoa LUONG va PHUCAP
--- Create the DANGNHAP table
+-- Create the LUUTRU table
 CREATE TABLE LUUTRU (
       MANV VARCHAR2(10),
-      SALT VARCHAR2(100),
       SECRET_KEY VARCHAR2(100),
       CONSTRAINT PK_DANGNHAP PRIMARY KEY ( MANV )
 );

@@ -21,6 +21,13 @@ Những người dùng có VAITRO là “Nhân viên” có quyền được mô
 − Có thể xem dữ liệu của toàn bộ quan hệ PHONGBAN và DEAN.
  */
 
+BEGIN
+    EXECUTE IMMEDIATE 'CREATE ROLE NHAN_VIEN';
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Role already exists');
+END;
+/
 -- Grant SELECT privilege on NHANVIEN and PHANCONG tables
 GRANT SELECT ON COMPANY_PUBLIC.NHANVIEN TO NHAN_VIEN;
 GRANT SELECT ON COMPANY_PUBLIC.PHANCONG TO NHAN_VIEN;
@@ -32,7 +39,6 @@ GRANT UPDATE(NGAYSINH, DIACHI, SODT) ON COMPANY_PUBLIC.NHANVIEN TO NHAN_VIEN;
 -- Grant SELECT privilege on PHONGBAN and DEAN tables
 GRANT SELECT ON COMPANY_PUBLIC.PHONGBAN TO NHAN_VIEN;
 GRANT SELECT ON COMPANY_PUBLIC.DEAN TO NHAN_VIEN;
-
 
 CREATE OR REPLACE FUNCTION NHANVIEN_PERMISSION_CONSTRAINTS (
   schema_name   IN VARCHAR2,
@@ -87,7 +93,10 @@ BEGIN
     statement_types  => 'SELECT',
     enable           => TRUE
   );
-  
+END;
+/
+
+BEGIN
   -- Có thể sửa trên các thuộc tính NGAYSINH, DIACHI, SODT liên quan đến chính nhân viên đó
   DBMS_RLS.ADD_POLICY(
     object_schema    => 'COMPANY_PUBLIC',
@@ -98,7 +107,10 @@ BEGIN
     sec_relevant_cols => 'NGAYSINH, DIACHI, SODT',
     enable           => TRUE
   );
+END;
+/
 
+BEGIN
   -- Có thể xem dữ liệu của toàn bộ quan hệ PHONGBAN và DEAN
   DBMS_RLS.ADD_POLICY(
     object_schema    => 'COMPANY_PUBLIC',
@@ -119,3 +131,5 @@ BEGIN
   );
 END;
 /
+
+COMMIT;

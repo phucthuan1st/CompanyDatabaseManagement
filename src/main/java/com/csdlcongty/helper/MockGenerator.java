@@ -84,4 +84,46 @@ public class MockGenerator {
 
         return phoneNumber.toString();
     }
+
+    public static List<NhanVienRecord> generateQLRecords(int count) {
+        List<NhanVienRecord> records = new ArrayList<>();
+
+        for (int i = 1; i <= count; i++) {
+            String MANV = generateQLMANV(i);
+            String TENNV = "QL Truc tiep " + i;
+            String PHAI = (i + random.nextInt()) % 2 == 0 ? "Male" : "Female";
+            Date NGAYSINH = getRandomBirthDate();
+            String DIACHI = "Address QL" + (300 + i);
+            String SODT = generateRandomPhoneNumber();
+            String LUONG = getModifiedSalary();
+            String PHUCAP = getModifiedAllowance();
+            String VAITRO = "QL trực tiếp";
+            String MANQL = ""; // QL employees have no MANQL
+            String PHG = "PB00" + ((i % 8) + 1); // Random department ID
+
+            NhanVienRecord record = new NhanVienRecord(MANV, TENNV, PHAI, NGAYSINH, DIACHI, SODT, LUONG, PHUCAP, VAITRO, MANQL, PHG);
+            records.add(record);
+        }
+
+        return records;
+    }
+
+    private static String generateQLMANV(int index) {
+        String digit = String.format("%03d", index);
+        return "QL" + digit;
+    }
+
+    private static String getModifiedSalary() {
+        int[] salaryOptions = {1500, 1600, 1700, 1800, 1900};
+        int randomIndex = random.nextInt(salaryOptions.length);
+        int modifiedSalary = salaryOptions[randomIndex] * 2;
+        return String.valueOf(modifiedSalary);
+    }
+
+    private static String getModifiedAllowance() {
+        int[] allowanceOptions = {100, 200, 300, 400, 500};
+        int randomIndex = random.nextInt(allowanceOptions.length);
+        double modifiedAllowance = allowanceOptions[randomIndex] * 1.5;
+        return String.valueOf(modifiedAllowance);
+    }
 }
