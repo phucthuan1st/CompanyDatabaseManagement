@@ -115,8 +115,8 @@ public class LoginController extends JFrame implements ActionListener {
                 /*
                     Nếu trong máy chưa có record nào trong bảng NHANVIEN thì bỏ comment dòng bên dưới
                 */
-//                dbc.insertMockRecordToNhanVien();
-//                dbc.writeNhanVienRecordsToFile(dbc.getDecryptedNhanVienRecords(), "NhanVienRecord.csv");
+                //dbc.insertMockRecordToNhanVien();
+                dbc.writeNhanVienRecordsToFile(dbc.getDecryptedNhanVienRecords(), "NhanVienRecord.csv");
                 
                 dbc.cnt.close();
             } catch (SQLException ex) {

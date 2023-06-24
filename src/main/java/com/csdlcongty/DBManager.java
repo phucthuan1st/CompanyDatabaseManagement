@@ -1,19 +1,15 @@
 package com.csdlcongty;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.sql.CallableStatement;
-import java.sql.SQLWarning;
+
 import com.csdlcongty.helper.CryptographyUtilities;
 import com.csdlcongty.helper.NhanVienRecord;
 
 import static com.csdlcongty.helper.MockGenerator.generateQLRecords;
-import static com.csdlcongty.helper.MockGenerator.generateRecords;
+import static com.csdlcongty.helper.MockGenerator.generateNVRecords;
+import static com.csdlcongty.helper.MockGenerator.generateTPRecords;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -160,15 +156,6 @@ public class DBManager {
             cst.setString(1, usernm);
             cst.setString(2, pass);
             cst.execute();
-        
-//            sql = "{call INSERT_DANGNHAP_RECORD(?, ?, ?)";
-//            cst = cnt.prepareCall(sql);
-//            String salt = CryptographyUtilities.generateSalt(16);
-//            
-//            cst.setString(1, usernm);
-//            cst.setString(2, salt);
-//            cst.setString(3, CryptographyUtilities.hashSHA1(pass, salt));
-//            cst.execute();
             commit();
             
             return 1;
@@ -295,14 +282,75 @@ public class DBManager {
         cst.execute();
     }
     
+//    public void insertMockRecordToNhanVien() {
+//        var data = generateNVRecords(300);
+//        data.addAll(generateQLRecords(20));
+//        data.addAll(generateTPRecords(8));
+//
+//        String sqlNhanVien = "{call INSERT_NHANVIEN_RECORD(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+//
+//        try {
+//            cst = cnt.prepareCall(sqlNhanVien);
+//
+//            for (NhanVienRecord record : data) {
+//                cst.setString(1, record.MANV);
+//                cst.setString(2, record.TENNV);
+//                cst.setString(3, record.PHAI);
+//                cst.setDate(4, new java.sql.Date(record.NGAYSINH.getTime()));
+//                cst.setString(5, record.DIACHI);
+//                cst.setString(6, record.SODT);
+//
+//                // Encrypt LUONG and PHUCAP using AES in CryptographyUtilities
+//                String md5Hash = CryptographyUtilities.hashMD5(record.SODT);
+//                String encryptedLuong = CryptographyUtilities.encryptAES(record.LUONG, md5Hash);
+//                String encryptedPhuCap = CryptographyUtilities.encryptAES(record.PHUCAP, md5Hash);
+//
+//                cst.setString(7, encryptedLuong);
+//                cst.setString(8, encryptedPhuCap);
+//                cst.setString(9, record.VAITRO);
+//                cst.setString(10, record.MANQL);
+//                cst.setString(11, record.PHG);
+//
+//                cst.execute();
+//            }
+//
+//            commit();
+//            System.out.println("Records inserted to NHANVIEN successfully.");
+//        } catch (SQLException | NoSuchAlgorithmException ex) {
+//            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//        sqlNhanVien = "{call INSERT_LUUTRU_RECORD(?, ?)}";
+//        try {
+//            cst = cnt.prepareCall(sqlNhanVien);
+//
+//            for (NhanVienRecord record : data) {
+//                cst.setString(1, record.MANV);
+//                cst.setString(2,  CryptographyUtilities.hashMD5(record.SODT));
+//                cst.execute();
+//            }
+//
+//            commit();
+//            System.out.println("Records inserted to LUUTRU successfully.");
+//        } catch (Exception ex) {
+//            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//    }
     public void insertMockRecordToNhanVien() {
-        var data = generateRecords(300);
+        var data = generateNVRecords(300);
         data.addAll(generateQLRecords(20));
+        data.addAll(generateTPRecords(8));
 
         String sqlNhanVien = "{call INSERT_NHANVIEN_RECORD(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
 
         try {
             cst = cnt.prepareCall(sqlNhanVien);
+
+            // Enable DBMS_OUTPUT
+            CallableStatement enableOutputStmt = cnt.prepareCall("BEGIN DBMS_OUTPUT.ENABLE(NULL); END;");
+            enableOutputStmt.execute();
 
             for (NhanVienRecord record : data) {
                 cst.setString(1, record.MANV);
@@ -326,6 +374,25 @@ public class DBManager {
                 cst.execute();
             }
 
+            // Retrieve DBMS_OUTPUT
+            CallableStatement retrieveOutputStmt = cnt.prepareCall("BEGIN DBMS_OUTPUT.GET_LINE(?, ?); END;");
+            retrieveOutputStmt.registerOutParameter(1, Types.VARCHAR);
+            retrieveOutputStmt.registerOutParameter(2, Types.NUMERIC);
+
+            int status = 0;
+            while (status == 0) {
+                retrieveOutputStmt.execute();
+                String line = retrieveOutputStmt.getString(1);
+                status = retrieveOutputStmt.getInt(2);
+                if (line != null && status == 0) {
+                    System.out.println(line);
+                }
+            }
+
+            // Disable DBMS_OUTPUT
+            CallableStatement disableOutputStmt = cnt.prepareCall("BEGIN DBMS_OUTPUT.DISABLE; END;");
+            disableOutputStmt.execute();
+
             commit();
             System.out.println("Records inserted to NHANVIEN successfully.");
         } catch (SQLException | NoSuchAlgorithmException ex) {
@@ -340,7 +407,7 @@ public class DBManager {
 
             for (NhanVienRecord record : data) {
                 cst.setString(1, record.MANV);
-                cst.setString(2,  CryptographyUtilities.hashMD5(record.SODT));
+                cst.setString(2, CryptographyUtilities.hashMD5(record.SODT));
                 cst.execute();
             }
 
@@ -350,7 +417,8 @@ public class DBManager {
             Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
+
     public List<NhanVienRecord> getDecryptedNhanVienRecords() {
         List<NhanVienRecord> decryptedRecords = new ArrayList<>();
 
