@@ -41,92 +41,9 @@ GRANT UPDATE(NGAYSINH, DIACHI, SODT) ON COMPANY_PUBLIC.NHANVIEN TO QL_TRUC_TIEP;
 -- Grant SELECT privilege on PHONGBAN and DEAN tables
 GRANT SELECT ON COMPANY_PUBLIC.PHONGBAN TO QL_TRUC_TIEP;
 GRANT SELECT ON COMPANY_PUBLIC.DEAN TO QL_TRUC_TIEP;
------------------------------------------------------------------------------------------------------------------------------
-BEGIN
-        DBMS_RLS.DROP_POLICY(
-            object_schema => 'COMPANY_PUBLIC',
-            object_name   => 'NHANVIEN',
-            policy_name   => 'QL_SELECT_NHANVIEN_POLICY'
-          );
-END;
-/
-
-BEGIN
-        DBMS_RLS.DROP_POLICY(
-            object_schema => 'COMPANY_PUBLIC',
-            object_name   => 'NHANVIEN',
-            policy_name   => 'QL_SELECT_SELF_NHANVIEN_POLICY'
-          );
-END;
-/
-
-BEGIN
-
-dbms_rls.add_policy(
-                   object_schema   => 'COMPANY_PUBLIC',
-                   object_name     => 'NHANVIEN',
-                   policy_name     => 'QL_SELECT_NHANVIEN_POLICY',
-                   policy_function => 'QLTT_PERMISSION_CONSTRAINTS',
-                   statement_types => 'SELECT',
-                   enable          => true
-);
-
-dbms_rls.add_policy(
-                   object_schema   => 'COMPANY_PUBLIC',
-                   object_name     => 'NHANVIEN',
-                   policy_name     => 'QL_SELECT_SELF_NHANVIEN_POLICY',
-                   policy_function => 'QLTT_SELF_PERMISSION_CONSTRAINTS',
-                   statement_types => 'SELECT',
-                   sec_relevant_cols => 'LUONG, PHUCAP',
-                   sec_relevant_cols_opt => DBMS_RLS.ALL_ROWS,
-                   enable          => true
-);
-END;
-/
-
-BEGIN
-dbms_rls.add_policy(
-                   object_schema   => 'COMPANY_PUBLIC',
-                   object_name     => 'PHANCONG',
-                   policy_name     => 'QL_SELECT_PHANCONG_POLICY',
-                   policy_function => 'QLTT_PERMISSION_CONSTRAINTS',
-                   statement_types => 'SELECT',
-                   enable          => true
-);
-  
-  -- Có thể sửa trên các thuộc tính NGAYSINH, DIACHI, SODT liên quan đến chính nhân viên đó
-dbms_rls.add_policy(
-                   object_schema     => 'COMPANY_PUBLIC',
-                   object_name       => 'NHANVIEN',
-                   policy_name       => 'QL_UPDATE_NHANVIEN_POLICY',
-                   policy_function   => 'QLTT_UPDATE_SELF_PERMISSION_CONSTRAINTS',
-                   statement_types   => 'UPDATE',
-                   sec_relevant_cols => 'NGAYSINH, DIACHI, SODT',
-                   enable            => true
-);
-
-  -- Có thể xem dữ liệu của toàn bộ quan hệ PHONGBAN và DEAN
-dbms_rls.add_policy(
-                   object_schema   => 'COMPANY_PUBLIC',
-                   object_name     => 'PHONGBAN',
-                   policy_name     => 'QL_SELECT_PHONGBAN_POLICY',
-                   policy_function => 'QLTT_PERMISSION_CONSTRAINTS',
-                   statement_types => 'SELECT',
-                   enable          => true
-);
-
-dbms_rls.add_policy(
-                   object_schema   => 'COMPANY_PUBLIC',
-                   object_name     => 'DEAN',
-                   policy_name     => 'QL_SELECT_DEAN_POLICY',
-                   policy_function => 'QLTT_PERMISSION_CONSTRAINTS',
-                   statement_types => 'SELECT',
-                   enable          => true
-);
-END;
-/
 
 -------------------------------------------------------------------------------------------------------------------------------------
+-- chính sách trên dòng của nhân viên đó và các nhân viên mà người đó quản lí
 CREATE OR REPLACE FUNCTION QLTT_PERMISSION_CONSTRAINTS (
     schema_name IN VARCHAR2,
     object_name IN VARCHAR2
@@ -166,6 +83,7 @@ BEGIN
 END;
 /
 
+-- chính sách trên dòng của nhân viên đó
 CREATE OR REPLACE FUNCTION QLTT_SELF_PERMISSION_CONSTRAINTS (
     schema_name IN VARCHAR2,
     object_name IN VARCHAR2
@@ -196,6 +114,70 @@ BEGIN
     
     -- Trả về ràng buộc (predicate) được sinh ra
     RETURN v_predicate;
+END;
+/
+
+-- truy cap cac ham muc tieu
+GRANT EXECUTE ON QLTT_PERMISSION_CONSTRAINTS TO QL_TRUC_TIEP;
+GRANT EXECUTE ON QLTT_SELF_PERMISSION_CONSTRAINTS TO QL_TRUC_TIEP;
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+-- được xem dòng của nhân viên đó và các nhân viên mà nhân viên đó quản lí
+BEGIN
+        dbms_rls.add_policy(
+           object_schema   => 'COMPANY_PUBLIC',
+           object_name     => 'NHANVIEN',
+           policy_name     => 'CS2_QL_SELECT_NHANVIEN_POLICY',
+           policy_function => 'QLTT_PERMISSION_CONSTRAINTS',
+           statement_types => 'SELECT',
+           enable          => true
+        );
+END;
+/
+
+-- chỉ được xem lương và phụ cấp của bản thân
+-- masking cột LUONG và PHUCAP
+BEGIN
+        dbms_rls.add_policy(
+           object_schema   => 'COMPANY_PUBLIC',
+           object_name     => 'NHANVIEN',
+           policy_name     => 'CS2_QL_SELECT_SELF_NHANVIEN_POLICY',
+           policy_function => 'QLTT_SELF_PERMISSION_CONSTRAINTS',
+           statement_types => 'SELECT',
+           sec_relevant_cols => 'LUONG, PHUCAP',
+           sec_relevant_cols_opt => DBMS_RLS.ALL_ROWS,
+           enable          => true
+        );
+END;
+/
+
+-- Có thể xem tất cả trên quan hệ phân công của chính nhân viên đó
+-- và các nhân viên mà nhân viên đó quản lí
+BEGIN
+        dbms_rls.add_policy(
+                   object_schema   => 'COMPANY_PUBLIC',
+                   object_name     => 'PHANCONG',
+                   policy_name     => 'CS2_QL_SELECT_PHANCONG_POLICY',
+                   policy_function => 'QLTT_PERMISSION_CONSTRAINTS',
+                   statement_types => 'SELECT',
+                   enable          => true
+        );
+END;
+/
+
+-- Có thể sửa trên các thuộc tính NGAYSINH, DIACHI, SODT liên quan đến chính nhân viên đó
+BEGIN
+        dbms_rls.add_policy(
+                   object_schema     => 'COMPANY_PUBLIC',
+                   object_name       => 'NHANVIEN',
+                   policy_name       => 'CS2_QL_UPDATE_NHANVIEN_POLICY',
+                   policy_function   => 'QLTT_UPDATE_SELF_PERMISSION_CONSTRAINTS',
+                   statement_types   => 'UPDATE',
+                   sec_relevant_cols => 'NGAYSINH, DIACHI, SODT',
+                   update_check      => true,
+                   enable            => true
+        );
 END;
 /
 

@@ -9,7 +9,7 @@ public class MockGenerator {
 
     private static final Random random = new Random();
 
-    public static List<NhanVienRecord> generateRecords(int count) {
+    public static List<NhanVienRecord> generateNVRecords(int count) {
         List<NhanVienRecord> records = new ArrayList<>();
 
         for (int i = 1; i <= count; i++) {
@@ -19,8 +19,8 @@ public class MockGenerator {
             Date NGAYSINH = getRandomBirthDate();
             String DIACHI = "Address " + i;
             String SODT = generateRandomPhoneNumber();
-            String LUONG = getRandomSalary();
-            String PHUCAP = getRandomAllowance();
+            String LUONG = String.valueOf(getRandomSalary());
+            String PHUCAP = String.valueOf(getRandomAllowance());
             String VAITRO = "Nhân viên";
             String MANQL = generateMANQL(i);
             String PHG = "PB00" + ((i % 8) + 1); // Random department ID
@@ -36,16 +36,16 @@ public class MockGenerator {
         return new Date(1970 + random.nextInt(25), 1 + random.nextInt(12), 1 + random.nextInt(28)); // Placeholder implementation
     }
 
-    public static String getRandomSalary() {
+    public static Integer getRandomSalary() {
         int[] salaryOptions = {1500, 1600, 1700, 1800, 1900};
         int randomIndex = random.nextInt(salaryOptions.length);
-        return String.valueOf(salaryOptions[randomIndex]);
+        return salaryOptions[randomIndex];
     }
 
-    public static String getRandomAllowance() {
+    public static Integer getRandomAllowance() {
         int[] allowanceOptions = {100, 200, 300, 400, 500};
         int randomIndex = random.nextInt(allowanceOptions.length);
-        return String.valueOf(allowanceOptions[randomIndex]);
+        return allowanceOptions[randomIndex];
     }
 
     public static String generateMANV(int index) {
@@ -95,8 +95,8 @@ public class MockGenerator {
             Date NGAYSINH = getRandomBirthDate();
             String DIACHI = "Address QL" + (300 + i);
             String SODT = generateRandomPhoneNumber();
-            String LUONG = getModifiedSalary();
-            String PHUCAP = getModifiedAllowance();
+            String LUONG = String.valueOf(getRandomSalary() * 3);
+            String PHUCAP = String.valueOf(getRandomAllowance() * 2);
             String VAITRO = "QL trực tiếp";
             String MANQL = ""; // QL employees have no MANQL
             String PHG = "PB00" + ((i % 8) + 1); // Random department ID
@@ -113,17 +113,31 @@ public class MockGenerator {
         return "QL" + digit;
     }
 
-    private static String getModifiedSalary() {
-        int[] salaryOptions = {1500, 1600, 1700, 1800, 1900};
-        int randomIndex = random.nextInt(salaryOptions.length);
-        int modifiedSalary = salaryOptions[randomIndex] * 2;
-        return String.valueOf(modifiedSalary);
+    public static List<NhanVienRecord> generateTPRecords(int count) {
+        List<NhanVienRecord> records = new ArrayList<>();
+
+        for (int i = 1; i <= count; i++) {
+            String MANV = generateTPMANV(i);
+            String TENNV = "QL Truc tiep " + i;
+            String PHAI = (i + random.nextInt()) % 2 == 0 ? "Male" : "Female";
+            Date NGAYSINH = getRandomBirthDate();
+            String DIACHI = "Address QL" + (300 + i);
+            String SODT = generateRandomPhoneNumber();
+            String LUONG = String.valueOf(getRandomSalary() * 4);
+            String PHUCAP = String.valueOf(getRandomAllowance() * 3);
+            String VAITRO = "Trưởng phòng";
+            String MANQL = ""; // QL employees have no MANQL
+            String PHG = "PB00" + ((i % 8) + 1); // Random department ID
+
+            NhanVienRecord record = new NhanVienRecord(MANV, TENNV, PHAI, NGAYSINH, DIACHI, SODT, LUONG, PHUCAP, VAITRO, MANQL, PHG);
+            records.add(record);
+        }
+
+        return records;
     }
 
-    private static String getModifiedAllowance() {
-        int[] allowanceOptions = {100, 200, 300, 400, 500};
-        int randomIndex = random.nextInt(allowanceOptions.length);
-        double modifiedAllowance = allowanceOptions[randomIndex] * 1.5;
-        return String.valueOf(modifiedAllowance);
+    private static String generateTPMANV(int i) {
+        String digit = String.format("%03d", i);
+        return "TP" + digit;
     }
 }

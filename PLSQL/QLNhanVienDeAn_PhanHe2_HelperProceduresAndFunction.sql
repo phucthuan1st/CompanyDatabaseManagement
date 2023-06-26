@@ -34,6 +34,9 @@ BEGIN
     INSERT INTO VAITRO_NHANVIEN (MANV, VAITRO)
     VALUES (p_MANV, p_VAITRO);
     
+    INSERT INTO NHANVIEN_PHONG (MANV, PHG)
+    VALUES (p_MANV, p_PHG);
+    
     COMMIT;
 EXCEPTION
     WHEN OTHERS THEN
@@ -60,3 +63,30 @@ EXCEPTION
     ROLLBACK;
 END;
 /
+
+-- vô hiệu hóa các policy hiện có
+CREATE OR REPLACE PROCEDURE DROP_EXISTS_POLICY
+AS
+  v_sql VARCHAR2(4000);
+BEGIN
+  FOR p IN (SELECT OBJECT_NAME, POLICY_NAME, ENABLE
+            FROM USER_POLICIES
+            ORDER BY POLICY_NAME ASC)
+  LOOP
+    IF p.ENABLE = 'YES' THEN
+      v_sql := 'BEGIN
+                  DBMS_RLS.DROP_POLICY(
+                    object_schema => ''' || 'COMPANY_PUBLIC' || ''',
+                    object_name => ''' || p.OBJECT_NAME || ''',
+                    policy_name => ''' || p.POLICY_NAME || '''
+                  );
+                END;';
+      DBMS_OUTPUT.PUT_LINE(v_sql);
+      EXECUTE IMMEDIATE v_sql;
+    END IF;
+  END LOOP;
+END;
+/
+
+
+COMMIT;

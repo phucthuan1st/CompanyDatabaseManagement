@@ -74,12 +74,14 @@ BEGIN
 END;
 /
 
+GRANT EXECUTE ON NHANVIEN_PERMISSION_CONSTRAINTS TO NHAN_VIEN;
+
 BEGIN
   -- Có quyền xem tất cả các thuộc tính trên quan hệ NHANVIEN và PHANCONG
   DBMS_RLS.ADD_POLICY(
     object_schema    => 'COMPANY_PUBLIC',
     object_name      => 'NHANVIEN',
-    policy_name      => 'NHANVIEN_SELECT_NHANVIEN_POLICY',
+    policy_name      => 'CS1_NHANVIEN_SELECT_NHANVIEN_POLICY',
     policy_function  => 'NHANVIEN_PERMISSION_CONSTRAINTS',
     statement_types  => 'SELECT',
     enable           => TRUE
@@ -88,7 +90,7 @@ BEGIN
   DBMS_RLS.ADD_POLICY(
     object_schema    => 'COMPANY_PUBLIC',
     object_name      => 'PHANCONG',
-    policy_name      => 'NHANVIEN_SELECT_PHANCONG_POLICY',
+    policy_name      => 'CS1_NHANVIEN_SELECT_PHANCONG_POLICY',
     policy_function  => 'NHANVIEN_PERMISSION_CONSTRAINTS',
     statement_types  => 'SELECT',
     enable           => TRUE
@@ -101,32 +103,11 @@ BEGIN
   DBMS_RLS.ADD_POLICY(
     object_schema    => 'COMPANY_PUBLIC',
     object_name      => 'NHANVIEN',
-    policy_name      => 'NHANVIEN_UPDATE_NHANVIEN_POLICY',
+    policy_name      => 'CS1_NHANVIEN_UPDATE_NHANVIEN_POLICY',
     policy_function  => 'NHANVIEN_PERMISSION_CONSTRAINTS',
     statement_types  => 'UPDATE',
     sec_relevant_cols => 'NGAYSINH, DIACHI, SODT',
-    enable           => TRUE
-  );
-END;
-/
-
-BEGIN
-  -- Có thể xem dữ liệu của toàn bộ quan hệ PHONGBAN và DEAN
-  DBMS_RLS.ADD_POLICY(
-    object_schema    => 'COMPANY_PUBLIC',
-    object_name      => 'PHONGBAN',
-    policy_name      => 'NHANVIEN_SELECT_PHONGBAN_POLICY',
-    policy_function  => 'NHANVIEN_PERMISSION_CONSTRAINTS',
-    statement_types  => 'SELECT',
-    enable           => TRUE
-  );
-  
-  DBMS_RLS.ADD_POLICY(
-    object_schema    => 'COMPANY_PUBLIC',
-    object_name      => 'DEAN',
-    policy_name      => 'NHANVIEN_SELECT_DEAN_POLICY',
-    policy_function  => 'NHANVIEN_PERMISSION_CONSTRAINTS',
-    statement_types  => 'SELECT',
+    update_check     => true,
     enable           => TRUE
   );
 END;
