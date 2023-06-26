@@ -351,18 +351,12 @@ public class DBAdminController extends JFrame implements ActionListener {
         result = dbm.getTablePrivilegesOfRoleOrUser(nameOfEntity);
         int numRows = dbm.getNumberOfRowsInLastQuery();
 
-        if (numRows == 0) {
-            JOptionPane.showMessageDialog(this,
-                    nameOfEntity + " is not exist or doesn't has any privileges yet!", DBAdminController.ERRORTITLE,
-                    JOptionPane.ERROR_MESSAGE);
-        } else {
-            if ("Role".equals(entityType)) {
-                this.displayRightPaneTable(numRows);
-            } else if ("User".equals(entityType)) {
-                ResultSet roleSet = dbm.getRoleOfUser(nameOfEntity);
-                int lowerNumRows = dbm.getNumberOfRowsInLastQuery();
-                this.displayTwoRightPaneTable(numRows, roleSet, lowerNumRows);
-            }
+        if ("Role".equals(entityType)) {
+            this.displayRightPaneTable(numRows);
+        } else if ("User".equals(entityType)) {
+            ResultSet roleSet = dbm.getRoleOfUser(nameOfEntity);
+            int lowerNumRows = dbm.getNumberOfRowsInLastQuery();
+            this.displayTwoRightPaneTable(numRows, roleSet, lowerNumRows);
         }
     }
 

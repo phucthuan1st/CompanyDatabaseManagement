@@ -1,3 +1,4 @@
 .idea/
 NhanVienRecord.csv
-target/classes/com/csdlcongty
+./target/classes/com/csdlcongty
+./target/classes
