@@ -574,12 +574,12 @@ BEGIN
 END;
 /
 
---Tạo level theo 3 mức độ PUBILC, CONFIDENTIAL, SENSTITIVE
+--Tạo level theo 3 mức độ Giám đốc, Trường phòng và Nhân viên
 BEGIN
     SA_COMPONENTS.CREATE_LEVEL (
         policy_name => 'OLS_POLICY'
-        long_name => 'PUBLIC'
-        short_name =>'PUB'
+        long_name => 'NHANVIEN'
+        short_name =>'NV'
         level_num => 1000
     );
 END;
@@ -588,8 +588,8 @@ END;
 BEGIN
     SA_COMPONENTS.CREATE_LEVEL (
         policy_name => 'OLS_POLICY'
-        long_name => 'CONFIDENTIAL'
-        short_name =>'CONF'
+        long_name => 'TRUONGPHONG'
+        short_name =>'TP'
         level_num => 2000
     );
 END;
@@ -598,20 +598,50 @@ END;
 BEGIN
     SA_COMPONENTS.CREATE_LEVEL (
         policy_name => 'OLS_POLICY'
-        long_name => 'SENSITIVE'
-        short_name =>'SENS'
+        long_name => 'GIAMDOC'
+        short_name =>'GD'
         level_num => 3000
     );
 END;
 /
 
---Tạo group theo 3 miền Bắc, Trung, Nam là con của công ty chủ trong đó mỗi miền đều có Sản Xuất, Mua Bán và Gia Công
+--Tạo compartments theo 3 ngành nghề Mua bán, Sản xuẩ và Gia công
+BEGIN
+    SA_COMPONENTS.CREATE_COMPARTMENT(
+        policy_name => 'OLS_POLICY'
+        long_name => 'MUABAN'
+        short_name => 'MB'
+        comp_num => 100
+    );
+END;
+/
+
+BEGIN
+    SA_COMPONENTS.CREATE_COMPARTMENT(
+        policy_name => 'OLS_POLICY'
+        long_name => 'SANXUAT'
+        short_name => 'SX'
+        comp_num => 200
+    );
+END;
+/
+
+BEGIN
+    SA_COMPONENTS.CREATE_COMPARTMENT(
+        policy_name => 'OLS_POLICY'
+        long_name => 'GIACONG'
+        short_name => 'GC'
+        comp_num => 300
+    );
+END;
+/
+--Tạo group theo 3 miền Bắc, Trung, Nam là con của công ty chủ
 BEGIN
     SA_COMPONENTS.CREATE_GROUP (
         policy_name => 'OLS_POLICY'
         long_name => 'CONGTY'
         short_name =>'CTY'
-        group_num => 100
+        group_num => 10
         parent_name => NULL
     );
 END;
@@ -621,8 +651,8 @@ BEGIN
     SA_COMPONENTS.CREATE_GROUP (
         policy_name => 'OLS_POLICY'
         long_name => 'BAC'
-        short_name =>'BAC'
-        group_num => 110
+        short_name =>'BA'
+        group_num => 11
         parent_name => 'CTY'
     );
 END;
@@ -632,8 +662,8 @@ BEGIN
     SA_COMPONENTS.CREATE_GROUP (
         policy_name => 'OLS_POLICY'
         long_name => 'TRUNG'
-        short_name =>'TRU'
-        group_num => 120
+        short_name =>'TR'
+        group_num => 12
         parent_name => 'CTY'
     );
 END;
@@ -643,243 +673,9 @@ BEGIN
     SA_COMPONENTS.CREATE_GROUP (
         policy_name => 'OLS_POLICY'
         long_name => 'NAM'
-        short_name =>'NAM'
-        group_num => 130
+        short_name =>'NA'
+        group_num => 13
         parent_name => 'CTY'
-    );
-END;
-/
-
-BEGIN
-    SA_COMPONENTS.CREATE_GROUP (
-        policy_name => 'OLS_POLICY'
-        long_name => 'BAC_MUABAN'
-        short_name =>'BMB'
-        group_num => 111
-        parent_name => 'BAC'
-    );
-END;
-/
-
-BEGIN
-    SA_COMPONENTS.CREATE_GROUP (
-        policy_name => 'OLS_POLICY'
-        long_name => 'BAC_SANXUAT'
-        short_name =>'BSX'
-        group_num => 112
-        parent_name => 'BAC'
-    );
-END;
-/
-
-BEGIN
-    SA_COMPONENTS.CREATE_GROUP (
-        policy_name => 'OLS_POLICY'
-        long_name => 'BAC_GIACONG'
-        short_name =>'BGC'
-        group_num => 113
-        parent_name => 'BAC'
-    );
-END;
-/
-
-BEGIN
-    SA_COMPONENTS.CREATE_GROUP (
-        policy_name => 'OLS_POLICY'
-        long_name => 'TRUNG_MUABAN'
-        short_name =>'TMB'
-        group_num => 121
-        parent_name => 'TRUNG'
-    );
-END;
-/
-
-BEGIN
-    SA_COMPONENTS.CREATE_GROUP (
-        policy_name => 'OLS_POLICY'
-        long_name => 'TRUNG_SANXUAT'
-        short_name =>'TSX'
-        group_num => 122
-        parent_name => 'TRUNG'
-    );
-END;
-/
-
-BEGIN
-    SA_COMPONENTS.CREATE_GROUP (
-        policy_name => 'OLS_POLICY'
-        long_name => 'TRUNG_GIACONG'
-        short_name =>'TGC'
-        group_num => 123
-        parent_name => 'TRUNG'
-    );
-END;
-/
-
-BEGIN
-    SA_COMPONENTS.CREATE_GROUP (
-        policy_name => 'OLS_POLICY'
-        long_name => 'NAM_MUABAN'
-        short_name =>'NMB'
-        group_num => 131
-        parent_name => 'NAM'
-    );
-END;
-/
-
-BEGIN
-    SA_COMPONENTS.CREATE_GROUP (
-        policy_name => 'OLS_POLICY'
-        long_name => 'NAM_SANXUAT'
-        short_name =>'NSX'
-        group_num => 132
-        parent_name => 'NAM'
-    );
-END;
-/
-
-BEGIN
-    SA_COMPONENTS.CREATE_GROUP (
-        policy_name => 'OLS_POLICY'
-        long_name => 'NAM_GIACONG'
-        short_name =>'NGC'
-        group_num => 133
-        parent_name => 'NAM'
-    );
-END;
-/
-
-BEGIN
-    SA_LABEL_ADMIN.CREATE_LABEL (
-        policy_name => 'OLS_POLICY'
-        label_tag => 1000
-        label_value => 'PUB'
-    );
-END;
-/
-
-BEGIN
-    SA_LABEL_ADMIN.CREATE_LABEL (
-        policy_name => 'OLS_POLICY'
-        label_tag => 2000
-        label_value => 'CONF'
-    );
-END;
-/
-
-BEGIN
-    SA_LABEL_ADMIN.CREATE_LABEL (
-        policy_name => 'OLS_POLICY'
-        label_tag => 3000
-        label_value => 'SENS'
-    );
-END;
-/
-
-BEGIN
-    SA_LABEL_ADMIN.CREATE_LABEL (
-        policy_name => 'OLS_POLICY'
-        label_tag => 1100
-        label_value => 'PUB:CTY'
-    );
-END;
-/
-
-BEGIN
-    SA_LABEL_ADMIN.CREATE_LABEL (
-        policy_name => 'OLS_POLICY'
-        label_tag => 2100
-        label_value => 'CONF:CTY'
-    );
-END;
-/
-
-BEGIN
-    SA_LABEL_ADMIN.CREATE_LABEL (
-        policy_name => 'OLS_POLICY'
-        label_tag => 3100
-        label_value => 'SENS:CTY'
-    );
-END;
-/
-
-BEGIN
-    SA_LABEL_ADMIN.CREATE_LABEL (
-        policy_name => 'OLS_POLICY'
-        label_tag => 1110
-        label_value => 'PUB:CTY:BAC'
-    );
-END;
-/
-
-BEGIN
-    SA_LABEL_ADMIN.CREATE_LABEL (
-        policy_name => 'OLS_POLICY'
-        label_tag => 2110
-        label_value => 'CONF:CTY:BAC'
-    );
-END;
-/
-
-BEGIN
-    SA_LABEL_ADMIN.CREATE_LABEL (
-        policy_name => 'OLS_POLICY'
-        label_tag => 3110
-        label_value => 'SENS:CTY:BAC'
-    );
-END;
-/
-
-BEGIN
-    SA_LABEL_ADMIN.CREATE_LABEL (
-        policy_name => 'OLS_POLICY'
-        label_tag => 1120
-        label_value => 'PUB:CTY:TRUNG'
-    );
-END;
-/
-
-BEGIN
-    SA_LABEL_ADMIN.CREATE_LABEL (
-        policy_name => 'OLS_POLICY'
-        label_tag => 2120
-        label_value => 'CONF:CTY:TRUNG'
-    );
-END;
-/
-
-BEGIN
-    SA_LABEL_ADMIN.CREATE_LABEL (
-        policy_name => 'OLS_POLICY'
-        label_tag => 3120
-        label_value => 'SENS:CTY:TRUNG'
-    );
-END;
-/
-
-BEGIN
-    SA_LABEL_ADMIN.CREATE_LABEL (
-        policy_name => 'OLS_POLICY'
-        label_tag => 1130
-        label_value => 'PUB:CTY:NAM'
-    );
-END;
-/
-
-BEGIN
-    SA_LABEL_ADMIN.CREATE_LABEL (
-        policy_name => 'OLS_POLICY'
-        label_tag => 2130
-        label_value => 'CONF:CTY:NAM'
-    );
-END;
-/
-
-BEGIN
-    SA_LABEL_ADMIN.CREATE_LABEL (
-        policy_name => 'OLS_POLICY'
-        label_tag => 3130
-        label_value => 'SENS:CTY:NAM'
     );
 END;
 /
