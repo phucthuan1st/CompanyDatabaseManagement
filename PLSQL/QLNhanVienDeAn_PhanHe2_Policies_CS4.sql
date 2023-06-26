@@ -41,6 +41,7 @@ GRANT SELECT ON COMPANY_PUBLIC.DEAN TO TAI_CHINH;
 --GRANT UPDATE PRIV
 GRANT UPDATE ON COMPANY_PUBLIC.NHANVIEN TO TAI_CHINH;
 --CHECK LAI
+/
 -------------------------------------------------------
 --TẠO POLICY (DÙNG VDP)
 --function dùng cho TAICHINH có quyền update trên chính dòng của họ như Nhân viên
