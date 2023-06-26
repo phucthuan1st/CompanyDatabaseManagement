@@ -679,3 +679,152 @@ BEGIN
     );
 END;
 /
+  
+-----------------------------------------------------------------AUDIT------------------------------------------------------
+ALTER SYSTEM SET audit_trail = 'DB' SCOPE=SPFILE;
+SHUTDOWN IMMEDIATE;
+STARTUP;
+
+/*
+    Những nguời dã cập nhật trường THOIGIAN trong quan hệ PHANCONG.
+*/
+--Tạo bảng audit_thoigian để ghi lại thông tin audit
+CREATE TABLE audit_thoigian (
+  username       VARCHAR2(100),
+  object_name    VARCHAR2(100),
+  policy_name    VARCHAR2(100),
+  statement_type VARCHAR2(100),
+  new_thoigian   TIMESTAMP,
+  old_thoigian   TIMESTAMP
+);
+/
+--Tạo function để ghi thông tin audit vào bảng audit_thoigian
+CREATE OR REPLACE FUNCTION audit_1 (
+  object_schema IN VARCHAR2,
+  object_name   IN VARCHAR2,
+  policy_name   IN VARCHAR2,
+  statement_type IN VARCHAR2,
+  audit_column  IN VARCHAR2,
+  new_value     IN VARCHAR2,
+  old_value     IN VARCHAR2
+) RETURN VARCHAR2 AS
+BEGIN
+    -- Ghi thông tin audit vào bảng audit_thoigian
+    INSERT INTO audit_thoigian (username, object_name, policy_name, statement_type, new_thoigian, old_thoigian)
+    VALUES (SYS_CONTEXT('USERENV', 'SESSION_USER'), object_name, policy_name, statement_type, TO_TIMESTAMP(new_value), TO_TIMESTAMP(old_value));
+    
+    RETURN NULL;
+END;
+/
+--Thiết lập FGA cho quan hệ "PHANCONG" và trường "THOIGIAN"
+BEGIN
+  DBMS_FGA.ADD_POLICY(
+    object_schema   => 'COMPANY_PUBLIC', 
+    object_name     => 'PHANCONG',
+    policy_name     => 'AUDIT_THOIGIAN_UPDATE',
+    audit_column    => 'THOIGIAN',
+    handler_schema  => 'COMPANY_PUBLIC', 
+    handler_module  => 'audit_1',
+    enable          => TRUE,
+    statement_types => 'UPDATE'
+  );
+END;
+/
+--Kích hoạt chính sách FGA
+EXEC DBMS_FGA.ENABLE_POLICY('AUDIT_THOIGIAN_UPDATE');
+/
+  
+/* 
+  Những người đã đọc trên trường LUONG và PHUCAP của người khác
+*/
+--Tạo bảng audit_luongpc để ghi lại thông tin audit
+CREATE TABLE audit_luongpc (
+  username       VARCHAR2(100),
+  object_name    VARCHAR2(100),
+  policy_name    VARCHAR2(100),
+  statement_type VARCHAR2(100)
+);
+/
+--Tạo function để ghi thông tin audit vào bảng audit_luongpc
+CREATE OR REPLACE FUNCTION audit_2 (
+  object_schema  IN VARCHAR2,
+  object_name    IN VARCHAR2,
+  policy_name    IN VARCHAR2,
+  statement_type IN VARCHAR2,
+  audit_column   IN VARCHAR2
+) RETURN VARCHAR2 AS
+BEGIN
+    -- Ghi thông tin audit vào bảng audit_luongpc
+    INSERT INTO audit_luongpc (username, object_name, policy_name, statement_type)
+    VALUES (SYS_CONTEXT('USERENV', 'SESSION_USER'), object_name, policy_name, statement_type);
+    
+    RETURN NULL;
+END;
+/
+--Thiết lập FGA cho quan hệ "NHANVIEN" và trường "LUONG" và "PHUCAP"
+BEGIN
+  DBMS_FGA.ADD_POLICY(
+    object_schema   => 'COMPANY_PUBLIC', 
+    object_name     => 'NHANVIEN',
+    policy_name     => 'AUDIT_NHANVIEN_READ',
+    audit_column    => 'LUONG,PHUCAP',
+    handler_schema  => 'COMPANY_PUBLIC', 
+    handler_module  => 'audit_2',
+    enable          => TRUE,
+    statement_types => 'SELECT'
+  );
+END;
+/
+--Kích hoạt chính sách FGA
+EXEC DBMS_FGA.ENABLE_POLICY('AUDIT_NHANVIEN_READ');
+/
+
+/*
+  Một người không thuộc vai trò “Tài chính” nhưng đã cập nhật thành công trên trường LUONG và PHUCAP.
+*/
+
+  
+/*
+    Kiểm tra nhật ký hệ thống
+*/
+----Tạo bảng audit_log để ghi lại thông tin audit
+CREATE TABLE audit_log (
+  audit_timestamp TIMESTAMP,
+  username        VARCHAR2(100),
+  object_name     VARCHAR2(100),
+  statement_type  VARCHAR2(100)
+);
+/
+--Tạo function để ghi thông tin audit vào bảng audit_log:
+CREATE OR REPLACE FUNCTION audit_4 (
+  object_schema   IN VARCHAR2,
+  object_name     IN VARCHAR2,
+  policy_name     IN VARCHAR2,
+  statement_type  IN VARCHAR2
+) RETURN BOOLEAN AS
+BEGIN
+  -- Ghi thông tin audit vào bảng audit_log
+  INSERT INTO audit_log (audit_timestamp, username, object_name, statement_type)
+  VALUES (systimestamp, SYS_CONTEXT('USERENV', 'SESSION_USER'), object_name, statement_type);
+  
+  RETURN TRUE;
+END;
+/
+-- Thiết lập FGA để kích hoạt kiểm tra nhật ký hệ thống
+BEGIN
+  DBMS_FGA.ADD_POLICY(
+    object_schema     => 'COMPANY_PUBLIC', 
+    object_name       => NULL,
+    policy_name       => 'SYSTEM_AUDIT_POLICY',
+    audit_condition   => NULL,
+    audit_column      => NULL,
+    handler_schema    => 'COMPANY_PUBLIC', 
+    handler_module    => 'audit_4',
+    enable            => TRUE,
+    statement_types   => 'SELECT, INSERT, UPDATE, DELETE'
+  );
+END;
+/
+--Kích hoạt chính sách FGA
+EXEC DBMS_FGA.ENABLE_POLICY('SYSTEM_AUDIT_POLICY');
+/
