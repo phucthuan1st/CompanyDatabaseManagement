@@ -176,9 +176,6 @@ BEGIN
   );
 END;
 /
---Kích hoạt chính sách FGA
-EXEC DBMS_FGA.ENABLE_POLICY('AUDIT_THOIGIAN_UPDATE');
-/
   
 /* 
   Những người đã đọc trên trường LUONG và PHUCAP của người khác
@@ -221,23 +218,65 @@ BEGIN
   );
 END;
 /
---Kích hoạt chính sách FGA
-EXEC DBMS_FGA.ENABLE_POLICY('AUDIT_NHANVIEN_READ');
-/
 
 /*
   Một người không thuộc vai trò “Tài chính” nhưng đã cập nhật thành công trên trường LUONG và PHUCAP.
 */
-
+--Tạo bảng audit_updateluongpc để ghi lại thông tin audit
+CREATE TABLE audit_updateluongpc (
+    username     VARCHAR2(100),
+    object_name  VARCHAR2(100),
+    policy_name  VARCHAR2(100),
+    statement_type VARCHAR2(100)
+);
+/
+--Tạo function để ghi thông tin audit vào bảng audit_updateluongpc
+CREATE OR REPLACE FUNCTION audit_3 (
+    object_schema IN VARCHAR2,
+    object_name   IN VARCHAR2,
+    policy_name   IN VARCHAR2,
+    statement_type IN VARCHAR2
+) RETURN VARCHAR2 AS
+  vaitro VARCHAR2(100);
+BEGIN
+  -- Kiểm tra vai trò của người dùng
+  SELECT VAITRO INTO vaitro
+  FROM COMPANY_PUBLIC.VAITRO_NHANVIEN
+  WHERE MANV = SYS_CONTEXT('USERENV', 'SESSION_USER');
+  
+  -- Kiểm tra nếu người dùng không thuộc vai trò "Tài chính" 
+  IF vaitro <> 'Tài chính' THEN
+    -- Ghi thông tin audit vào bảng audit_updateluongpc
+    INSERT INTO audit_updateluongpc (username, object_name, policy_name, statement_type, timestamp)
+    VALUES (SYS_CONTEXT('USERENV', 'SESSION_USER'), object_name, policy_name, statement_type, SYSTIMESTAMP);
+  END IF;
+  
+  RETURN NULL;
+END;
+/
+--Thiết lập FGA cho quan hệ "NHANVIEN" và trường "LUONG" và "PHUCAP"
+BEGIN
+  DBMS_FGA.ADD_POLICY(
+    object_schema   => 'COMPANY_PUBLIC',
+    object_name     => 'NHANVIEN',
+    policy_name     => 'AUDIT_LUONG_PHUCAP',
+    audit_column    => 'LUONG,PHUCAP',
+    handler_schema  => 'COMPANY_PUBLIC',
+    handler_module  => 'audit_3',
+    enable          => TRUE,
+    statement_types => 'UPDATE'
+  );
+END;
+/
   
 /*
     Kiểm tra nhật ký hệ thống
 */
 ----Tạo bảng audit_log để ghi lại thông tin audit
 CREATE TABLE audit_log (
-  audit_timestamp TIMESTAMP,
   username        VARCHAR2(100),
   object_name     VARCHAR2(100),
+  policy_name     IN VARCHAR2,
   statement_type  VARCHAR2(100)
 );
 /
@@ -250,8 +289,8 @@ CREATE OR REPLACE FUNCTION audit_4 (
 ) RETURN BOOLEAN AS
 BEGIN
   -- Ghi thông tin audit vào bảng audit_log
-  INSERT INTO audit_log (audit_timestamp, username, object_name, statement_type)
-  VALUES (systimestamp, SYS_CONTEXT('USERENV', 'SESSION_USER'), object_name, statement_type);
+  INSERT INTO audit_log (username, object_name, policy_name, statement_type)
+  VALUES (SYS_CONTEXT('USERENV', 'SESSION_USER'), object_name, policy_name, statement_type);
   
   RETURN TRUE;
 END;
@@ -270,7 +309,4 @@ BEGIN
     statement_types   => 'SELECT, INSERT, UPDATE, DELETE'
   );
 END;
-/
---Kích hoạt chính sách FGA
-EXEC DBMS_FGA.ENABLE_POLICY('SYSTEM_AUDIT_POLICY');
 /
