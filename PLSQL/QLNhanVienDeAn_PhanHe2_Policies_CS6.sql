@@ -53,6 +53,9 @@ BEGIN
         IF (P_OBJ = 'NHANVIEN' OR P_OBJ ='PHANCONG') THEN
             STR := 'MANV= SYS_CONTEXT(''USERENV'', ''SESSION_USER'')';
             RETURN STR;
+        ELSIF (P_OBJ='DEAN') THEN
+            STR:= 'TRUONGDEAN = SYS_CONTEXT(''USERENV'', ''SESSION_USER'')';
+            RETURN STR;
         END IF;
     END IF;
     RETURN NULL;
@@ -98,10 +101,20 @@ BEGIN
             UPDATE_CHECK => TRUE, 
             ENABLE => TRUE
             );      
-            
---------------------------------------------------------------------
 END;
 /
-
-            
--------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------
+-- trưởng đề án chỉ được xóa, cập nhật những đề án của chính đề án.
+BEGIN
+      DBMS_RLS.ADD_POLICY(
+            OBJECT_SCHEMA => 'COMPANY_PUBLIC',
+            OBJECT_NAME => 'DEAN',
+            POLICY_NAME => 'TRUONGDEAN_UPDATE_DEL_DEAN_PC',
+            POLICY_FUNCTION => 'a_CS_TRUONGDEAN_1',
+            STATEMENT_TYPES => 'UPDATE, DELETE',
+            UPDATE_CHECK => TRUE, 
+            ENABLE => TRUE
+            );    
+END;
+/            
+--------------------------------------------------------------------------
