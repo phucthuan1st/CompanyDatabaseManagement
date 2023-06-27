@@ -29,16 +29,15 @@ public class NormalUserController extends JFrame implements ActionListener {
     private void initComponents() {
         // Set window properties
         this.setTitle("Dashboard");
-        this.setSize(1366, 768);
+        this.setSize(1600, 900);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
         this.setResizable(false);
 
         this.mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
-        // Create left and right panels
+        // Create left panel
         this.leftPanel = new JPanel(new GridBagLayout());
-        this.rightPanel = new JPanel();
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.insets = new Insets(10, 10, 10, 10);
@@ -163,6 +162,100 @@ public class NormalUserController extends JFrame implements ActionListener {
         constraints.gridwidth = 2;
         constraints.anchor = GridBagConstraints.CENTER;
         this.leftPanel.add(logoutButton, constraints);
+
+        // create right panel
+        this.rightPanel = new JPanel();
+
+        JSplitPane subRightSplits = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        JPanel upperPanel = new JPanel(new GridBagLayout());
+
+        // Employee data fields
+        JTextField luongField = new JTextField(50);
+        JTextField phucapField = new JTextField(50);
+        JTextField manvField = new JTextField(10);
+        JTextField tennvField = new JTextField(35);
+        JTextField phaiField = new JTextField(10);
+        JTextField ngaysinhField = new JTextField(10);
+        JTextField diachiField = new JTextField(50);
+        JTextField sodtField = new JTextField(20);
+        JTextField manqlField = new JTextField(10);
+        JTextField phgField = new JTextField(10);
+        JTextField vaitroField = new JTextField(20);
+
+        constraints = new GridBagConstraints();
+        constraints.insets = new Insets(10, 10, 10, 10);
+        constraints.anchor = GridBagConstraints.WEST;
+
+        constraints.gridx = 1;
+        constraints.gridy = 0;
+        upperPanel.add(new JLabel("Mã số"), constraints);
+        constraints.gridx++;
+        upperPanel.add(manvField, constraints);
+
+        constraints.gridy++;
+        constraints.gridx = 1;
+        upperPanel.add(new JLabel("Họ tên"), constraints);
+        constraints.gridx++;
+        upperPanel.add(tennvField, constraints);
+
+        constraints.gridx = 1;
+        constraints.gridy++;
+        upperPanel.add(new JLabel("Ngày sinh"), constraints);
+        constraints.gridx++;
+        constraints.gridwidth = 2;
+        upperPanel.add(ngaysinhField, constraints);
+
+        constraints.gridwidth = 1;
+        constraints.gridx++;
+        upperPanel.add(new JLabel("Giới tính"), constraints);
+        constraints.gridx++;
+        upperPanel.add(phaiField, constraints);
+
+        constraints.gridx = 1;
+        constraints.gridy++;
+        upperPanel.add(new JLabel("Chức vụ"), constraints);
+        constraints.gridx++;
+        upperPanel.add(vaitroField, constraints);
+
+        constraints.gridx = 1;
+        constraints.gridy++;
+        upperPanel.add(new JLabel("Địa chỉ"), constraints);
+        constraints.gridx++;
+        upperPanel.add(diachiField, constraints);
+
+        constraints.gridx = 1;
+        constraints.gridy++;
+        upperPanel.add(new JLabel("Số điện thoại"), constraints);
+        constraints.gridx++;
+        upperPanel.add(sodtField, constraints);
+
+        constraints.gridx = 1;
+        constraints.gridy++;
+        upperPanel.add(new JLabel("Mã phòng ban"), constraints);
+        constraints.gridx++;
+        upperPanel.add(phgField, constraints);
+
+        constraints.gridx = 1;
+        constraints.gridy++;
+        upperPanel.add(new JLabel("Mã người quản lí"), constraints);
+        constraints.gridx++;
+        upperPanel.add(manqlField, constraints);
+
+        constraints.gridx = 1;
+        constraints.gridy++;
+        upperPanel.add(new JLabel("Lương"), constraints);
+        constraints.gridx++;
+        upperPanel.add(luongField, constraints);
+
+        constraints.gridx = 1;
+        constraints.gridy++;
+        upperPanel.add(new JLabel("Phụ cấp"), constraints);
+        constraints.gridx++;
+        upperPanel.add(phucapField, constraints);
+
+        subRightSplits.setTopComponent(upperPanel);
+
+        this.rightPanel.add(subRightSplits);
 
         this.mainSplitPane.setLeftComponent(this.leftPanel);
         this.mainSplitPane.setRightComponent(this.rightPanel);
