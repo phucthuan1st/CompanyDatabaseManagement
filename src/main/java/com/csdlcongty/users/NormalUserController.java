@@ -170,13 +170,13 @@ public class NormalUserController extends JFrame implements ActionListener {
         JPanel upperPanel = new JPanel(new GridBagLayout());
 
         // Employee data fields
-        JTextField luongField = new JTextField(50);
-        JTextField phucapField = new JTextField(50);
+        JTextField luongField = new JTextField(60);
+        JTextField phucapField = new JTextField(60);
         JTextField manvField = new JTextField(10);
         JTextField tennvField = new JTextField(35);
         JTextField phaiField = new JTextField(10);
         JTextField ngaysinhField = new JTextField(10);
-        JTextField diachiField = new JTextField(50);
+        JTextField diachiField = new JTextField(60);
         JTextField sodtField = new JTextField(20);
         JTextField manqlField = new JTextField(10);
         JTextField phgField = new JTextField(10);
@@ -202,11 +202,10 @@ public class NormalUserController extends JFrame implements ActionListener {
         constraints.gridy++;
         upperPanel.add(new JLabel("Ngày sinh"), constraints);
         constraints.gridx++;
-        constraints.gridwidth = 2;
         upperPanel.add(ngaysinhField, constraints);
 
-        constraints.gridwidth = 1;
-        constraints.gridx++;
+        constraints.gridx = 1;
+        constraints.gridy++;
         upperPanel.add(new JLabel("Giới tính"), constraints);
         constraints.gridx++;
         upperPanel.add(phaiField, constraints);
