@@ -1,6 +1,7 @@
 package com.csdlcongty.users;
 
 import com.csdlcongty.DBManager;
+import com.csdlcongty.helper.CryptographyUtilities;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -8,9 +9,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import java.security.NoSuchAlgorithmException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
@@ -19,11 +23,23 @@ public class NormalUserController extends JFrame implements ActionListener {
     private final DBManager dbc;
     private ResultSet result;
     private final JFrame father;
-
     private JSplitPane mainSplitPane;
-    private JSplitPane subRightSplits ;
+    private JSplitPane subRightSplits;
     private JPanel leftPanel;
     private JPanel rightPanel;
+
+    // Employee data fields
+    private JTextField luongField = new JTextField(60);
+    private JTextField phucapField = new JTextField(60);
+    private JTextField manvField = new JTextField(10);
+    private JTextField tennvField = new JTextField(35);
+    private JTextField phaiField = new JTextField(10);
+    private JTextField ngaysinhField = new JTextField(10);
+    private JTextField diachiField = new JTextField(60);
+    private JTextField sodtField = new JTextField(20);
+    private JTextField manqlField = new JTextField(10);
+    private JTextField phgField = new JTextField(10);
+    private JTextField vaitroField = new JTextField(20);
 
     public NormalUserController(String username, String password, JFrame father)
             throws ClassNotFoundException, SQLException {
@@ -31,14 +47,15 @@ public class NormalUserController extends JFrame implements ActionListener {
         this.dbc = new DBManager(username, password);
         this.father = father;
         this.initComponents();
+        this.fetchPersonalInformation(username);
     }
 
-    private void initComponents() {
+    private void initComponents() throws SQLException {
         // Set window properties
-        Rectangle r = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+        //Rectangle r = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
         this.setTitle("Dashboard");
-//        this.setSize(1600, 900);
-        this.setSize(r.width, r.height);
+        this.setSize(1600, 900);
+        //this.setSize(r.width, r.height);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
         this.setResizable(false);
@@ -183,25 +200,6 @@ public class NormalUserController extends JFrame implements ActionListener {
        this.subRightSplits = new JSplitPane(JSplitPane.VERTICAL_SPLIT); 
         JPanel upperPanel = new JPanel(new GridBagLayout());
 
-                        
-       // JPanel lowerPanel = new JPanel();
-        
-        //subRightSplits.setBottomComponent(lowerPanel);
-        
- 
-        // Employee data fields
-        JTextField luongField = new JTextField(60);
-        JTextField phucapField = new JTextField(60);
-        JTextField manvField = new JTextField(10);
-        JTextField tennvField = new JTextField(35);
-        JTextField phaiField = new JTextField(10);
-        JTextField ngaysinhField = new JTextField(10);
-        JTextField diachiField = new JTextField(60);
-        JTextField sodtField = new JTextField(20);
-        JTextField manqlField = new JTextField(10);
-        JTextField phgField = new JTextField(10);
-        JTextField vaitroField = new JTextField(20);
-
         constraints = new GridBagConstraints();
         constraints.insets = new Insets(10, 10, 10, 10);
         constraints.anchor = GridBagConstraints.WEST;
@@ -272,13 +270,28 @@ public class NormalUserController extends JFrame implements ActionListener {
         constraints.gridx++;
         upperPanel.add(phucapField, constraints);
 
+        // Set the fields as uneditable
+        luongField.setEditable(false);
+        phucapField.setEditable(false);
+        manvField.setEditable(false);
+        tennvField.setEditable(false);
+        phaiField.setEditable(false);
+        ngaysinhField.setEditable(false);
+        diachiField.setEditable(false);
+        sodtField.setEditable(false);
+        manqlField.setEditable(false);
+        phgField.setEditable(false);
+        vaitroField.setEditable(false);
+
         subRightSplits.setTopComponent(upperPanel);
-        
        
         this.rightPanel.add(subRightSplits);
 
         this.mainSplitPane.setLeftComponent(this.leftPanel);
         this.mainSplitPane.setRightComponent(this.rightPanel);
+
+        this.mainSplitPane.setResizeWeight(0.5);
+        this.mainSplitPane.setDividerLocation(0.5);
 
         this.add(this.mainSplitPane);
         this.setVisible(true);
@@ -308,18 +321,24 @@ public class NormalUserController extends JFrame implements ActionListener {
 
         return new DefaultTableModel(data, columnNames);
     }
-    
+
     void displayLowerPanelTable(int numRows) throws SQLException {
-        JTable table =new JTable(buildTableModel(this.result, numRows)) {
+        JTable table = new JTable(buildTableModel(this.result, numRows)) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS); // Set autoResizeMode
         JScrollPane bottomPane = new JScrollPane(table);
-        subRightSplits.setTopComponent(bottomPane);
+        JPanel bottomPanel = new JPanel(new BorderLayout()); // Use BorderLayout for bottomPanel
+        bottomPanel.add(bottomPane, BorderLayout.CENTER); // Add table to the center of bottomPanel
+        this.subRightSplits.setBottomComponent(bottomPanel);
+
+        this.subRightSplits.revalidate();
+        this.subRightSplits.repaint();
     }
-    
+
     @Override
     public void actionPerformed(ActionEvent e) {
         JButton button = (JButton) e.getSource();
@@ -345,43 +364,82 @@ public class NormalUserController extends JFrame implements ActionListener {
 //                handleUpdatePHONGBAN();
             }
         }
-        
+
         catch(SQLException ex) {
             String message = "Error when communicate with database: " + ex.getMessage();
             JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
-      
-        
+
+
     }
     void handleShowPHONGBAN() throws SQLException{
-        result = dbc.getTABLE("PHONGBAN");
+        result = dbc.selectFromTable("PHONGBAN");
         int num_rows = dbc.getNumberRowsOf("COMPANY_PUBLIC.PHONGBAN");
         displayLowerPanelTable(num_rows);
     }
     void handleShowDEAN() throws SQLException{
-        result = dbc.getTABLE("DEAN");
+        result = dbc.selectFromTable("DEAN");
         int num_rows = dbc.getNumberRowsOf("COMPANY_PUBLIC.DEAN");
         displayLowerPanelTable(num_rows);
     }
     void handleShowPHANCONG() throws SQLException{
-        result = dbc.getTABLE("PHANCONG");
+        result = dbc.selectFromTable("PHANCONG");
         int num_rows = dbc.getNumberRowsOf("COMPANY_PUBLIC.PHANCONG");
         displayLowerPanelTable(num_rows);
     }
     void handleShowNHANVIEN() throws SQLException{
-        result = dbc.getTABLE("NHANVIEN");
+        result = dbc.selectFromTable("NHANVIEN");
         int num_rows = dbc.getNumberRowsOf("COMPANY_PUBLIC.NHANVIEN");
         displayLowerPanelTable(num_rows);
     }
-    void handleShowLUONGPHUCAP() throws SQLException{
-        result = dbc.getLUONGPHUCAP();
-        int num_rows = dbc.getNumberRowsOf("COMPANY_PUBLIC.NHANVIEN");
-        displayLowerPanelTable(num_rows);
+    void handleShowLUONGPHUCAP() throws Exception {
+        result = dbc.selectLuongPhuCap(this.manvField.getText());
+
+        if (result.next()) {
+            String luong = result.getString("LUONG");
+            String phucap = result.getString("PHUCAP");
+            String secretKey = JOptionPane.showInputDialog(this, "Nhập khóa bí mật", "Thông báo", JOptionPane.QUESTION_MESSAGE);
+
+            String key = CryptographyUtilities.hashMD5(secretKey);
+            String LUONG = CryptographyUtilities.decryptAES(luong, key);
+            String PHUCAP = CryptographyUtilities.decryptAES(phucap, key);
+
+            this.luongField.setText(LUONG);
+            this.phucapField.setText(PHUCAP);
+        }
     }
-//    void handleUpdatePHONGBAN() throws SQLException{
-//        result =dbc.
-//    
-//    }
+
+    private void fetchPersonalInformation(String id) throws SQLException {
+        ResultSet resultSet = dbc.getPersonalInfomation(id);
+
+        if (resultSet.next()) {
+            String luong = resultSet.getString("LUONG");
+            String phucap = resultSet.getString("PHUCAP");
+            String manv = resultSet.getString("MANV");
+            String tennv = resultSet.getString("TENNV");
+            String phai = resultSet.getString("PHAI");
+            String ngaysinh = resultSet.getString("NGAYSINH");
+            String diachi = resultSet.getString("DIACHI");
+            String sodt = resultSet.getString("SODT");
+            String manql = resultSet.getString("MANQL");
+            String phg = resultSet.getString("PHG");
+
+            luongField.setText(luong);
+            phucapField.setText(phucap);
+            manvField.setText(manv);
+            tennvField.setText(tennv);
+            phaiField.setText(phai);
+            ngaysinhField.setText(ngaysinh);
+            diachiField.setText(diachi);
+            sodtField.setText(sodt);
+            manqlField.setText(manql);
+            phgField.setText(phg);
+        }
+
+        resultSet.close();
+    }
 
     private void applyLineBorder(JPanel panel) {
         Border lineBorder = BorderFactory.createLineBorder(Color.BLACK);

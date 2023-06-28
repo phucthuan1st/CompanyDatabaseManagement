@@ -40,50 +40,10 @@ public class CryptographyUtilities {
     }
 
     /**
-     * Applies PKCS7 padding to the input byte array.
-     *
-     * @param input The input byte array to pad.
-     * @param blockSize The block size to use for padding.
-     * @return The padded byte array.
-     */
-    public static byte[] paddingPKCS7(byte[] input, int blockSize) {
-        int paddingLength = blockSize - (input.length % blockSize);
-        byte[] paddedInput = new byte[input.length + paddingLength];
-        System.arraycopy(input, 0, paddedInput, 0, input.length);
-        for (int i = input.length; i < paddedInput.length; i++) {
-            paddedInput[i] = (byte) paddingLength;
-        }
-        return paddedInput;
-    }
-
-    /**
-     * Removes PKCS7 padding from the input byte array.
-     *
-     * @param paddedBytes The byte array with PKCS7 padding.
-     * @return The byte array without padding.
-     */
-    private static byte[] removePKCS7Padding(byte[] paddedBytes) {
-        int paddingLength = paddedBytes[paddedBytes.length - 1];
-        if (paddingLength < 1 || paddingLength > 16) {
-            throw new IllegalArgumentException("Invalid PKCS7 padding length");
-        }
-
-        // Check if the padding is valid
-        for (int i = paddedBytes.length - paddingLength; i < paddedBytes.length; i++) {
-            if (paddedBytes[i] != paddingLength) {
-                throw new IllegalArgumentException("Invalid PKCS7 padding");
-            }
-        }
-
-        // Remove the padding bytes
-        return Arrays.copyOf(paddedBytes, paddedBytes.length - paddingLength);
-    }
-
-    /**
      * Encrypts the input string using AES-128 with CBC mode and PKCS7 padding.
      *
      * @param input The input string to encrypt.
-     * @param key The encryption key.
+     * @param key   The encryption key.
      * @return The encrypted string.
      * @throws Exception if an error occurs during encryption.
      */
@@ -102,8 +62,7 @@ public class CryptographyUtilities {
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivParameterSpec);
 
         // Perform the encryption
-        byte[] paddedInput = paddingPKCS7(input.getBytes(), cipher.getBlockSize());
-        byte[] encryptedBytes = cipher.doFinal(paddedInput);
+        byte[] encryptedBytes = cipher.doFinal(input.getBytes());
 
         // Combine the IV and encrypted bytes into a single byte array
         byte[] combinedBytes = new byte[ivBytes.length + encryptedBytes.length];
@@ -119,7 +78,7 @@ public class CryptographyUtilities {
      * and PKCS7 padding.
      *
      * @param encryptedBase64 The encrypted Base64 string to decrypt.
-     * @param key The decryption key.
+     * @param key             The decryption key.
      * @return The decrypted string.
      * @throws Exception if an error occurs during decryption.
      */
@@ -140,17 +99,9 @@ public class CryptographyUtilities {
         cipher.init(Cipher.DECRYPT_MODE, secretKey, ivParameterSpec);
 
         // Decrypt the remaining bytes after the IV
-        byte[] encryptedBytes = new byte[combinedBytes.length - ivBytes.length];
-        System.arraycopy(combinedBytes, ivBytes.length, encryptedBytes, 0, encryptedBytes.length);
+        byte[] decryptedBytes = cipher.doFinal(combinedBytes, ivBytes.length, combinedBytes.length - ivBytes.length);
 
-        // Perform the decryption
-        byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
-
-        // Remove PKCS7 padding
-        byte[] unpaddedBytes = removePKCS7Padding(decryptedBytes);
-
-        // Convert the decrypted bytes to a string
-        return new String(unpaddedBytes);
+        return new String(decryptedBytes);
     }
     
     public static String generateSalt(int length) {
