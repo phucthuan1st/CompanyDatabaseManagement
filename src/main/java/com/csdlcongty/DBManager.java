@@ -282,7 +282,7 @@ public class DBManager {
         cst.execute();
     }
     
-    public ResultSet getTABLE(String tableName) throws SQLException {
+    public ResultSet selectFromTable(String tableName) throws SQLException {
         String sql = "SELECT * FROM COMPANY_PUBLIC." +tableName;
         ResultSet result;
 
@@ -292,9 +292,9 @@ public class DBManager {
         previousStatement = String.format(DBManager.COUNTSQL, sql);
         return result;
     }
-    
-    public ResultSet getLUONGPHUCAP() throws SQLException{
-        String sql = "SELECT LUONG, PHUCAP FROM COMPANY_PUBLIC.NHANVIEN" ;
+
+    public ResultSet selectLuongPhuCap(String id) throws SQLException {
+        String sql = String.format("SELECT LUONG, PHUCAP FROM COMPANY_PUBLIC.NHANVIEN WHERE MANV = '%s'", id);
         ResultSet result;
 
         st = cnt.createStatement();
@@ -413,6 +413,32 @@ public class DBManager {
 //            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
 //        }
 //    }
+
+
+    public ResultSet selectLuongPhuCap() throws SQLException {
+        String sql = String.format("SELECT LUONG, PHUCAP FROM COMPANY_PUBLIC.NHANVIEN");
+        ResultSet result;
+
+        st = cnt.createStatement();
+        result = st.executeQuery(sql);
+
+        previousStatement = String.format(DBManager.COUNTSQL, sql);
+        return result;
+    }
+
+    public ResultSet getPersonalInfomation(String id) throws SQLException{
+        String sql = String.format("SELECT * FROM COMPANY_PUBLIC.NHANVIEN WHERE MANV = '%s'", id);
+        System.out.println(sql);
+        ResultSet result;
+
+        st = cnt.createStatement();
+        result = st.executeQuery(sql);
+
+        previousStatement = String.format(DBManager.COUNTSQL, sql);
+        return result;
+    }
+
+
     public void insertMockRecordToNhanVien() {
         var data = generateNVRecords(300);
         data.addAll(generateQLRecords(20));
@@ -436,7 +462,7 @@ public class DBManager {
                 cst.setString(6, record.SODT);
 
                 // Encrypt LUONG and PHUCAP using AES in CryptographyUtilities
-                String md5Hash = CryptographyUtilities.hashMD5(record.SODT);
+                String md5Hash = CryptographyUtilities.hashMD5("secret");
                 String encryptedLuong = CryptographyUtilities.encryptAES(record.LUONG, md5Hash);
                 String encryptedPhuCap = CryptographyUtilities.encryptAES(record.PHUCAP, md5Hash);
 
@@ -514,7 +540,7 @@ public class DBManager {
                 String MANQL = resultSet.getString("MANQL");
                 String PHG = resultSet.getString("PHG");
 
-                String key = CryptographyUtilities.hashMD5(SODT);
+                String key = CryptographyUtilities.hashMD5("secret");
                 String LUONG = CryptographyUtilities.decryptAES(encryptedLUONG, key);
                 String PHUCAP = CryptographyUtilities.decryptAES(encryptedPHUCAP, key);
 

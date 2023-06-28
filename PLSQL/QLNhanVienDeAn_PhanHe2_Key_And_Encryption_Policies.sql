@@ -1,0 +1,40 @@
+CONNECT COMPANY_PUBLIC/astrongpassword@localhost:1521/COMPANY;
+SET SERVEROUTPUT ON;
+
+GRANT SELECT, UPDATE(SECRET_KEY) ON LUUTRU TO NHAN_VIEN;
+GRANT SELECT, UPDATE(SECRET_KEY) ON LUUTRU TO QL_TRUC_TIEP;
+GRANT SELECT, UPDATE(SECRET_KEY) ON LUUTRU TO TRUONG_PHONG;
+GRANT SELECT, UPDATE(SECRET_KEY) ON LUUTRU TO TAI_CHINH;
+GRANT SELECT, UPDATE(SECRET_KEY) ON LUUTRU TO NHAN_SU;
+GRANT SELECT, UPDATE(SECRET_KEY) ON LUUTRU TO TRUONG_DEAN;
+
+CREATE OR REPLACE FUNCTION secretKeyAccessRight (
+  schema_name   IN VARCHAR2,
+  object_name   IN VARCHAR2
+)
+RETURN VARCHAR2
+AS
+BEGIN
+  IF schema_name = 'COMPANY_PUBLIC' AND object_name = 'LUUTRU' THEN
+        RETURN 'MANV = SYS_CONTEXT(''USERENV'', ''SESSION_USER'')';
+  END IF;
+
+  RETURN '0=1';
+END;
+/
+
+BEGIN
+  DBMS_RLS.ADD_POLICY(
+    object_schema    => 'COMPANY_PUBLIC',
+    object_name      => 'LUUTRU',
+    policy_name      => 'SECRET_KEY_ACCESS_POLICY',
+    policy_function  => 'secretKeyAccessRight',
+    statement_types  => 'UPDATE',
+    sec_relevant_cols => 'SECRET_KEY',
+    update_check     => true,
+    enable           => TRUE
+  );
+END;
+/
+
+COMMIT;
