@@ -331,12 +331,10 @@ public class NormalUserController extends JFrame implements ActionListener {
         };
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS); // Set autoResizeMode
         JScrollPane bottomPane = new JScrollPane(table);
-        JPanel bottomPanel = new JPanel(new BorderLayout()); // Use BorderLayout for bottomPanel
-        bottomPanel.add(bottomPane, BorderLayout.CENTER); // Add table to the center of bottomPanel
-        this.subRightSplits.setBottomComponent(bottomPanel);
+        this.subRightSplits.setBottomComponent(bottomPane);
 
-        this.subRightSplits.revalidate();
-        this.subRightSplits.repaint();
+        this.rightPanel.revalidate();
+        this.rightPanel.repaint();
     }
 
     @Override
