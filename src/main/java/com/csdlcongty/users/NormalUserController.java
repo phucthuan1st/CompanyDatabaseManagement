@@ -75,6 +75,7 @@ public class NormalUserController extends JFrame implements ActionListener {
         JButton showDepartmentInfoButton = new JButton("Xem thông tin các phòng ban");
         showDepartmentInfoButton.addActionListener(this);
         JButton modifyDepartmentButton = new JButton("Thay đổi thông tin các Phòng ban");
+        modifyDepartmentButton.addActionListener(this);
         JButton showSchemeInfoButton = new JButton("Xem các đề án hiện có");
         showSchemeInfoButton.addActionListener(this);
         JButton modifySchemeButton = new JButton("Thay đổi các đề án");
@@ -359,7 +360,7 @@ public class NormalUserController extends JFrame implements ActionListener {
             }else if("Xem Lương và Phụ cấp".equals(command)){
                 handleShowLUONGPHUCAP();
             } else if("Thay đổi thông tin các Phòng ban".equals(command)){
-//                handleUpdatePHONGBAN();
+                handleUpdatePHONGBAN();
             }
         }
 
@@ -438,6 +439,76 @@ public class NormalUserController extends JFrame implements ActionListener {
 
         resultSet.close();
     }
+
+    void handleUpdatePHONGBAN() throws SQLException{
+        this.subRightSplits.setBottomComponent(new JPanel() {   
+            JLabel label;
+            JTextField oldMAPB;
+            JTextField TENPB ;
+            JTextField TRPHG;
+            JTextField MAPB;
+            JButton updateButton;
+        
+        public void JPanel(){   
+            label= new JLabel("Cập nhật thông tin");
+            oldMAPB = new JTextField(10);
+            MAPB = new JTextField(10);
+            TENPB = new JTextField(100);
+            TRPHG = new JTextField(10);
+            updateButton= new JButton("Cập nhật");
+                        
+            
+            updateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String oldma= oldMAPB.getText().trim();
+                String ma =MAPB.getText().trim();
+                String ten =TENPB.getText().trim();
+                String truongphong =TRPHG.getText().trim();
+                int sucess;
+                try {
+                    sucess = dbc.updatePHONGBAN(oldma, ma, ten, truongphong);
+                                if (sucess >0)
+                {
+                    JFrame frame = new JFrame("Message");
+                    JOptionPane.showMessageDialog(frame, "Update Sucessfully", "Message",
+                            JOptionPane.INFORMATION_MESSAGE);
+                }
+                else
+                {
+                    JFrame frame = new JFrame("Message");
+                    JOptionPane.showMessageDialog(frame,
+                    "Cannot update ", "ERROR",JOptionPane.ERROR_MESSAGE);
+
+                }
+                } catch (SQLException ex) {
+                    Logger.getLogger(NormalUserController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                }
+            });
+            
+            setLayout(new FlowLayout());
+            add(label);
+            add(new JLabel("Mã PB cần update"));
+            add(oldMAPB);
+            add(new JLabel("Mã PB"));
+            add(MAPB);
+            add(new JLabel("Tên PB:"));
+            add(TENPB);
+            add(new JLabel("Mã Trưởng Phòng:"));
+            add(TRPHG);
+            add(updateButton);
+
+        };
+        
+    });
+
+
+    }
+
+
+
 
     private void applyLineBorder(JPanel panel) {
         Border lineBorder = BorderFactory.createLineBorder(Color.BLACK);

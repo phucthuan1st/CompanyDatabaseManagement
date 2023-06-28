@@ -303,6 +303,117 @@ public class DBManager {
         previousStatement = String.format(DBManager.COUNTSQL, sql);
         return result;
     }
+    
+    public int updatePHONGBAN(String oldma, String mapb, String tenpb, String tentrphg  ) throws SQLException{
+        String sql = "UPDATE COMPANY_PUBLIC.PHONGBAN SET";
+        int count=0;
+        // kiểm tra
+        try{
+                if (mapb!= "")
+            {
+                sql= sql +"MAPB= ? ,";
+                count++;
+            }
+            if (tenpb!="" )
+            {
+                sql= sql + "  TENPB= ? ,";
+                count++;
+            }  
+
+            if (tentrphg!="")
+            {
+                sql= sql + "TRPHG= ? , ";
+            }
+            sql = sql.substring(0, sql.length() - 1);
+            sql= sql+ " WHERE MAPB = ? ;";
+            cst = cnt.prepareCall(sql);
+            int parameterIndex=1;
+            // gán giá trị
+            if (mapb != "") {
+            cst.setString(parameterIndex++, mapb);
+            }
+            if (tenpb != "") {
+                cst.setString(parameterIndex++, tenpb);
+            }
+            if (tentrphg != "") {
+                cst.setString(parameterIndex++, tentrphg);
+            }
+            cst.setString(parameterIndex, mapb);
+            cst.execute();
+                        SQLWarning warning = cst.getWarnings();
+                if (warning != null) {
+                    System.out.println("Error creating table: " + warning.getMessage());
+                    return 0;
+                }
+            
+            System.out.println("Table created successfully.");
+            commit();
+            return 1;
+        } catch (SQLException e) {
+            System.out.println("Error creating table: " + e.getMessage());
+            return 0;
+        }
+    }
+    
+    
+    
+//    public void insertMockRecordToNhanVien() {
+//        var data = generateNVRecords(300);
+//        data.addAll(generateQLRecords(20));
+//        data.addAll(generateTPRecords(8));
+//
+//        String sqlNhanVien = "{call INSERT_NHANVIEN_RECORD(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+//
+//        try {
+//            cst = cnt.prepareCall(sqlNhanVien);
+//
+//            for (NhanVienRecord record : data) {
+//                cst.setString(1, record.MANV);
+//                cst.setString(2, record.TENNV);
+//                cst.setString(3, record.PHAI);
+//                cst.setDate(4, new java.sql.Date(record.NGAYSINH.getTime()));
+//                cst.setString(5, record.DIACHI);
+//                cst.setString(6, record.SODT);
+//
+//                // Encrypt LUONG and PHUCAP using AES in CryptographyUtilities
+//                String md5Hash = CryptographyUtilities.hashMD5(record.SODT);
+//                String encryptedLuong = CryptographyUtilities.encryptAES(record.LUONG, md5Hash);
+//                String encryptedPhuCap = CryptographyUtilities.encryptAES(record.PHUCAP, md5Hash);
+//
+//                cst.setString(7, encryptedLuong);
+//                cst.setString(8, encryptedPhuCap);
+//                cst.setString(9, record.VAITRO);
+//                cst.setString(10, record.MANQL);
+//                cst.setString(11, record.PHG);
+//
+//                cst.execute();
+//            }
+//
+//            commit();
+//            System.out.println("Records inserted to NHANVIEN successfully.");
+//        } catch (SQLException | NoSuchAlgorithmException ex) {
+//            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//
+//        sqlNhanVien = "{call INSERT_LUUTRU_RECORD(?, ?)}";
+//        try {
+//            cst = cnt.prepareCall(sqlNhanVien);
+//
+//            for (NhanVienRecord record : data) {
+//                cst.setString(1, record.MANV);
+//                cst.setString(2,  CryptographyUtilities.hashMD5(record.SODT));
+//                cst.execute();
+//            }
+//
+//            commit();
+//            System.out.println("Records inserted to LUUTRU successfully.");
+//        } catch (Exception ex) {
+//            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//    }
+
 
     public ResultSet selectLuongPhuCap() throws SQLException {
         String sql = String.format("SELECT LUONG, PHUCAP FROM COMPANY_PUBLIC.NHANVIEN");
@@ -326,6 +437,7 @@ public class DBManager {
         previousStatement = String.format(DBManager.COUNTSQL, sql);
         return result;
     }
+
 
     public void insertMockRecordToNhanVien() {
         var data = generateNVRecords(300);
