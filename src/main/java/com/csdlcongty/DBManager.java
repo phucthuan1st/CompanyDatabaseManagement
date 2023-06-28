@@ -304,7 +304,28 @@ public class DBManager {
         return result;
     }
     
-//    public void updatePHONGBAN(String columns, )
+    public void updatePHONGBAN(String oldma, String mapb, String tenpb, String tentrphg  ) throws SQLException{
+        String sql = "UPDATE COMPANY_PUBLIC.PHONGBAN SET";
+        
+        if(oldma =="")
+        {
+            
+        }
+        if (mapb!= "")
+        {
+            sql= sql +"MAPB= ? , ";
+        }
+        if (tenpb!="")
+        {
+            sql= sql + "TENPB= ? ,";
+        }
+        if (tenpb!="")
+        {
+            sql= sql + "TRPHG= ? ";
+        }
+        sql= sql+ " WHERE MAPB = ? ;";
+        cst = cnt.prepareCall(sql);
+    }
     
     
     
