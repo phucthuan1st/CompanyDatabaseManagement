@@ -7,14 +7,21 @@ import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 
 public class NormalUserController extends JFrame implements ActionListener {
     private final DBManager dbc;
+    private ResultSet result;
     private final JFrame father;
 
     private JSplitPane mainSplitPane;
-
+    private JSplitPane subRightSplits ;
     private JPanel leftPanel;
     private JPanel rightPanel;
 
@@ -28,8 +35,10 @@ public class NormalUserController extends JFrame implements ActionListener {
 
     private void initComponents() {
         // Set window properties
+        Rectangle r = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
         this.setTitle("Dashboard");
-        this.setSize(1600, 900);
+//        this.setSize(1600, 900);
+        this.setSize(r.width, r.height);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
         this.setResizable(false);
@@ -47,8 +56,10 @@ public class NormalUserController extends JFrame implements ActionListener {
         JPanel group1Panel = new JPanel(new GridBagLayout());
         JLabel group1Label = new JLabel("Phòng ban và đề án");
         JButton showDepartmentInfoButton = new JButton("Xem thông tin các phòng ban");
+        showDepartmentInfoButton.addActionListener(this);
         JButton modifyDepartmentButton = new JButton("Thay đổi thông tin các Phòng ban");
         JButton showSchemeInfoButton = new JButton("Xem các đề án hiện có");
+        showSchemeInfoButton.addActionListener(this);
         JButton modifySchemeButton = new JButton("Thay đổi các đề án");
         applyLineBorder(group1Panel);
         constraints.gridx = 0;
@@ -67,6 +78,7 @@ public class NormalUserController extends JFrame implements ActionListener {
         JPanel group2Panel = new JPanel(new GridBagLayout());
         JLabel group2Label = new JLabel("Phân công");
         JButton showAssignmentInfoButton = new JButton("Xem phân công trên các đề án");
+        showAssignmentInfoButton.addActionListener(this);
         JButton modifyAssignmentButton = new JButton("Cập nhật phân công");
         applyLineBorder(group2Panel);
         constraints.gridx = 1;
@@ -88,6 +100,7 @@ public class NormalUserController extends JFrame implements ActionListener {
         group3Panel.add(group3Label, constraints);
         constraints.gridy++;
         JButton showRelevantInfoButton = new JButton("Xem thông tin các Nhân viên đang quản lí");
+        showRelevantInfoButton.addActionListener(this);
         group3Panel.add(showRelevantInfoButton, constraints);
         constraints.gridy++;
         group3Panel.add(insertNewEmployeeButton, constraints);
@@ -98,6 +111,7 @@ public class NormalUserController extends JFrame implements ActionListener {
         JPanel group4Panel = new JPanel(new GridBagLayout());
         JLabel group4Label = new JLabel("Lương và phụ cấp");
         JButton showSalaryAndAllowanceButton = new JButton("Xem Lương và Phụ cấp");
+        showSalaryAndAllowanceButton.addActionListener(this);
         JButton updateSalaryAndAllowanceButton = new JButton("Cập nhật Lương và Phụ cấp");
         applyLineBorder(group4Panel);
         constraints.gridx = 1;
@@ -166,9 +180,15 @@ public class NormalUserController extends JFrame implements ActionListener {
         // create right panel
         this.rightPanel = new JPanel();
 
-        JSplitPane subRightSplits = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+       this.subRightSplits = new JSplitPane(JSplitPane.VERTICAL_SPLIT); 
         JPanel upperPanel = new JPanel(new GridBagLayout());
 
+                        
+       // JPanel lowerPanel = new JPanel();
+        
+        //subRightSplits.setBottomComponent(lowerPanel);
+        
+ 
         // Employee data fields
         JTextField luongField = new JTextField(60);
         JTextField phucapField = new JTextField(60);
@@ -253,7 +273,8 @@ public class NormalUserController extends JFrame implements ActionListener {
         upperPanel.add(phucapField, constraints);
 
         subRightSplits.setTopComponent(upperPanel);
-
+        
+       
         this.rightPanel.add(subRightSplits);
 
         this.mainSplitPane.setLeftComponent(this.leftPanel);
@@ -262,7 +283,43 @@ public class NormalUserController extends JFrame implements ActionListener {
         this.add(this.mainSplitPane);
         this.setVisible(true);
     }
+    
+    private TableModel buildTableModel(ResultSet rs, int numRows) throws SQLException {
+        ResultSetMetaData metaData = rs.getMetaData();
 
+        // Get dataLengthField of columns
+        int columns = metaData.getColumnCount();
+
+        // Create columnNameField names array
+        String[] columnNames = new String[columns];
+        for (int i = 1; i <= columns; i++) {
+            columnNames[i - 1] = metaData.getColumnName(i);
+        }
+
+        // Create data array
+        Object[][] data = new Object[numRows][columns];
+        int row = 0;
+        while (rs.next() && row < numRows) {
+            for (int i = 1; i <= columns; i++) {
+                data[row][i - 1] = rs.getObject(i);
+            }
+            row++;
+        }
+
+        return new DefaultTableModel(data, columnNames);
+    }
+    
+    void displayLowerPanelTable(int numRows) throws SQLException {
+        JTable table =new JTable(buildTableModel(this.result, numRows)) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        JScrollPane bottomPane = new JScrollPane(table);
+        subRightSplits.setTopComponent(bottomPane);
+    }
+    
     @Override
     public void actionPerformed(ActionEvent e) {
         JButton button = (JButton) e.getSource();
@@ -272,7 +329,59 @@ public class NormalUserController extends JFrame implements ActionListener {
             father.setVisible(true); // Display the father frame
             this.dispose(); // Dispose the current frame
         }
+        
+        try {
+            if("Xem thông tin các phòng ban".equals(command)){
+                handleShowPHONGBAN();
+            } else if("Xem các đề án hiện có".equals(command)){
+                handleShowDEAN();
+            } else if("Xem phân công trên các đề án".equals(command)){
+                handleShowPHANCONG();
+            } else if("Xem thông tin các Nhân viên đang quản lí".equals(command)){
+                handleShowNHANVIEN();
+            }else if("Xem Lương và Phụ cấp".equals(command)){
+                handleShowLUONGPHUCAP();
+            } else if("Thay đổi thông tin các Phòng ban".equals(command)){
+//                handleUpdatePHONGBAN();
+            }
+        }
+        
+        catch(SQLException ex) {
+            String message = "Error when communicate with database: " + ex.getMessage();
+            JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+        }
+      
+        
     }
+    void handleShowPHONGBAN() throws SQLException{
+        result = dbc.getTABLE("PHONGBAN");
+        int num_rows = dbc.getNumberRowsOf("COMPANY_PUBLIC.PHONGBAN");
+        displayLowerPanelTable(num_rows);
+    }
+    void handleShowDEAN() throws SQLException{
+        result = dbc.getTABLE("DEAN");
+        int num_rows = dbc.getNumberRowsOf("COMPANY_PUBLIC.DEAN");
+        displayLowerPanelTable(num_rows);
+    }
+    void handleShowPHANCONG() throws SQLException{
+        result = dbc.getTABLE("PHANCONG");
+        int num_rows = dbc.getNumberRowsOf("COMPANY_PUBLIC.PHANCONG");
+        displayLowerPanelTable(num_rows);
+    }
+    void handleShowNHANVIEN() throws SQLException{
+        result = dbc.getTABLE("NHANVIEN");
+        int num_rows = dbc.getNumberRowsOf("COMPANY_PUBLIC.NHANVIEN");
+        displayLowerPanelTable(num_rows);
+    }
+    void handleShowLUONGPHUCAP() throws SQLException{
+        result = dbc.getLUONGPHUCAP();
+        int num_rows = dbc.getNumberRowsOf("COMPANY_PUBLIC.NHANVIEN");
+        displayLowerPanelTable(num_rows);
+    }
+//    void handleUpdatePHONGBAN() throws SQLException{
+//        result =dbc.
+//    
+//    }
 
     private void applyLineBorder(JPanel panel) {
         Border lineBorder = BorderFactory.createLineBorder(Color.BLACK);
