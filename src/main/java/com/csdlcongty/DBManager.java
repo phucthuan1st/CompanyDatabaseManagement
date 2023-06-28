@@ -304,27 +304,55 @@ public class DBManager {
         return result;
     }
     
-    public void updatePHONGBAN(String oldma, String mapb, String tenpb, String tentrphg  ) throws SQLException{
+    public int updatePHONGBAN(String oldma, String mapb, String tenpb, String tentrphg  ) throws SQLException{
         String sql = "UPDATE COMPANY_PUBLIC.PHONGBAN SET";
-        
-        if(oldma =="")
-        {
+        int count=0;
+        // kiểm tra
+        try{
+                if (mapb!= "")
+            {
+                sql= sql +"MAPB= ? ,";
+                count++;
+            }
+            if (tenpb!="" )
+            {
+                sql= sql + "  TENPB= ? ,";
+                count++;
+            }  
+
+            if (tentrphg!="")
+            {
+                sql= sql + "TRPHG= ? , ";
+            }
+            sql = sql.substring(0, sql.length() - 1);
+            sql= sql+ " WHERE MAPB = ? ;";
+            cst = cnt.prepareCall(sql);
+            int parameterIndex=1;
+            // gán giá trị
+            if (mapb != "") {
+            cst.setString(parameterIndex++, mapb);
+            }
+            if (tenpb != "") {
+                cst.setString(parameterIndex++, tenpb);
+            }
+            if (tentrphg != "") {
+                cst.setString(parameterIndex++, tentrphg);
+            }
+            cst.setString(parameterIndex, mapb);
+            cst.execute();
+                        SQLWarning warning = cst.getWarnings();
+                if (warning != null) {
+                    System.out.println("Error creating table: " + warning.getMessage());
+                    return 0;
+                }
             
+            System.out.println("Table created successfully.");
+            commit();
+            return 1;
+        } catch (SQLException e) {
+            System.out.println("Error creating table: " + e.getMessage());
+            return 0;
         }
-        if (mapb!= "")
-        {
-            sql= sql +"MAPB= ? , ";
-        }
-        if (tenpb!="")
-        {
-            sql= sql + "TENPB= ? ,";
-        }
-        if (tenpb!="")
-        {
-            sql= sql + "TRPHG= ? ";
-        }
-        sql= sql+ " WHERE MAPB = ? ;";
-        cst = cnt.prepareCall(sql);
     }
     
     
