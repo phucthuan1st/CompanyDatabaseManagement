@@ -52,7 +52,7 @@ public class NormalUserController extends JFrame implements ActionListener {
 
     private void initComponents() throws SQLException {
         // Set window properties
-        //Rectangle r = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+       // Rectangle r = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
         this.setTitle("Dashboard");
         this.setSize(1600, 900);
         //this.setSize(r.width, r.height);
@@ -79,6 +79,7 @@ public class NormalUserController extends JFrame implements ActionListener {
         JButton showSchemeInfoButton = new JButton("Xem các đề án hiện có");
         showSchemeInfoButton.addActionListener(this);
         JButton modifySchemeButton = new JButton("Thay đổi các đề án");
+        modifySchemeButton.addActionListener(this);
         applyLineBorder(group1Panel);
         constraints.gridx = 0;
         constraints.gridy = 0;
@@ -98,6 +99,7 @@ public class NormalUserController extends JFrame implements ActionListener {
         JButton showAssignmentInfoButton = new JButton("Xem phân công trên các đề án");
         showAssignmentInfoButton.addActionListener(this);
         JButton modifyAssignmentButton = new JButton("Cập nhật phân công");
+        modifyAssignmentButton.addActionListener(this );
         applyLineBorder(group2Panel);
         constraints.gridx = 1;
         constraints.gridy = 0;
@@ -361,6 +363,10 @@ public class NormalUserController extends JFrame implements ActionListener {
                 handleShowLUONGPHUCAP();
             } else if("Thay đổi thông tin các Phòng ban".equals(command)){
                 handleUpdatePHONGBAN();
+            }else if("Thay đổi các đề án".equals(command)){
+                handleUpdateDEAN();
+            } else if("Cập nhật phân công".equals(command)){
+                handleUpdatePHANCONG();
             }
         }
 
@@ -438,29 +444,134 @@ public class NormalUserController extends JFrame implements ActionListener {
         }
 
         resultSet.close();
-    }
 
+    }
+    
+    void handleUpdateDEAN() throws SQLException{
+        String[] option = {"Thêm", "Xóa", "Cập nhật"};
+        String message = "Chọn thao tác?";
+        int choose = JOptionPane.showOptionDialog(this, message, "Selection", JOptionPane.DEFAULT_OPTION,
+                JOptionPane.PLAIN_MESSAGE, null, option, null);
+
+        if (choose < 0) {
+            return;
+        }
+        String entityType = option[choose];
+        
+        JPanel panel= new JPanel();
+        JTextField oldMADA= new JTextField(10);
+        JTextField MADA= new JTextField(10);
+        JTextField TENDA = new JTextField(50);
+        JTextField PHONG= new JTextField(10);
+        JTextField TRUONGDA= new JTextField(10);
+        JTextField DATE= new JTextField(10);
+        JButton updateButton =new JButton("Cập nhật");
+        JButton delButton =new JButton("Xóa");
+        panel.setLayout(new GridBagLayout());
+        
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.insets = new Insets(10, 10, 10, 10);
+        constraints.anchor = GridBagConstraints.WEST;
+        
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        if ("Cập nhật".equals(entityType) ||   "Thêm".equals(entityType))
+        {
+
+        if("Cập nhật".equals(entityType)){
+        panel.add(new JLabel("Mã Đề án cần update"), constraints);
+        constraints.gridx++;
+        panel.add(oldMADA,constraints);
+        }
+        constraints.gridx = 0;
+        constraints.gridy ++;
+        panel.add(new JLabel("Mã Đề án "), constraints);
+        constraints.gridx++;
+        panel.add(MADA,constraints);
+        
+        constraints.gridx = 0;
+        constraints.gridy ++;
+        panel.add(new JLabel("Tên Đề án "), constraints);
+        constraints.gridx++;
+        panel.add(TENDA,constraints);
+        
+        constraints.gridx = 0;
+        constraints.gridy ++;
+        panel.add(new JLabel("Ngày "), constraints);
+        constraints.gridx++;
+        panel.add(DATE,constraints);
+
+        constraints.gridx = 0;
+        constraints.gridy ++;
+        panel.add(new JLabel("Phòng "), constraints);
+        constraints.gridx++;
+        panel.add(PHONG,constraints);
+        
+        constraints.gridx = 0;
+        constraints.gridy ++;
+        panel.add(new JLabel("Trưởng đề án "), constraints);
+        constraints.gridx++;
+        panel.add(TRUONGDA,constraints);
+        
+        constraints.gridx = 1;
+        constraints.gridy ++;
+        panel.add(updateButton, constraints);
+        
+        updateButton.addActionListener(this);
+        }
+        else if("Xóa".equals(entityType) )
+        {
+            panel.add(new JLabel("Mã Đề án cần xóa"), constraints);
+            constraints.gridx++;
+            panel.add(oldMADA,constraints);
+            
+            constraints.gridx = 1;
+            constraints.gridy ++;
+            panel.add(delButton, constraints);
+            delButton.addActionListener(this);
+        }
+        this.subRightSplits.setBottomComponent(panel);
+        this.rightPanel.revalidate();
+        this.rightPanel.repaint();
+    }
+    
     void handleUpdatePHONGBAN() throws SQLException{
-        this.subRightSplits.setBottomComponent(new JPanel() {   
-            JLabel label;
+        JPanel panel= new JPanel() {   
+            {JLabel label;
             JTextField oldMAPB;
             JTextField TENPB ;
             JTextField TRPHG;
             JTextField MAPB;
             JButton updateButton;
-        
-        public void JPanel(){   
+            pack();
+     
             label= new JLabel("Cập nhật thông tin");
             oldMAPB = new JTextField(10);
             MAPB = new JTextField(10);
-            TENPB = new JTextField(100);
+            TENPB = new JTextField(30);
             TRPHG = new JTextField(10);
-            updateButton= new JButton("Cập nhật");
-                        
             
-            updateButton.addActionListener(new ActionListener() {
+            BoxLayout boxLayout = new BoxLayout(this, BoxLayout.Y_AXIS);
+            setLayout(boxLayout);
+            updateButton= new JButton("Cập nhật");
+
+            add(label);
+            add(new JLabel("Mã PB cần update"));
+            add(oldMAPB);
+            
+            add(new JLabel("Mã PB"));
+            add(MAPB);
+            add(new JLabel("Tên PB:"));
+            add(TENPB);
+            add(new JLabel("Mã Trưởng Phòng:"));
+            add(TRPHG);
+            add(updateButton, BorderLayout.CENTER);
+            
+            ActionListener listener =new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                JButton button = (JButton) e.getSource();
+                
                 String oldma= oldMAPB.getText().trim();
                 String ma =MAPB.getText().trim();
                 String ten =TENPB.getText().trim();
@@ -486,28 +597,94 @@ public class NormalUserController extends JFrame implements ActionListener {
                 }
 
                 }
-            });
-            
-            setLayout(new FlowLayout());
-            add(label);
-            add(new JLabel("Mã PB cần update"));
-            add(oldMAPB);
-            add(new JLabel("Mã PB"));
-            add(MAPB);
-            add(new JLabel("Tên PB:"));
-            add(TENPB);
-            add(new JLabel("Mã Trưởng Phòng:"));
-            add(TRPHG);
-            add(updateButton);
-
+            };
+            updateButton.addActionListener(listener);
+             this.setVisible(true);
         };
-        
-    });
+
+    };
+    this.subRightSplits.setBottomComponent(panel);
+    this.rightPanel.revalidate();
+    this.rightPanel.repaint();
 
 
     }
 
+    void handleUpdatePHANCONG() {
+        String[] option = {"Thêm", "Xóa", "Cập nhật"};
+        String message = "Chọn thao tác?";
+        int choose = JOptionPane.showOptionDialog(this, message, "Selection", JOptionPane.DEFAULT_OPTION,
+                JOptionPane.PLAIN_MESSAGE, null, option, null);
 
+        if (choose < 0) {
+            return;
+        }
+        String entityType = option[choose];
+        
+        JPanel panel= new JPanel();
+        JTextField oldMANV= new JTextField(10);
+        JTextField MANV= new JTextField(10);
+        JTextField MADA = new JTextField(10);
+        JTextField THOIGIAN= new JTextField(10);
+        JButton updateButton=new JButton("Cập nhật");
+        JButton delButton=new JButton("Xóa");
+        panel.setLayout(new GridBagLayout());
+
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.insets = new Insets(10, 10, 10, 10);
+        constraints.anchor = GridBagConstraints.WEST;
+
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        if ("Cập nhật".equals(entityType) ||   "Thêm".equals(entityType))
+        {
+
+            if("Cập nhật".equals(entityType)){
+            panel.add(new JLabel("Mã Nhân viên cần update"), constraints);
+            constraints.gridx++;
+            panel.add(oldMANV,constraints);
+            }
+            constraints.gridx = 0;
+            constraints.gridy ++;
+            panel.add(new JLabel("Mã nhân viên"), constraints);
+            constraints.gridx++;
+            panel.add(MANV,constraints);
+
+            constraints.gridx = 0;
+            constraints.gridy ++;
+            panel.add(new JLabel("Mã đề án"), constraints);
+            constraints.gridx++;
+            panel.add(MADA,constraints);
+
+            constraints.gridx = 0;
+            constraints.gridy ++;
+            panel.add(new JLabel("Thời gian"), constraints);
+            constraints.gridx++;
+            panel.add(THOIGIAN,constraints);
+
+            constraints.gridx = 1;
+            constraints.gridy ++;
+            panel.add(updateButton, constraints);
+
+            updateButton.addActionListener(this);
+
+        }
+        
+        else if ("Xóa".equals(entityType))
+        {
+            panel.add(new JLabel("Mã Nhân viên cần xóa"), constraints);
+            constraints.gridx++;
+            panel.add(oldMANV,constraints);
+            constraints.gridx = 1;
+            constraints.gridy ++;
+            panel.add(delButton, constraints);
+            delButton.addActionListener(this);
+
+        }
+            this.subRightSplits.setBottomComponent(panel);
+            this.rightPanel.revalidate();
+            this.rightPanel.repaint();
+    }
 
 
     private void applyLineBorder(JPanel panel) {
