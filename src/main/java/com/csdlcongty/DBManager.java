@@ -282,6 +282,32 @@ public class DBManager {
         cst.execute();
     }
     
+    public ResultSet getTABLE(String tableName) throws SQLException {
+        String sql = "SELECT * FROM COMPANY_PUBLIC." +tableName;
+        ResultSet result;
+
+        st = cnt.createStatement();
+        result = st.executeQuery(sql);
+
+        previousStatement = String.format(DBManager.COUNTSQL, sql);
+        return result;
+    }
+    
+    public ResultSet getLUONGPHUCAP() throws SQLException{
+        String sql = "SELECT LUONG, PHUCAP FROM COMPANY_PUBLIC.NHANVIEN" ;
+        ResultSet result;
+
+        st = cnt.createStatement();
+        result = st.executeQuery(sql);
+
+        previousStatement = String.format(DBManager.COUNTSQL, sql);
+        return result;
+    }
+    
+//    public void updatePHONGBAN(String columns, )
+    
+    
+    
 //    public void insertMockRecordToNhanVien() {
 //        var data = generateNVRecords(300);
 //        data.addAll(generateQLRecords(20));
