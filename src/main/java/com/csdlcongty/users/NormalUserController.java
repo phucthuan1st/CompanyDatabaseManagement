@@ -1211,24 +1211,50 @@ public class NormalUserController extends JFrame implements ActionListener {
                 newconstraints.gridx = 2;
                 newconstraints.gridy++;
                 nhanvienPanel.add(updateButton, newconstraints);
-                updateButton.addActionListener(this::buttonUpdateActionPerformed);
+                updateButton.addActionListener(this::buttonActionPerformed);
             }else
             {
                 newconstraints.gridx = 2;
                 newconstraints.gridy++;
                 nhanvienPanel.add(insertButton, newconstraints);
-                insertButton.addActionListener(this::buttonInsertActionPerformed);                
+                insertButton.addActionListener(this::buttonActionPerformed);                
             }
             add(nhanvienPanel, constraints);
         }   
         
-            private void buttonUpdateActionPerformed(ActionEvent e) {
-        
+            private void buttonActionPerformed(ActionEvent e) {
+                JButton button = (JButton) e.getSource();
+                String command = button.getText();
+                
+                String oldNV = manvOldField.getText().trim();
+                String manv= manvField.getText().trim();
+                String tennv= tennvField.getText().trim();
+                String phai= phaiField.getText().trim();
+                String ngaysinh= ngaysinhField.getText().trim();
+                String diachi= diachiField.getText().trim();
+                String sodt=sodtField.getText().trim();
+                String manql= manqlField.getText().trim();
+                String phg= phgField.getText().trim();
+                String vaitro =vaitroField.getText().trim();
+
+                if("Thêm".equals(command))
+                {
+                    try {
+                        dbc.insertNhanVienRecord(manv, tennv, phai, ngaysinh, diachi, sodt, manql, phg, vaitro);
+                        JOptionPane.showMessageDialog(this, "Cập nhật thông tin cá nhân thành công", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                        } catch (SQLException ex) {
+                        JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
+                    } catch (ParseException ex) {
+                        JOptionPane.showMessageDialog(this, ex.getMessage() + ": Date must be format dd/MM/yyyy", "Date Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                    
+                    }else if("Cập nhật".equals(command))
+                {
+                    
+                }
             }
             
-            private void buttonInsertActionPerformed(ActionEvent e){
-            
-            }
+
         });
                     
         this.rightPanel.revalidate();
