@@ -401,20 +401,18 @@ public class NormalUserController extends JFrame implements ActionListener {
     }
 
     private void handleShowLUONGPHUCAP() throws Exception {
-        result = dbc.selectLuongPhuCap(this.manvField.getText());
 
-        if (result.next()) {
-            String luong = result.getString("LUONG");
-            String phucap = result.getString("PHUCAP");
-            String secretKey = JOptionPane.showInputDialog(this, "Nhập khóa bí mật", "Thông báo", JOptionPane.QUESTION_MESSAGE);
+        String luong = this.luongField.getText();
+        String phucap = this.phucapField.getText();
+        String secretKey = JOptionPane.showInputDialog(this, "Nhập khóa bí mật", "Thông báo", JOptionPane.QUESTION_MESSAGE);
 
-            String key = CryptographyUtilities.hashMD5(secretKey);
-            luong = CryptographyUtilities.decryptAES(luong, key);
-            phucap = CryptographyUtilities.decryptAES(phucap, key);
+        String key = CryptographyUtilities.hashMD5(secretKey);
+        luong = CryptographyUtilities.decryptAES(luong, key);
+        phucap = CryptographyUtilities.decryptAES(phucap, key);
 
-            this.luongField.setText(luong);
-            this.phucapField.setText(phucap);
-        }
+        this.luongField.setText(luong);
+        this.phucapField.setText(phucap);
+
     }
 
     private void fetchPersonalInformation(String id) throws SQLException {
@@ -637,6 +635,8 @@ public class NormalUserController extends JFrame implements ActionListener {
                     case "Thêm": {
                         try {
                             dbc.insertPhongBanRecord(MaPB, TenPB, TrPhg);
+                            JOptionPane.showMessageDialog(this, "Đã thêm phòng " + TenPB, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                            handleShowPHONGBAN();
                         } catch (SQLException ex) {
                             JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
                         }
@@ -648,6 +648,8 @@ public class NormalUserController extends JFrame implements ActionListener {
 
                         try {
                             dbc.updatePhongBanRecord(oldMaPB, MaPB, TenPB, TrPhg);
+                            JOptionPane.showMessageDialog(this, "Đã cập nhật thông tin phòng " + TenPB, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                            handleShowPHONGBAN();
                         } catch (SQLException ex) {
                             JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
                         }
@@ -665,7 +667,6 @@ public class NormalUserController extends JFrame implements ActionListener {
         this.rightPanel.revalidate();
         this.rightPanel.repaint();
     }
-
 
     private void handleUpdatePHANCONG() {
         var option = new String[]{"Thêm", "Xóa", "Cập nhật"};
@@ -778,6 +779,8 @@ public class NormalUserController extends JFrame implements ActionListener {
 
                         try {
                             dbc.insertPhanCongRecord(MaNV, MaDA, ThoiGian);
+                            JOptionPane.showMessageDialog(this, "Đã thêm 01 phân công mới", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                            handleShowPHANCONG();
                         } catch (SQLException ex) {
                             JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
                         } catch (ParseException ex) {
@@ -795,6 +798,8 @@ public class NormalUserController extends JFrame implements ActionListener {
 
                         try {
                             dbc.updatePhanCongRecord(oldMaNV, oldMaDA, newMaNV, newMaDA, newThoiGian);
+                            JOptionPane.showMessageDialog(this, "Cập nhật phân công thành công", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                            handleShowPHANCONG();
                         } catch (SQLException ex) {
                             JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
                         } catch (ParseException ex) {
@@ -809,6 +814,8 @@ public class NormalUserController extends JFrame implements ActionListener {
 
                         try {
                             dbc.deletePhanCongRecord(oldMaNV, oldMaDA);
+                            JOptionPane.showMessageDialog(this, "Đã xóa 01 phân công", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                            handleShowPHANCONG();
                         } catch (SQLException ex) {
                             JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
                         }
@@ -826,7 +833,6 @@ public class NormalUserController extends JFrame implements ActionListener {
         this.rightPanel.revalidate();
         this.rightPanel.repaint();
     }
-
 
     private void applyLineBorder(JPanel panel) {
         Border lineBorder = BorderFactory.createLineBorder(Color.BLACK);
