@@ -597,4 +597,25 @@ public class DBManager {
         prt.execute();
         commit();
     }
+
+    public void updateSalaryAndAllowance(String maNV, String newLuong, String newPhuCap) throws Exception {
+        String sql = """
+                                UPDATE COMPANY_PUBLIC.NHANVIEN
+                                SET LUONG = ?, PHUCAP = ?
+                                WHERE MANV = ?
+                """;
+
+        prt = cnt.prepareStatement(sql);
+
+        prt.setString(3, maNV);
+
+        ResultSet result = this.selectFromTable("LUUTRU");
+        String key = result.getString("SECRET_KEY");
+
+        String encryptedLuong = CryptographyUtilities.encryptAES(newLuong, key);
+        String encryptedPhuCap = CryptographyUtilities.encryptAES(newPhuCap, key);
+
+        prt.execute();
+        commit();
+    }
 }

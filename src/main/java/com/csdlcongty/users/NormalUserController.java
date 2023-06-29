@@ -10,6 +10,7 @@ import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -19,9 +20,7 @@ public class NormalUserController extends JFrame implements ActionListener {
     private final DBManager dbc;
     private ResultSet result;
     private final JFrame father;
-    private JSplitPane mainSplitPane;
     private JSplitPane subRightSplits;
-    private JPanel leftPanel;
     private JPanel rightPanel;
 
     // Employee data fields
@@ -36,7 +35,6 @@ public class NormalUserController extends JFrame implements ActionListener {
     private final JTextField manqlField = new JTextField(10);
     private final JTextField phgField = new JTextField(10);
     private final JTextField vaitroField = new JTextField(20);
-    private int numRows;
 
     public NormalUserController(String username, String password, JFrame father)
             throws ClassNotFoundException, SQLException {
@@ -47,7 +45,7 @@ public class NormalUserController extends JFrame implements ActionListener {
         this.fetchPersonalInformation(username);
     }
 
-    private void initComponents() throws SQLException {
+    private void initComponents() {
         // Set window properties
         // Rectangle r = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
         this.setTitle("Dashboard");
@@ -57,10 +55,10 @@ public class NormalUserController extends JFrame implements ActionListener {
         this.setLocationRelativeTo(null);
         this.setResizable(false);
 
-        this.mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
         // Create left panel
-        this.leftPanel = new JPanel(new GridBagLayout());
+        JPanel leftPanel = new JPanel(new GridBagLayout());
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.insets = new Insets(5, 10, 5, 10);
@@ -130,6 +128,7 @@ public class NormalUserController extends JFrame implements ActionListener {
         JButton showSalaryAndAllowanceButton = new JButton("Xem Lương và Phụ cấp");
         showSalaryAndAllowanceButton.addActionListener(this);
         JButton updateSalaryAndAllowanceButton = new JButton("Cập nhật Lương và Phụ cấp");
+        updateSalaryAndAllowanceButton.addActionListener(this);
         applyLineBorder(group4Panel);
         constraints.gridx = 1;
         constraints.gridy = 0;
@@ -148,6 +147,7 @@ public class NormalUserController extends JFrame implements ActionListener {
         group5Panel.add(group5Label, constraints);
         constraints.gridy++;
         JButton showAdminMessagesButton = new JButton("Xem tin nhắn từ người quản trị");
+        showAdminMessagesButton.addActionListener(this);
         group5Panel.add(showAdminMessagesButton, constraints);
         constraints.gridy++;
         JButton updatePersonalInfoButton = new JButton("Cập nhật thông tin cá nhân");
@@ -171,20 +171,20 @@ public class NormalUserController extends JFrame implements ActionListener {
         // Add groups to the left panel
         constraints.gridx = 0;
         constraints.gridy = 0;
-        this.leftPanel.add(group1Panel, constraints);
+        leftPanel.add(group1Panel, constraints);
         constraints.gridy++;
-        this.leftPanel.add(group3Panel, constraints);
+        leftPanel.add(group3Panel, constraints);
         constraints.gridy++;
-        this.leftPanel.add(group5Panel, constraints);
+        leftPanel.add(group5Panel, constraints);
 
         // Add groups to the right panel
         constraints.gridx = 1;
         constraints.gridy = 0;
-        this.leftPanel.add(group2Panel, constraints);
+        leftPanel.add(group2Panel, constraints);
         constraints.gridy++;
-        this.leftPanel.add(group4Panel, constraints);
+        leftPanel.add(group4Panel, constraints);
         constraints.gridy++;
-        this.leftPanel.add(group6Panel, constraints);
+        leftPanel.add(group6Panel, constraints);
 
         // Add a logout button
         JButton logoutButton = new JButton("Đăng xuất");
@@ -193,7 +193,7 @@ public class NormalUserController extends JFrame implements ActionListener {
         constraints.gridy++;
         constraints.gridwidth = 2;
         constraints.anchor = GridBagConstraints.CENTER;
-        this.leftPanel.add(logoutButton, constraints);
+        leftPanel.add(logoutButton, constraints);
 
         // create right panel
         this.rightPanel = new JPanel();
@@ -288,13 +288,13 @@ public class NormalUserController extends JFrame implements ActionListener {
 
         this.rightPanel.add(subRightSplits);
 
-        this.mainSplitPane.setLeftComponent(this.leftPanel);
-        this.mainSplitPane.setRightComponent(this.rightPanel);
+        mainSplitPane.setLeftComponent(leftPanel);
+        mainSplitPane.setRightComponent(this.rightPanel);
 
-        this.mainSplitPane.setResizeWeight(0.5);
-        this.mainSplitPane.setDividerLocation(0.5);
+        mainSplitPane.setResizeWeight(0.5);
+        mainSplitPane.setDividerLocation(0.5);
 
-        this.add(this.mainSplitPane);
+        this.add(mainSplitPane);
         this.setVisible(true);
     }
 
@@ -324,7 +324,6 @@ public class NormalUserController extends JFrame implements ActionListener {
     }
 
     private void displayLowerPanelTable(int numRows) throws SQLException {
-        this.numRows = numRows;
         JTable table = new JTable(buildTableModel(this.result, numRows)) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -368,6 +367,10 @@ public class NormalUserController extends JFrame implements ActionListener {
                 handleModifyPHANCONG();
             } else if ("Cập nhật thông tin cá nhân".equals(command)) {
                 handleUpdatePersonalInfomation();
+            } else if ("Xem tin nhắn từ người quản trị".equals(command)) {
+                handleShowAdminMessage();
+            } else if ("Cập nhật Lương và Phụ cấp".equals(command)) {
+                handleUpdateSalaryAndAllowanceButton();
             }
         } catch (SQLException ex) {
             String message = "Error when communicate with database: " + ex.getMessage();
@@ -375,6 +378,97 @@ public class NormalUserController extends JFrame implements ActionListener {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    private void handleUpdateSalaryAndAllowanceButton() {
+        JTextField curentMaNVField = new JTextField(10);
+        JTextField newLuongField = new JTextField(20);
+        JTextField newPhuCapField = new JTextField(20);
+
+        JButton button = new JButton("Cập nhật");
+        this.subRightSplits.setBottomComponent(new JPanel() {
+            {
+                setLayout(new GridBagLayout());
+
+                GridBagConstraints constraints = new GridBagConstraints();
+                constraints.insets = new Insets(5, 10, 5, 10);
+                constraints.anchor = GridBagConstraints.WEST;
+
+                constraints.gridx = 0;
+                constraints.gridy = 0;
+
+                JPanel newInfoPanel = new JPanel();
+                newInfoPanel.setBorder(BorderFactory.createTitledBorder("Thông tin mới"));
+
+                newInfoPanel.setLayout(new GridBagLayout());
+                GridBagConstraints newInfoConstraints = new GridBagConstraints();
+
+                newInfoConstraints.insets = new Insets(5, 10, 5, 10);
+                newInfoConstraints.anchor = GridBagConstraints.WEST;
+
+                newInfoConstraints.gridx = 0;
+                newInfoConstraints.gridy++;
+                newInfoPanel.add(new JLabel("Mã nhân viên cần cập nhật"), newInfoConstraints);
+                newInfoConstraints.gridx++;
+                newInfoPanel.add(curentMaNVField, newInfoConstraints);
+
+                newInfoConstraints.gridx = 0;
+                newInfoConstraints.gridy = 0;
+                newInfoPanel.add(new JLabel("Lương"), newInfoConstraints);
+                newInfoConstraints.gridx++;
+                newInfoPanel.add(newLuongField, newInfoConstraints);
+
+                newInfoConstraints.gridx = 0;
+                newInfoConstraints.gridy++;
+                newInfoPanel.add(new JLabel("Phụ cấp"), newInfoConstraints);
+                newInfoConstraints.gridx++;
+                newInfoPanel.add(newPhuCapField, newInfoConstraints);
+
+                constraints.gridx = 0;
+                constraints.gridy++;
+                constraints.gridwidth = 2;
+
+                add(newInfoPanel, constraints);
+                constraints.gridy++;
+                constraints.gridwidth = 1;
+
+                constraints.gridx = 1;
+                constraints.gridy++;
+                add(button, constraints);
+                button.addActionListener(this::buttonActionPerformed);
+            }
+
+            private void buttonActionPerformed(ActionEvent e) {
+                JButton button = (JButton) e.getSource();
+                String command = button.getText();
+
+                if ("Cập nhật".equals(command)) {
+                    String maNV = curentMaNVField.getText();
+                    String newLuong = newLuongField.getText();
+                    String newPhuCap = newPhuCapField.getText();
+
+                    try {
+                        dbc.updateSalaryAndAllowance(maNV, newLuong, newPhuCap);
+                        JOptionPane.showMessageDialog(this, "Cập nhật thông tin cá nhân thành công", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                        fetchPersonalInformation(manvField.getText());
+                    } catch (SQLException ex) {
+                        JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(this, "Sai khóa bí mật hoặc dữ liệu đã bị hỏng", "Lỗi mã hóa", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+
+            }
+        });
+
+        this.rightPanel.revalidate();
+        this.rightPanel.repaint();
+    }
+
+    private void handleShowAdminMessage() throws SQLException {
+        result = dbc.selectFromTable("THONGDIEP");
+        int num_rows = dbc.getNumberRowsOf("COMPANY_PUBLIC.THONGDIEP");
+        displayLowerPanelTable(num_rows);
     }
 
     private void handleShowPHONGBAN() throws SQLException {
@@ -425,7 +519,7 @@ public class NormalUserController extends JFrame implements ActionListener {
             String manv = resultSet.getString("MANV");
             String tennv = resultSet.getString("TENNV");
             String phai = resultSet.getString("PHAI");
-            String ngaysinh = resultSet.getString("NGAYSINH");
+            Date ngaysinh = resultSet.getDate("NGAYSINH");
             String diachi = resultSet.getString("DIACHI");
             String sodt = resultSet.getString("SODT");
             String manql = resultSet.getString("MANQL");
@@ -436,7 +530,7 @@ public class NormalUserController extends JFrame implements ActionListener {
             manvField.setText(manv);
             tennvField.setText(tennv);
             phaiField.setText(phai);
-            ngaysinhField.setText(ngaysinh);
+            ngaysinhField.setText(ngaysinh.toString());
             diachiField.setText(diachi);
             sodtField.setText(sodt);
             manqlField.setText(manql);
@@ -559,7 +653,7 @@ public class NormalUserController extends JFrame implements ActionListener {
                 String command = button.getText();
 
                 switch (command) {
-                    case "Thêm": {
+                    case "Thêm" -> {
                         String maDA = newMADAField.getText();
                         String tenDA = newTenDAField.getText();
                         String ngayBD = newNgayBDField.getText();
@@ -576,9 +670,8 @@ public class NormalUserController extends JFrame implements ActionListener {
                             JOptionPane.showMessageDialog(this, ex.getMessage() + ": Date must be format dd/MM/yyyy", "Date Error", JOptionPane.ERROR_MESSAGE);
                         }
 
-                        break;
                     }
-                    case "Cập nhật": {
+                    case "Cập nhật" -> {
                         String oldMaDA = oldMADAField.getText();
                         String maDA = newMADAField.getText();
                         String tenDA = newTenDAField.getText();
@@ -596,9 +689,8 @@ public class NormalUserController extends JFrame implements ActionListener {
                             JOptionPane.showMessageDialog(this, ex.getMessage() + ": Date must be format dd/MM/yyyy", "Date Error", JOptionPane.ERROR_MESSAGE);
                         }
 
-                        break;
                     }
-                    case "Xóa": {
+                    case "Xóa" -> {
                         String oldMaDA = oldMADAField.getText();
 
                         try {
@@ -609,12 +701,9 @@ public class NormalUserController extends JFrame implements ActionListener {
                             JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
                         }
 
-                        break;
                     }
-                    default: {
-                        JOptionPane.showMessageDialog(this, "Invalid operation", "Operation Error", JOptionPane.ERROR_MESSAGE);
-                        break;
-                    }
+                    default ->
+                            JOptionPane.showMessageDialog(this, "Invalid operation", "Operation Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -724,7 +813,7 @@ public class NormalUserController extends JFrame implements ActionListener {
                 String TrPhg = newTRPHGField.getText();
 
                 switch (command) {
-                    case "Thêm": {
+                    case "Thêm" -> {
                         try {
                             dbc.insertPhongBanRecord(MaPB, TenPB, TrPhg);
                             JOptionPane.showMessageDialog(this, "Đã thêm phòng " + TenPB, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
@@ -733,9 +822,8 @@ public class NormalUserController extends JFrame implements ActionListener {
                             JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
                         }
 
-                        break;
                     }
-                    case "Cập nhật": {
+                    case "Cập nhật" -> {
                         String oldMaPB = oldMAPBField.getText();
 
                         try {
@@ -746,12 +834,9 @@ public class NormalUserController extends JFrame implements ActionListener {
                             JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
                         }
 
-                        break;
                     }
-                    default: {
-                        JOptionPane.showMessageDialog(this, "Invalid operation", "Operation Error", JOptionPane.ERROR_MESSAGE);
-                        break;
-                    }
+                    default ->
+                            JOptionPane.showMessageDialog(this, "Invalid operation", "Operation Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -864,7 +949,7 @@ public class NormalUserController extends JFrame implements ActionListener {
                 String command = button.getText();
 
                 switch (command) {
-                    case "Thêm": {
+                    case "Thêm" -> {
                         String MaNV = newMaNVField.getText();
                         String MaDA = newMaDaField.getText();
                         String ThoiGian = newThoiGianField.getText();
@@ -879,9 +964,8 @@ public class NormalUserController extends JFrame implements ActionListener {
                             JOptionPane.showMessageDialog(this, ex.getMessage() + ": Date must be format dd/MM/yyyy", "Date Error", JOptionPane.ERROR_MESSAGE);
                         }
 
-                        break;
                     }
-                    case "Cập nhật": {
+                    case "Cập nhật" -> {
                         String oldMaNV = oldMaNVField.getText();
                         String oldMaDA = oldMaDaField.getText();
                         String newMaNV = newMaNVField.getText();
@@ -898,9 +982,8 @@ public class NormalUserController extends JFrame implements ActionListener {
                             JOptionPane.showMessageDialog(this, ex.getMessage() + ": Date must be format dd/MM/yyyy", "Date Error", JOptionPane.ERROR_MESSAGE);
                         }
 
-                        break;
                     }
-                    case "Xóa": {
+                    case "Xóa" -> {
                         String oldMaNV = oldMaNVField.getText();
                         String oldMaDA = oldMaDaField.getText();
 
@@ -912,12 +995,9 @@ public class NormalUserController extends JFrame implements ActionListener {
                             JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
                         }
 
-                        break;
                     }
-                    default: {
-                        JOptionPane.showMessageDialog(this, "Invalid operation", "Operation Error", JOptionPane.ERROR_MESSAGE);
-                        break;
-                    }
+                    default ->
+                            JOptionPane.showMessageDialog(this, "Invalid operation", "Operation Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
