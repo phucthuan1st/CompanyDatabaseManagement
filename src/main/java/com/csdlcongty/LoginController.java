@@ -149,14 +149,14 @@ public class LoginController extends JFrame implements ActionListener {
                     changeTo(userSession);
                 }
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Cannot connect to database!", "Error",
+                JOptionPane.showMessageDialog(this, "Cannot connect to database!" + ex.getMessage(), "Error",
                         JOptionPane.ERROR_MESSAGE);
             } catch (ClassNotFoundException ex) {
                 JOptionPane.showMessageDialog(this, "Unexpected error!", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
-    
+
 
     public void changeTo(JFrame other) {
         this.setVisible(false);

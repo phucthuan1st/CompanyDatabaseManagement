@@ -331,6 +331,9 @@ public class DBManager {
         var data = generateNVRecords(300);
         data.addAll(generateQLRecords(20));
         data.addAll(generateTPRecords(8));
+        data.addAll(generateTCRecords(5));
+        data.addAll(generateNhanSuRecords(5));
+        data.addAll(generateTruongDeAnRecords(3));
 
         String sqlNhanVien = "{call INSERT_NHANVIEN_RECORD(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
 
