@@ -14,8 +14,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.text.ParseException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class NormalUserController extends JFrame implements ActionListener {
     private final DBManager dbc;
@@ -536,76 +534,138 @@ public class NormalUserController extends JFrame implements ActionListener {
     }
 
     private void handleUpdatePHONGBAN() throws SQLException {
-        JPanel panel = new JPanel() {
+        var option = new String[]{"Thêm", "Cập nhật"};
+        String message = "Chọn thao tác?";
+
+        int choose = JOptionPane.showOptionDialog(this, message, "Selection", JOptionPane.DEFAULT_OPTION,
+                JOptionPane.PLAIN_MESSAGE, null, option, null);
+
+        if (choose < 0) {
+            return;
+        }
+
+        String operationType = option[choose];
+
+        JTextField oldMAPBField = new JTextField(10);
+        JTextField newMAPBField = new JTextField(10);
+        JTextField newTenPBField = new JTextField(30);
+        JTextField newTRPHGField = new JTextField(10);
+
+        JButton button = new JButton(operationType);
+
+        this.subRightSplits.setBottomComponent(new JPanel() {
             {
-                JLabel label;
-                JTextField oldMAPB;
-                JTextField TENPB;
-                JTextField TRPHG;
-                JTextField MAPB;
-                JButton updateButton;
-                pack();
+                setLayout(new GridBagLayout());
 
-                label = new JLabel("Cập nhật thông tin");
-                oldMAPB = new JTextField(10);
-                MAPB = new JTextField(10);
-                TENPB = new JTextField(30);
-                TRPHG = new JTextField(10);
+                GridBagConstraints constraints = new GridBagConstraints();
+                constraints.insets = new Insets(5, 10, 5, 10);
+                constraints.anchor = GridBagConstraints.WEST;
 
-                BoxLayout boxLayout = new BoxLayout(this, BoxLayout.Y_AXIS);
-                setLayout(boxLayout);
-                updateButton = new JButton("Cập nhật");
+                constraints.gridx = 0;
+                constraints.gridy = 0;
 
-                add(label);
-                add(new JLabel("Mã PB cần update"));
-                add(oldMAPB);
+                if ("Cập nhật".equals(operationType)) {
+                    JPanel oldInfoPanel = new JPanel();
+                    oldInfoPanel.setBorder(BorderFactory.createTitledBorder("Phòng ban cũ"));
 
-                add(new JLabel("Mã PB"));
-                add(MAPB);
-                add(new JLabel("Tên PB:"));
-                add(TENPB);
-                add(new JLabel("Mã Trưởng Phòng:"));
-                add(TRPHG);
-                add(updateButton, BorderLayout.CENTER);
+                    oldInfoPanel.setLayout(new GridBagLayout());
+                    GridBagConstraints oldInfoConstraints = new GridBagConstraints();
+                    oldInfoConstraints.insets = new Insets(5, 10, 5, 10);
+                    oldInfoConstraints.anchor = GridBagConstraints.WEST;
 
-                ActionListener listener = new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        JButton button = (JButton) e.getSource();
+                    oldInfoConstraints.gridx = 0;
+                    oldInfoConstraints.gridy = 0;
+                    oldInfoPanel.add(new JLabel(String.format("Mã Phòng ban cần %s", operationType)), oldInfoConstraints);
+                    oldInfoConstraints.gridx++;
+                    oldInfoPanel.add(oldMAPBField, oldInfoConstraints);
+                    oldInfoConstraints.gridy++;
 
-                        String oldma = oldMAPB.getText().trim();
-                        String ma = MAPB.getText().trim();
-                        String ten = TENPB.getText().trim();
-                        String truongphong = TRPHG.getText().trim();
-                        int sucess;
-                        try {
-                            sucess = dbc.updatePHONGBAN(oldma, ma, ten, truongphong);
-                            if (sucess > 0) {
-                                JFrame frame = new JFrame("Message");
-                                JOptionPane.showMessageDialog(frame, "Update Sucessfully", "Message",
-                                        JOptionPane.INFORMATION_MESSAGE);
-                            } else {
-                                JFrame frame = new JFrame("Message");
-                                JOptionPane.showMessageDialog(frame,
-                                        "Cannot update ", "ERROR", JOptionPane.ERROR_MESSAGE);
+                    add(oldInfoPanel, constraints);
+                    constraints.gridy++;
+                }
 
-                            }
-                        } catch (SQLException ex) {
-                            Logger.getLogger(NormalUserController.class.getName()).log(Level.SEVERE, null, ex);
-                        }
 
-                    }
-                };
-                updateButton.addActionListener(listener);
-                this.setVisible(true);
+                JPanel newInfoPanel = new JPanel();
+                newInfoPanel.setBorder(BorderFactory.createTitledBorder("Phòng ban mới"));
+
+                newInfoPanel.setLayout(new GridBagLayout());
+                GridBagConstraints newInfoConstraints = new GridBagConstraints();
+
+                newInfoConstraints.insets = new Insets(5, 10, 5, 10);
+                newInfoConstraints.anchor = GridBagConstraints.WEST;
+
+                newInfoConstraints.gridx = 0;
+                newInfoConstraints.gridy = 0;
+                newInfoPanel.add(new JLabel("Mã phòng ban"), newInfoConstraints);
+                newInfoConstraints.gridx++;
+                newInfoPanel.add(newMAPBField, newInfoConstraints);
+
+                newInfoConstraints.gridx = 0;
+                newInfoConstraints.gridy++;
+                newInfoPanel.add(new JLabel("Tên phòng ban"), newInfoConstraints);
+                newInfoConstraints.gridx++;
+                newInfoPanel.add(newTenPBField, newInfoConstraints);
+
+                newInfoConstraints.gridx = 0;
+                newInfoConstraints.gridy++;
+                newInfoPanel.add(new JLabel("Mã trưởng phòng"), newInfoConstraints);
+                newInfoConstraints.gridx++;
+                newInfoPanel.add(newTRPHGField, newInfoConstraints);
+
+                constraints.gridx = 0;
+                constraints.gridy++;
+                constraints.gridwidth = 2;
+                add(newInfoPanel, constraints);
+                constraints.gridy++;
+                constraints.gridwidth = 1;
+
+                constraints.gridx = 1;
+                constraints.gridy++;
+                add(button, constraints);
+                button.addActionListener(this::buttonActionPerformed);
             }
 
-        };
-        this.subRightSplits.setBottomComponent(panel);
+            private void buttonActionPerformed(ActionEvent e) {
+                JButton button = (JButton) e.getSource();
+                String command = button.getText();
+
+                String MaPB = newMAPBField.getText();
+                String TenPB = newTenPBField.getText();
+                String TrPhg = newTRPHGField.getText();
+
+                switch (command) {
+                    case "Thêm": {
+                        try {
+                            dbc.insertPhongBanRecord(MaPB, TenPB, TrPhg);
+                        } catch (SQLException ex) {
+                            JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
+                        }
+
+                        break;
+                    }
+                    case "Cập nhật": {
+                        String oldMaPB = oldMAPBField.getText();
+
+                        try {
+                            dbc.updatePhongBanRecord(oldMaPB, MaPB, TenPB, TrPhg);
+                        } catch (SQLException ex) {
+                            JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
+                        }
+
+                        break;
+                    }
+                    default: {
+                        JOptionPane.showMessageDialog(this, "Invalid operation", "Operation Error", JOptionPane.ERROR_MESSAGE);
+                        break;
+                    }
+                }
+            }
+        });
+
         this.rightPanel.revalidate();
         this.rightPanel.repaint();
-
     }
+
 
     private void handleUpdatePHANCONG() {
         var option = new String[]{"Thêm", "Xóa", "Cập nhật"};

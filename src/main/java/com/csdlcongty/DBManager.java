@@ -552,4 +552,32 @@ public class DBManager {
 
         prt.execute();
     }
+
+    public void insertPhongBanRecord(String maPB, String tenPB, String trPhg) throws SQLException {
+        String sql = "INSERT INTO COMPANY_PUBLIC.PHONGBAN(MAPB, TENPB, TRPHG) VALUES (?, ?, ?)";
+        prt = cnt.prepareStatement(sql);
+
+        prt.setString(1, maPB);
+        prt.setString(2, tenPB);
+        prt.setString(3, trPhg);
+
+        prt.execute();
+    }
+
+    public void updatePhongBanRecord(String oldMaPB, String maPB, String tenPB, String trPhg) throws SQLException {
+        String sql = """
+                                UPDATE COMPANY_PUBLIC.PHONGBAN
+                                SET MAPB = ?, TENPB = ?, TRPHG = ?
+                                WHERE MAPB = ?
+                """;
+
+        prt = cnt.prepareStatement(sql);
+
+        prt.setString(1, maPB);
+        prt.setString(2, tenPB);
+        prt.setString(3, trPhg);
+        prt.setString(4, oldMaPB);
+
+        prt.execute();
+    }
 }
