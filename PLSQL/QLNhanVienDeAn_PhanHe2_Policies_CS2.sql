@@ -55,6 +55,10 @@ BEGIN
     -- Get the session user name
     v_session_user := SYS_CONTEXT('USERENV', 'SESSION_USER');
     
+    IF v_session_user = 'COMPANY_PUBLIC' THEN
+        RETURN '1=1';
+    END IF;
+    
     -- Lay vai tro cua user
     SELECT VAITRO INTO v_vaitro FROM COMPANY_PUBLIC.VAITRO_NHANVIEN WHERE MANV = v_session_user;
     
@@ -71,11 +75,11 @@ BEGIN
             v_predicate := '1 = 1';
         ELSE
             -- Không áp dụng ràng buộc cho các bảng khác
-            v_predicate := '1=0';
+            v_predicate := '1=1';
         END IF;
     ELSE
         -- Không áp dụng ràng buộc cho các bảng khác
-        v_predicate := NULL;
+        v_predicate := '1=1';
     END IF;
     
     -- Trả về ràng buộc (predicate) được sinh ra
@@ -95,6 +99,10 @@ BEGIN
     -- Get the session user name
     v_session_user := SYS_CONTEXT('USERENV', 'SESSION_USER');
     
+    IF v_session_user = 'COMPANY_PUBLIC' THEN
+        RETURN '1=1';
+    END IF;
+    
     -- Lay vai tro cua user
     SELECT VAITRO INTO v_vaitro FROM COMPANY_PUBLIC.VAITRO_NHANVIEN WHERE MANV = v_session_user;
     
@@ -109,7 +117,7 @@ BEGIN
         END IF;
     ELSE
         -- Không áp dụng ràng buộc cho các bảng khác
-        v_predicate := NULL;
+        v_predicate := '1=1';
     END IF;
     
     -- Trả về ràng buộc (predicate) được sinh ra
@@ -167,12 +175,14 @@ END;
 /
 
 -- Có thể sửa trên các thuộc tính NGAYSINH, DIACHI, SODT liên quan đến chính nhân viên đó
+
 BEGIN
+        
         dbms_rls.add_policy(
                    object_schema     => 'COMPANY_PUBLIC',
                    object_name       => 'NHANVIEN',
                    policy_name       => 'CS2_QL_UPDATE_NHANVIEN_POLICY',
-                   policy_function   => 'QLTT_UPDATE_SELF_PERMISSION_CONSTRAINTS',
+                   policy_function   => 'QLTT_SELF_PERMISSION_CONSTRAINTS',
                    statement_types   => 'UPDATE',
                    sec_relevant_cols => 'NGAYSINH, DIACHI, SODT',
                    update_check      => true,

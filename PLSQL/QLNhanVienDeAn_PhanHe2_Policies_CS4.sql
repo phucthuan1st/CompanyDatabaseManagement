@@ -55,6 +55,11 @@ IS
     STR VARCHAR2(100);
 BEGIN
     USR:= SYS_CONTEXT('USERENV', 'SESSION_USER');
+    
+    IF USR = 'COMPANY_PUBLIC' THEN
+        RETURN '1=1';
+    END IF;
+    
     SELECT NV.VAITRO INTO ROL FROM COMPANY_PUBLIC.VAITRO_NHANVIEN NV WHERE MANV= SYS_CONTEXT('USERENV', 'SESSION_USER');
     
     IF ROL ='Tài chính' THEN
@@ -63,7 +68,7 @@ BEGIN
             RETURN STR;
         END IF;
     END IF;
-    RETURN NULL;
+    RETURN '1=1';
 END;
 /
 --function cho policy TAICHINH có thể sửa LUONG và PHUCAP trên NHANVIEN của tất cả nhân viên
@@ -76,13 +81,18 @@ IS
     USR VARCHAR2(100);
 BEGIN
     USR:= SYS_CONTEXT('USERENV', 'SESSION_USER');
+    
+    IF USR = 'COMPANY_PUBLIC' THEN
+        RETURN '1=1';
+    END IF;
+    
     SELECT NV.VAITRO INTO ROL FROM COMPANY_PUBLIC.VAITRO_NHANVIEN NV WHERE MANV= USR;
     IF ROL ='Tài chính' THEN
         IF P_OBJ = 'NHANVIEN' THEN
             RETURN '1=1';
         END IF;
     END IF;
-    RETURN NULL;
+    RETURN '1=1';
 END;
 /
 -- *NOTE: đối với hàm chính sách, return NULL để có vô hiệu hóa điều kiện, để có thể gắn thêm các chính sách khác (các CS2 --> 6)

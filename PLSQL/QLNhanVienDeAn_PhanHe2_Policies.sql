@@ -9,6 +9,11 @@ BEGIN
   DBMS_OUTPUT.PUT_LINE('Service Name: ' || v_service_name);
 END;
 /
+
+GRANT SELECT ON NHANVIEN TO COMPANY_PUBLIC;
+GRANT SELECT ON PHANCONG TO COMPANY_PUBLIC;
+GRANT SELECT ON DEAN TO COMPANY_PUBLIC;
+GRANT SELECT ON PHONGBAN TO COMPANY_PUBLIC;
 -------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------OLS----------------------------------------
 --Tạo chính sách

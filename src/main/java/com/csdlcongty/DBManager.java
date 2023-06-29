@@ -580,4 +580,21 @@ public class DBManager {
         prt.execute();
         commit();
     }
+
+    public void updatePersonalInfoRecord(String newNgaySinh, String newDiaChi, String newSoDT) throws SQLException, ParseException {
+        String sql = """
+                                UPDATE COMPANY_PUBLIC.NHANVIEN
+                                SET NGAYSINH = ?, DIACHI = ?, SODT = ?
+                                WHERE MADA = SYS_CONTEXT('USERENV', 'SESSION_USER')
+                """;
+
+        prt = cnt.prepareStatement(sql);
+
+        prt.setDate(1, new Date((new SimpleDateFormat("dd/MM/yyyy")).parse(newNgaySinh).getTime()));
+        prt.setString(2, newDiaChi);
+        prt.setString(3, newSoDT);
+
+        prt.execute();
+        commit();
+    }
 }

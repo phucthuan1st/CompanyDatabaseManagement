@@ -151,6 +151,7 @@ public class NormalUserController extends JFrame implements ActionListener {
         group5Panel.add(showAdminMessagesButton, constraints);
         constraints.gridy++;
         JButton updatePersonalInfoButton = new JButton("Cập nhật thông tin cá nhân");
+        updatePersonalInfoButton.addActionListener(this);
         group5Panel.add(updatePersonalInfoButton, constraints);
 
         // Group 6 (Right column)
@@ -365,6 +366,8 @@ public class NormalUserController extends JFrame implements ActionListener {
                 handleModifyDEAN();
             } else if ("Cập nhật phân công".equals(command)) {
                 handleModifyPHANCONG();
+            } else if ("Cập nhật thông tin cá nhân".equals(command)) {
+                handleUpdatePersonalInfomation();
             }
         } catch (SQLException ex) {
             String message = "Error when communicate with database: " + ex.getMessage();
@@ -372,8 +375,6 @@ public class NormalUserController extends JFrame implements ActionListener {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-
-
     }
 
     private void handleShowPHONGBAN() throws SQLException {
@@ -919,6 +920,94 @@ public class NormalUserController extends JFrame implements ActionListener {
                     }
                 }
             }
+        });
+
+        this.rightPanel.revalidate();
+        this.rightPanel.repaint();
+    }
+
+    private void handleUpdatePersonalInfomation() {
+        JTextField newNgaySinhField = new JTextField(10);
+        JTextField newDiaChiField = new JTextField(30);
+        JTextField newSoDTField = new JTextField(20);
+
+        JButton button = new JButton("Cập nhật");
+
+        this.subRightSplits.setBottomComponent(new JPanel() {
+            {
+                setLayout(new GridBagLayout());
+
+                GridBagConstraints constraints = new GridBagConstraints();
+                constraints.insets = new Insets(5, 10, 5, 10);
+                constraints.anchor = GridBagConstraints.WEST;
+
+                constraints.gridx = 0;
+                constraints.gridy = 0;
+
+                JPanel newInfoPanel = new JPanel();
+                newInfoPanel.setBorder(BorderFactory.createTitledBorder("Thông tin mới"));
+
+                newInfoPanel.setLayout(new GridBagLayout());
+                GridBagConstraints newInfoConstraints = new GridBagConstraints();
+
+                newInfoConstraints.insets = new Insets(5, 10, 5, 10);
+                newInfoConstraints.anchor = GridBagConstraints.WEST;
+
+                newInfoConstraints.gridx = 0;
+                newInfoConstraints.gridy = 0;
+                newInfoPanel.add(new JLabel("Ngày sinh"), newInfoConstraints);
+                newInfoConstraints.gridx++;
+                newInfoPanel.add(newNgaySinhField, newInfoConstraints);
+
+                newInfoConstraints.gridx = 0;
+                newInfoConstraints.gridy++;
+                newInfoPanel.add(new JLabel("Địa chỉ"), newInfoConstraints);
+                newInfoConstraints.gridx++;
+                newInfoPanel.add(newDiaChiField, newInfoConstraints);
+
+                newInfoConstraints.gridx = 0;
+                newInfoConstraints.gridy++;
+                newInfoPanel.add(new JLabel("Số điện thoại"), newInfoConstraints);
+                newInfoConstraints.gridx++;
+                newInfoPanel.add(newSoDTField, newInfoConstraints);
+
+                constraints.gridx = 0;
+                constraints.gridy++;
+                constraints.gridwidth = 2;
+
+                add(newInfoPanel, constraints);
+                constraints.gridy++;
+                constraints.gridwidth = 1;
+
+                constraints.gridx = 1;
+                constraints.gridy++;
+                add(button, constraints);
+                button.addActionListener(this::buttonActionPerformed);
+            }
+
+            private void buttonActionPerformed(ActionEvent e) {
+                JButton button = (JButton) e.getSource();
+                String command = button.getText();
+
+                if ("Cập nhật".equals(command)) {
+                    String newNgaySinh = newNgaySinhField.getText();
+                    String newDiaChi = newDiaChiField.getText();
+                    String newSoDT = newSoDTField.getText();
+
+                    try {
+                        dbc.updatePersonalInfoRecord(newNgaySinh, newDiaChi, newSoDT);
+                        JOptionPane.showMessageDialog(this, "Cập nhật phân công thành công", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                        handleShowPHANCONG();
+                    } catch (SQLException ex) {
+                        JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
+                    } catch (ParseException ex) {
+                        JOptionPane.showMessageDialog(this, ex.getMessage() + ": Date must be format dd/MM/yyyy", "Date Error", JOptionPane.ERROR_MESSAGE);
+                    }
+
+                }
+
+            }
+
         });
 
         this.rightPanel.revalidate();

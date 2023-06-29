@@ -37,6 +37,24 @@ BEGIN
     INSERT INTO NHANVIEN_PHONG (MANV, PHG)
     VALUES (p_MANV, p_PHG);
     
+    create_user(p_MANV, 'password');
+    
+    IF p_VAITRO = 'Nhân viên' THEN
+        EXECUTE IMMEDIATE 'GRANT NHAN_VIEN TO ' || p_MANV;
+    ELSIF p_VAITRO = 'QL trực tiếp' THEN
+        EXECUTE IMMEDIATE 'GRANT QL_TRUC_TIEP TO ' || p_MANV;
+    ELSIF p_VAITRO = 'Trưởng phòng' THEN
+        EXECUTE IMMEDIATE 'GRANT TRUONG_PHONG TO ' || p_MANV;
+    ELSIF p_VAITRO = 'Tài chính' THEN
+        EXECUTE IMMEDIATE 'GRANT TAI_CHINH TO ' || p_MANV;
+    ELSIF p_VAITRO = 'Nhân sự' THEN
+        EXECUTE IMMEDIATE 'GRANT NHAN_SU TO ' || p_MANV;
+    ELSIF p_VAITRO = 'Trưởng đề án' THEN
+        EXECUTE IMMEDIATE 'GRANT TRUONG_DEAN TO ' || p_MANV;
+    ELSE 
+        ROLLBACK;
+    END IF;
+    
     COMMIT;
 EXCEPTION
     WHEN OTHERS THEN

@@ -1,13 +1,15 @@
 package com.csdlcongty;
 
+import com.csdlcongty.dba.DBAdminController;
+import com.csdlcongty.users.NormalUserController;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
-import com.csdlcongty.dba.DBAdminController;
-import com.csdlcongty.users.NormalUserController;
 
 // include Login screen and handling for pressing Login button
 public class LoginController extends JFrame implements ActionListener {
@@ -91,66 +93,70 @@ public class LoginController extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == loginButton) {
+            authenticateLogin();
+        }
+    }
 
-            // Implement login logic
-            String username = usernameField.getText();
-            String password = new String(passwordField.getPassword());
-            String role;
-            boolean accessGranted = false;
+    private void authenticateLogin() {
+        // Implement login logic
+        String username = usernameField.getText();
+        String password = new String(passwordField.getPassword());
+        String role;
+        boolean accessGranted = false;
 
-            // normalize username
-            username = username.toUpperCase();
-            if ("COMPANY_PUBLIC".equals(username)) {
-                role = "DBA";
-            } else {
-                role = "normal";
-            }
+        // normalize username
+        username = username.toUpperCase();
+        if ("COMPANY_PUBLIC".equals(username)) {
+            role = "DBA";
+        } else {
+            role = "normal";
+        }
 
-            // try to connect to database to check if credentials is true
-            try {
-                DBManager dbc = new DBManager(username, password);
-                accessGranted = true;
-                JOptionPane.showMessageDialog(this, "Access Granted");
-                
+        // try to connect to database to check if credentials is true
+        try {
+            DBManager dbc = new DBManager(username, password);
+            accessGranted = true;
+            JOptionPane.showMessageDialog(this, "Access Granted");
+
                 /*
                     Nếu trong máy chưa có record nào trong bảng NHANVIEN thì bỏ comment dòng bên dưới
                 */
-                //dbc.insertMockRecordToNhanVien();
-                //dbc.writeNhanVienRecordsToFile(dbc.getDecryptedNhanVienRecords(), "NhanVienRecord.csv");
-                
-                dbc.cnt.close();
-            } catch (SQLException ex) {
-                String cause = ex.getMessage();
-                String message;
-                if (cause.contains("could not establish the connection")) {
-                    message = "Cannot access database: database might offline!";
+            //dbc.insertMockRecordToNhanVien();
+            //dbc.writeNhanVienRecordsToFile(dbc.getDecryptedNhanVienRecords(), "NhanVienRecord.csv");
+
+            dbc.cnt.close();
+        } catch (SQLException ex) {
+            String cause = ex.getMessage();
+            String message;
+            if (cause.contains("could not establish the connection")) {
+                message = "Cannot access database: database might offline!";
+            } else {
+                message = "Username or password is not correct";
+            }
+            JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (ClassNotFoundException ex) {
+            JOptionPane.showMessageDialog(this, "Unexpected error!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+
+        if (accessGranted) {
+
+            try {
+                if ("DBA".equals(role)) {
+                    DBAdminController adminSession = new DBAdminController(username, password, this);
+                    changeTo(adminSession);
                 } else {
-                    message = "Username or password is not correct";
+                    NormalUserController userSession = new NormalUserController(username, password, this);
+                    changeTo(userSession);
                 }
-                JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Cannot connect to database!", "Error",
+                        JOptionPane.ERROR_MESSAGE);
             } catch (ClassNotFoundException ex) {
                 JOptionPane.showMessageDialog(this, "Unexpected error!", "Error", JOptionPane.ERROR_MESSAGE);
             }
-
-            if (accessGranted) {
-                
-                try {
-                    if ("DBA".equals(role)) {
-                        DBAdminController adminSession = new DBAdminController(username, password, this);
-                        changeTo(adminSession);
-                    } else {
-                        NormalUserController userSession = new NormalUserController(username, password, this);
-                        changeTo(userSession);
-                    }
-                } catch (SQLException ex) {
-                    JOptionPane.showMessageDialog(this, "Cannot connect to database!", "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                } catch (ClassNotFoundException ex) {
-                    JOptionPane.showMessageDialog(this, "Unexpected error!", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
         }
     }
+    
 
     public void changeTo(JFrame other) {
         this.setVisible(false);

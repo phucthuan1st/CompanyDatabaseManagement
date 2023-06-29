@@ -61,6 +61,10 @@ BEGIN
     -- Lấy tên người dùng của phiên làm việc
     v_session_user := SYS_CONTEXT('USERENV', 'SESSION_USER');
     
+    IF v_session_user = 'COMPANY_PUBLIC' THEN
+        RETURN '1=1';
+    END IF;
+    
     -- Lấy vai trò của người dùng
     SELECT VAITRO INTO v_vaitro FROM COMPANY_PUBLIC.VAITRO_NHANVIEN WHERE MANV = v_session_user;
     
@@ -80,7 +84,7 @@ BEGIN
         END IF;
     ELSE
         -- Không áp dụng ràng buộc cho vai trò khác hoặc schema hoặc bảng khác
-        v_predicate := NULL;
+        v_predicate := '1=1';
     END IF;
 
     -- Trả về ràng buộc được sinh ra
@@ -100,6 +104,10 @@ BEGIN
     -- Get the session user name
     v_session_user := SYS_CONTEXT('USERENV', 'SESSION_USER');
     
+    IF v_session_user = 'COMPANY_PUBLIC' THEN
+        RETURN '1=1';
+    END IF;
+    
     -- Lay vai tro cua user
     SELECT VAITRO INTO v_vaitro FROM COMPANY_PUBLIC.VAITRO_NHANVIEN WHERE MANV = v_session_user;
     
@@ -114,7 +122,7 @@ BEGIN
         END IF;
     ELSE
         -- Không áp dụng ràng buộc cho các bảng khác
-        v_predicate := NULL;
+        v_predicate := '1=1';
     END IF;
     
     -- Trả về ràng buộc (predicate) được sinh ra
