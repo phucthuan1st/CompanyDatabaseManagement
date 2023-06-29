@@ -327,10 +327,15 @@ public class DBManager {
     }
 
 
-    public void insertMockRecordToNhanVien() {
+    public void insertMockRecordToNhanVien() throws NoSuchAlgorithmException {
         var data = generateNVRecords(300);
         data.addAll(generateQLRecords(20));
         data.addAll(generateTPRecords(8));
+        data.addAll(generateTCRecords(5));
+        data.addAll(generateNhanSuRecords(5));
+        data.addAll(generateTruongDeAnRecords(3));
+
+        String key = CryptographyUtilities.hashMD5("secret");
 
         String sqlNhanVien = "{call INSERT_NHANVIEN_RECORD(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
 
@@ -350,9 +355,8 @@ public class DBManager {
                 cst.setString(6, record.SODT);
 
                 // Encrypt LUONG and PHUCAP using AES in CryptographyUtilities
-                String md5Hash = CryptographyUtilities.hashMD5("secret");
-                String encryptedLuong = CryptographyUtilities.encryptAES(record.LUONG, md5Hash);
-                String encryptedPhuCap = CryptographyUtilities.encryptAES(record.PHUCAP, md5Hash);
+                String encryptedLuong = CryptographyUtilities.encryptAES(record.LUONG, key);
+                String encryptedPhuCap = CryptographyUtilities.encryptAES(record.PHUCAP, key);
 
                 cst.setString(7, encryptedLuong);
                 cst.setString(8, encryptedPhuCap);
@@ -396,7 +400,7 @@ public class DBManager {
 
             for (NhanVienRecord record : data) {
                 cst.setString(1, record.MANV);
-                cst.setString(2, CryptographyUtilities.hashMD5(record.SODT));
+                cst.setString(2, key);
                 cst.execute();
             }
 
@@ -628,10 +632,18 @@ public class DBManager {
         prt.setString(3, maNV);
 
         ResultSet result = this.selectFromTable("LUUTRU");
-        String key = result.getString("SECRET_KEY");
+        String key;
+        if (result.next())
+            key = result.getString("SECRET_KEY");
+        else
+            throw new Exception("Cannot access the secret key");
 
         String encryptedLuong = CryptographyUtilities.encryptAES(newLuong, key);
         String encryptedPhuCap = CryptographyUtilities.encryptAES(newPhuCap, key);
+
+        prt.setString(1, encryptedLuong);
+        prt.setString(2, encryptedPhuCap);
+        prt.setString(3, maNV);
 
         prt.execute();
         commit();

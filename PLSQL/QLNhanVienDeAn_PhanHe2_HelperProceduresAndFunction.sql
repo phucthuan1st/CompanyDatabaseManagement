@@ -37,24 +37,6 @@ BEGIN
     INSERT INTO NHANVIEN_PHONG (MANV, PHG)
     VALUES (p_MANV, p_PHG);
     
-    create_user(p_MANV, 'password');
-    
-    IF p_VAITRO = 'Nhân viên' THEN
-        EXECUTE IMMEDIATE 'GRANT NHAN_VIEN TO ' || p_MANV;
-    ELSIF p_VAITRO = 'QL trực tiếp' THEN
-        EXECUTE IMMEDIATE 'GRANT QL_TRUC_TIEP TO ' || p_MANV;
-    ELSIF p_VAITRO = 'Trưởng phòng' THEN
-        EXECUTE IMMEDIATE 'GRANT TRUONG_PHONG TO ' || p_MANV;
-    ELSIF p_VAITRO = 'Tài chính' THEN
-        EXECUTE IMMEDIATE 'GRANT TAI_CHINH TO ' || p_MANV;
-    ELSIF p_VAITRO = 'Nhân sự' THEN
-        EXECUTE IMMEDIATE 'GRANT NHAN_SU TO ' || p_MANV;
-    ELSIF p_VAITRO = 'Trưởng đề án' THEN
-        EXECUTE IMMEDIATE 'GRANT TRUONG_DEAN TO ' || p_MANV;
-    ELSE 
-        ROLLBACK;
-    END IF;
-    
     COMMIT;
 EXCEPTION
     WHEN OTHERS THEN
@@ -102,6 +84,43 @@ BEGIN
       DBMS_OUTPUT.PUT_LINE(v_sql);
       EXECUTE IMMEDIATE v_sql;
     END IF;
+  END LOOP;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE grant_user_roles AS
+BEGIN
+  FOR user_rec IN (SELECT username FROM dba_users
+                   WHERE account_status = 'OPEN'
+                     AND authentication_type = 'PASSWORD'
+                     AND username NOT IN ('SYS', 'SYSTEM', 'OUTLN', 'DBSNMP'))
+  LOOP
+    BEGIN
+      -- Determine the role based on the username
+      IF user_rec.username LIKE 'NV%' THEN
+        EXECUTE IMMEDIATE 'GRANT COMPANY_PUBLIC.NHAN_VIEN TO ' || user_rec.username;
+      ELSIF user_rec.username LIKE 'QL%' THEN
+        EXECUTE IMMEDIATE 'GRANT COMPANY_PUBLIC.QL_TRUC_TIEP TO ' || user_rec.username;
+      ELSIF user_rec.username LIKE 'TP%' THEN
+        EXECUTE IMMEDIATE 'GRANT COMPANY_PUBLIC.TRUONG_PHONG TO ' || user_rec.username;
+      ELSIF user_rec.username LIKE 'TC%' THEN
+        EXECUTE IMMEDIATE 'GRANT COMPANY_PUBLIC.TAI_CHINH TO ' || user_rec.username;
+      ELSIF user_rec.username LIKE 'NS%' THEN
+        EXECUTE IMMEDIATE 'GRANT COMPANY_PUBLIC.NHAN_SU TO ' || user_rec.username;
+      ELSIF user_rec.username LIKE 'TDA%' THEN
+        EXECUTE IMMEDIATE 'GRANT COMPANY_PUBLIC.TRUONG_DEAN TO ' || user_rec.username;
+      ELSE
+        CONTINUE; -- Skip to the next iteration if the username doesn't match any condition
+      END IF;
+      
+      -- Commit the grant statement if successful
+      COMMIT;
+    EXCEPTION
+      WHEN OTHERS THEN
+        -- Log the error and continue to the next iteration
+        DBMS_OUTPUT.PUT_LINE('Error granting role for user: ' || user_rec.username || ', Error: ' || SQLERRM);
+        CONTINUE;
+    END;
   END LOOP;
 END;
 /

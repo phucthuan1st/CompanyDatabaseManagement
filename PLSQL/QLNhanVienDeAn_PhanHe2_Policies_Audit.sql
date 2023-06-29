@@ -14,131 +14,12 @@ GRANT SELECT ON NHANVIEN TO COMPANY_PUBLIC;
 GRANT SELECT ON PHANCONG TO COMPANY_PUBLIC;
 GRANT SELECT ON DEAN TO COMPANY_PUBLIC;
 GRANT SELECT ON PHONGBAN TO COMPANY_PUBLIC;
--------------------------------------------------------------------------------------------------------------------------------------
----------------------------------------------OLS----------------------------------------
---Tạo chính sách
-BEGIN
-    SA_SYSDBA.CREATE_POLICY (
-        policy_name => 'OLS_POLICY'
-        column_name => 'OLS_COLUMN'
-    );
-END;
-/
 
---Tạo level theo 3 mức độ Giám đốc, Trường phòng và Nhân viên
-BEGIN
-    SA_COMPONENTS.CREATE_LEVEL (
-        policy_name => 'OLS_POLICY'
-        long_name => 'NHANVIEN'
-        short_name =>'NV'
-        level_num => 1000
-    );
-END;
-/
-
-BEGIN
-    SA_COMPONENTS.CREATE_LEVEL (
-        policy_name => 'OLS_POLICY'
-        long_name => 'TRUONGPHONG'
-        short_name =>'TP'
-        level_num => 2000
-    );
-END;
-/
-
-BEGIN
-    SA_COMPONENTS.CREATE_LEVEL (
-        policy_name => 'OLS_POLICY'
-        long_name => 'GIAMDOC'
-        short_name =>'GD'
-        level_num => 3000
-    );
-END;
-/
-
---Tạo compartments theo 3 ngành nghề Mua bán, Sản xuẩ và Gia công
-BEGIN
-    SA_COMPONENTS.CREATE_COMPARTMENT(
-        policy_name => 'OLS_POLICY'
-        long_name => 'MUABAN'
-        short_name => 'MB'
-        comp_num => 100
-    );
-END;
-/
-
-BEGIN
-    SA_COMPONENTS.CREATE_COMPARTMENT(
-        policy_name => 'OLS_POLICY'
-        long_name => 'SANXUAT'
-        short_name => 'SX'
-        comp_num => 200
-    );
-END;
-/
-
-BEGIN
-    SA_COMPONENTS.CREATE_COMPARTMENT(
-        policy_name => 'OLS_POLICY'
-        long_name => 'GIACONG'
-        short_name => 'GC'
-        comp_num => 300
-    );
-END;
-/
---Tạo group theo 3 miền Bắc, Trung, Nam là con của công ty chủ
-BEGIN
-    SA_COMPONENTS.CREATE_GROUP (
-        policy_name => 'OLS_POLICY'
-        long_name => 'CONGTY'
-        short_name =>'CTY'
-        group_num => 10
-        parent_name => NULL
-    );
-END;
-/
-
-BEGIN
-    SA_COMPONENTS.CREATE_GROUP (
-        policy_name => 'OLS_POLICY'
-        long_name => 'BAC'
-        short_name =>'BA'
-        group_num => 11
-        parent_name => 'CTY'
-    );
-END;
-/
-
-BEGIN
-    SA_COMPONENTS.CREATE_GROUP (
-        policy_name => 'OLS_POLICY'
-        long_name => 'TRUNG'
-        short_name =>'TR'
-        group_num => 12
-        parent_name => 'CTY'
-    );
-END;
-/
-
-BEGIN
-    SA_COMPONENTS.CREATE_GROUP (
-        policy_name => 'OLS_POLICY'
-        long_name => 'NAM'
-        short_name =>'NA'
-        group_num => 13
-        parent_name => 'CTY'
-    );
-END;
-/
-  
 -----------------------------------------------------------------AUDIT------------------------------------------------------
-ALTER SYSTEM SET audit_trail = 'DB' SCOPE=SPFILE;
-SHUTDOWN IMMEDIATE;
-STARTUP;
+--ALTER SYSTEM SET audit_trail = 'DB' SCOPE=SPFILE;
+--SHUTDOWN IMMEDIATE;
+--STARTUP;
 
-/*
-    Những nguời dã cập nhật trường THOIGIAN trong quan hệ PHANCONG.
-*/
 --Tạo bảng audit_thoigian để ghi lại thông tin audit
 CREATE TABLE COMPANY_PUBLIC.audit_thoigian (
   username       VARCHAR2(100),
@@ -149,6 +30,53 @@ CREATE TABLE COMPANY_PUBLIC.audit_thoigian (
   old_thoigian   TIMESTAMP
 );
 /
+
+--Tạo bảng audit_luongpc để ghi lại thông tin audit
+CREATE TABLE COMPANY_PUBLIC.audit_luongpc (
+  username       VARCHAR2(100),
+  object_name    VARCHAR2(100),
+  policy_name    VARCHAR2(100),
+  statement_type VARCHAR2(100)
+);
+/
+
+--Tạo bảng audit_updateluongpc để ghi lại thông tin audit
+CREATE TABLE COMPANY_PUBLIC.audit_updateluongpc (
+    username     VARCHAR2(100),
+    object_name  VARCHAR2(100),
+    policy_name  VARCHAR2(100),
+    statement_type VARCHAR2(100)
+);
+/
+
+----Tạo bảng audit_log để ghi lại thông tin audit
+CREATE TABLE COMPANY_PUBLIC.audit_log (
+  username        VARCHAR2(100),
+  object_name     VARCHAR2(100),
+  policy_name     VARCHAR2(100),
+  statement_type  VARCHAR2(100),
+  timestamp       TIMESTAMP DEFAULT SYSTIMESTAMP
+);
+/
+
+BEGIN
+  FOR policy IN (SELECT object_name, policy_name
+                 FROM dba_audit_policies
+                 WHERE policy_owner = 'COMPANY_PUBLIC') -- Replace 'COMPANY_PUBLIC' with the appropriate schema name
+  LOOP
+    DBMS_FGA.DROP_POLICY(
+      object_schema => 'COMPANY_PUBLIC', -- Replace 'COMPANY_PUBLIC' with the appropriate schema name
+      object_name   => policy.object_name,
+      policy_name   => policy.policy_name
+    );
+  END LOOP;
+END;
+/
+
+
+/*
+    Những nguời dã cập nhật trường THOIGIAN trong quan hệ PHANCONG.
+*/
 --Tạo function để ghi thông tin audit vào bảng audit_thoigian
 CREATE OR REPLACE FUNCTION audit_1 (
   object_schema IN VARCHAR2,
@@ -169,6 +97,7 @@ END;
 /
 --Thiết lập FGA cho quan hệ "PHANCONG" và trường "THOIGIAN"
 BEGIN
+  
   DBMS_FGA.ADD_POLICY(
     object_schema   => 'COMPANY_PUBLIC', 
     object_name     => 'PHANCONG',
@@ -184,14 +113,7 @@ END;
 /* 
   Những người đã đọc trên trường LUONG và PHUCAP của người khác
 */
---Tạo bảng audit_luongpc để ghi lại thông tin audit
-CREATE TABLE COMPANY_PUBLIC.audit_luongpc (
-  username       VARCHAR2(100),
-  object_name    VARCHAR2(100),
-  policy_name    VARCHAR2(100),
-  statement_type VARCHAR2(100)
-);
-/
+
 --Tạo function để ghi thông tin audit vào bảng audit_luongpc
 CREATE OR REPLACE FUNCTION audit_2 (
   object_schema  IN VARCHAR2,
@@ -225,14 +147,6 @@ END;
 /*
   Một người không thuộc vai trò “Tài chính” nhưng đã cập nhật thành công trên trường LUONG và PHUCAP.
 */
---Tạo bảng audit_updateluongpc để ghi lại thông tin audit
-CREATE TABLE COMPANY_PUBLIC.audit_updateluongpc (
-    username     VARCHAR2(100),
-    object_name  VARCHAR2(100),
-    policy_name  VARCHAR2(100),
-    statement_type VARCHAR2(100)
-);
-/
 --Tạo function để ghi thông tin audit vào bảng audit_updateluongpc
 CREATE OR REPLACE FUNCTION audit_3 (
     object_schema IN VARCHAR2,
@@ -250,15 +164,15 @@ BEGIN
   -- Kiểm tra nếu người dùng không thuộc vai trò "Tài chính" 
   IF vaitro <> 'Tài chính' THEN
     -- Ghi thông tin audit vào bảng audit_updateluongpc
-    INSERT INTO COMPANY_PUBLIC.audit_updateluongpc (username, object_name, policy_name, statement_type, timestamp)
-    VALUES (SYS_CONTEXT('USERENV', 'SESSION_USER'), object_name, policy_name, statement_type, SYSTIMESTAMP);
+    INSERT INTO COMPANY_PUBLIC.audit_updateluongpc (username, object_name, policy_name, statement_type)
+    VALUES (SYS_CONTEXT('USERENV', 'SESSION_USER'), object_name, policy_name, statement_type);
   END IF;
   
   RETURN NULL;
 END;
 /
 --Thiết lập FGA cho quan hệ "NHANVIEN" và trường "LUONG" và "PHUCAP"
-BEGIN
+BEGIN   
   DBMS_FGA.ADD_POLICY(
     object_schema   => 'COMPANY_PUBLIC',
     object_name     => 'NHANVIEN',
@@ -270,18 +184,13 @@ BEGIN
   );
 END;
 /
-  
+
+------------------------------------------------------------------------------
+------------------------ Fine Grained Audit-----------------------------------
+------------------------------------------------------------------------------
 /*
     Kiểm tra nhật ký hệ thống
 */
-----Tạo bảng audit_log để ghi lại thông tin audit
-CREATE TABLE COMPANY_PUBLIC.audit_log (
-  username        VARCHAR2(100),
-  object_name     VARCHAR2(100),
-  policy_name     IN VARCHAR2,
-  statement_type  VARCHAR2(100)
-);
-/
 --Tạo function để ghi thông tin audit vào bảng audit_log:
 CREATE OR REPLACE FUNCTION audit_4 (
   object_schema   IN VARCHAR2,
@@ -290,21 +199,89 @@ CREATE OR REPLACE FUNCTION audit_4 (
   statement_type  IN VARCHAR2
 ) RETURN BOOLEAN AS
 BEGIN
-  -- Ghi thông tin audit vào bảng audit_log
+  -- Insert the audit information into the audit_log table
   INSERT INTO COMPANY_PUBLIC.audit_log (username, object_name, policy_name, statement_type)
   VALUES (SYS_CONTEXT('USERENV', 'SESSION_USER'), object_name, policy_name, statement_type);
-  
+
   RETURN TRUE;
 END;
 /
+
+-- Thiết lập FGA để kích hoạt kiểm tra nhật ký hệ thống
+BEGIN
+  DBMS_FGA.ADD_POLICY(
+    object_schema     => 'COMPANY_PUBLIC',
+    object_name       => 'NHANVIEN',
+    policy_name       => 'SYSTEM_AUDIT_NHANVIEN_POLICY',
+    handler_module    => 'audit_4',
+    enable            => TRUE,
+    statement_types   => 'SELECT, INSERT, UPDATE, DELETE'
+  );
+END;
+/
+
+-- Thiết lập FGA để kích hoạt kiểm tra nhật ký hệ thống
+BEGIN
+
+  DBMS_FGA.ADD_POLICY(
+    object_schema     => 'COMPANY_PUBLIC', 
+    object_name       => 'PHANCONG',
+    policy_name       => 'SYSTEM_AUDIT_PHANCONG_POLICY',
+    handler_module    => 'audit_4',
+    enable            => TRUE,
+    statement_types   => 'SELECT, INSERT, UPDATE, DELETE'
+  );
+END;
+/
+
+-- Thiết lập FGA để kích hoạt kiểm tra nhật ký hệ thống
+BEGIN
+  
+  DBMS_FGA.ADD_POLICY(
+    object_schema     => 'COMPANY_PUBLIC', 
+    object_name       => 'PHONGBAN',
+    policy_name       => 'SYSTEM_AUDIT_PHONGBAN_POLICY',
+    handler_module    => 'audit_4',
+    enable            => TRUE,
+    statement_types   => 'SELECT, INSERT, UPDATE, DELETE'
+  );
+END;
+/
+
+-- Thiết lập FGA để kích hoạt kiểm tra nhật ký hệ thống
+BEGIN
+
+  DBMS_FGA.ADD_POLICY(
+    object_schema     => 'COMPANY_PUBLIC', 
+    object_name       => 'LUUTRU',
+    policy_name       => 'SYSTEM_AUDIT_LUUTRU_POLICY',
+    handler_module    => 'audit_4',
+    enable            => TRUE,
+    statement_types   => 'SELECT, INSERT, UPDATE, DELETE'
+  );
+END;
+/
+
+-- Thiết lập FGA để kích hoạt kiểm tra nhật ký hệ thống
+BEGIN
+
+  DBMS_FGA.ADD_POLICY(
+    object_schema     => 'COMPANY_PUBLIC', 
+    object_name       => 'DEAN',
+    policy_name       => 'SYSTEM_AUDIT_DEAN_POLICY',
+    handler_module    => 'audit_4',
+    enable            => TRUE,
+    statement_types   => 'SELECT, INSERT, UPDATE, DELETE'
+  );
+END;
+/
+
 -- Thiết lập FGA để kích hoạt kiểm tra nhật ký hệ thống
 BEGIN
   DBMS_FGA.ADD_POLICY(
     object_schema     => 'COMPANY_PUBLIC', 
-    object_name       => NULL,
-    policy_name       => 'SYSTEM_AUDIT_POLICY',
-    audit_condition   => NULL,
-    audit_column      => NULL,
+    object_name       => 'THONGDIEP',
+    policy_name       => 'SYSTEM_AUDIT_THONGDIEP_POLICY',
     handler_module    => 'audit_4',
     enable            => TRUE,
     statement_types   => 'SELECT, INSERT, UPDATE, DELETE'
