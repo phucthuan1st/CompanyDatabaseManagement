@@ -360,11 +360,11 @@ public class NormalUserController extends JFrame implements ActionListener {
             } else if ("Xem Lương và Phụ cấp".equals(command)) {
                 handleShowLUONGPHUCAP();
             } else if ("Thay đổi thông tin các Phòng ban".equals(command)) {
-                handleUpdatePHONGBAN();
+                handleModifyPHONGBAN();
             } else if ("Thay đổi các đề án".equals(command)) {
-                handleUpdateDEAN();
+                handleModifyDEAN();
             } else if ("Cập nhật phân công".equals(command)) {
-                handleUpdatePHANCONG();
+                handleModifyPHANCONG();
             }
         } catch (SQLException ex) {
             String message = "Error when communicate with database: " + ex.getMessage();
@@ -446,7 +446,7 @@ public class NormalUserController extends JFrame implements ActionListener {
 
     }
 
-    private void handleUpdateDEAN() throws SQLException {
+    private void handleModifyDEAN() throws SQLException {
         var option = new String[]{"Thêm", "Cập nhật", "Xóa"};
 
         int choose = JOptionPane.showOptionDialog(this, "Chọn thao tác?", "Selection", JOptionPane.DEFAULT_OPTION,
@@ -622,7 +622,7 @@ public class NormalUserController extends JFrame implements ActionListener {
         this.rightPanel.repaint();
     }
 
-    private void handleUpdatePHONGBAN() throws SQLException {
+    private void handleModifyPHONGBAN() throws SQLException {
         var option = new String[]{"Thêm", "Cập nhật"};
         String message = "Chọn thao tác?";
 
@@ -759,7 +759,7 @@ public class NormalUserController extends JFrame implements ActionListener {
         this.rightPanel.repaint();
     }
 
-    private void handleUpdatePHANCONG() {
+    private void handleModifyPHANCONG() {
         var option = new String[]{"Thêm", "Xóa", "Cập nhật"};
         String message = "Chọn thao tác?";
 
