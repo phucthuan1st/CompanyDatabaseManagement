@@ -10,6 +10,8 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 // include Login screen and handling for pressing Login button
 public class LoginController extends JFrame implements ActionListener {
@@ -149,8 +151,9 @@ public class LoginController extends JFrame implements ActionListener {
                     changeTo(userSession);
                 }
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Cannot connect to database!" + ex.getMessage(), "Error",
+                JOptionPane.showMessageDialog(this, "Cannot connect to database!", "Error",
                         JOptionPane.ERROR_MESSAGE);
+                Logger.getLogger(LoginController.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
             } catch (ClassNotFoundException ex) {
                 JOptionPane.showMessageDialog(this, "Unexpected error!", "Error", JOptionPane.ERROR_MESSAGE);
             }
