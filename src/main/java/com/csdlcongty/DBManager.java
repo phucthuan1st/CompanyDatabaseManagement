@@ -536,4 +536,48 @@ public class DBManager {
         prt.execute();
         commit();
     }
+
+    public void insertDeAnRecord(String maDA, String tenDA, String ngayBD, String phong, String truongDeAn) throws SQLException, ParseException {
+        String sql = "INSERT INTO COMPANY_PUBLIC.DEAN(MADA, TENDA, NGAYBD, PHONG, TRUONGDEAN) VALUES (?, ?, ?, ?, ?)";
+        prt = cnt.prepareStatement(sql);
+
+        prt.setString(1, maDA);
+        prt.setString(2, tenDA);
+        prt.setDate(3, new Date((new SimpleDateFormat("dd/MM/yyyy")).parse(ngayBD).getTime()));
+        prt.setString(4, phong);
+        prt.setString(5, truongDeAn);
+
+        prt.execute();
+        commit();
+    }
+
+    public void updateDeAnRecord(String oldMaDA, String maDA, String tenDA, String ngayBD, String phong, String truongDeAn) throws SQLException, ParseException {
+        String sql = """
+                                UPDATE COMPANY_PUBLIC.DEAN
+                                SET MADA = ?, TENDA = ?, NGAYBD = ?, PHONG = ?, TRUONGDEAN = ?
+                                WHERE MADA = ?
+                """;
+
+        prt = cnt.prepareStatement(sql);
+
+        prt.setString(1, maDA);
+        prt.setString(2, tenDA);
+        prt.setDate(3, new Date((new SimpleDateFormat("dd/MM/yyyy")).parse(ngayBD).getTime()));
+        prt.setString(4, phong);
+        prt.setString(5, truongDeAn);
+        prt.setString(6, oldMaDA);
+
+        prt.execute();
+        commit();
+    }
+
+    public void deleteDeAnRecord(String oldMaDA) throws SQLException {
+        String sql = "DELETE FROM COMPANY_PUBLIC.DEAN WHERE MADA = ?";
+        prt = cnt.prepareStatement(sql);
+
+        prt.setString(1, oldMaDA);
+
+        prt.execute();
+        commit();
+    }
 }

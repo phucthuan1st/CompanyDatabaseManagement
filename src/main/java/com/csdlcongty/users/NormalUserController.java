@@ -447,86 +447,177 @@ public class NormalUserController extends JFrame implements ActionListener {
     }
 
     private void handleUpdateDEAN() throws SQLException {
-        String[] option = {"Thêm", "Xóa", "Cập nhật"};
-        String message = "Chọn thao tác?";
-        int choose = JOptionPane.showOptionDialog(this, message, "Selection", JOptionPane.DEFAULT_OPTION,
+        var option = new String[]{"Thêm", "Cập nhật", "Xóa"};
+
+        int choose = JOptionPane.showOptionDialog(this, "Chọn thao tác?", "Selection", JOptionPane.DEFAULT_OPTION,
                 JOptionPane.PLAIN_MESSAGE, null, option, null);
 
         if (choose < 0) {
             return;
         }
-        String entityType = option[choose];
 
-        JPanel panel = new JPanel();
-        JTextField oldMADA = new JTextField(10);
-        JTextField MADA = new JTextField(10);
-        JTextField TENDA = new JTextField(50);
-        JTextField PHONG = new JTextField(10);
-        JTextField TRUONGDA = new JTextField(10);
-        JTextField DATE = new JTextField(10);
-        JButton updateButton = new JButton("Cập nhật");
-        JButton delButton = new JButton("Xóa");
-        panel.setLayout(new GridBagLayout());
+        String operationType = option[choose];
 
-        GridBagConstraints constraints = new GridBagConstraints();
-        constraints.insets = new Insets(5, 10, 5, 10);
-        constraints.anchor = GridBagConstraints.WEST;
+        JTextField oldMADAField = new JTextField(10);
+        JTextField newMADAField = new JTextField(10);
+        JTextField newTenDAField = new JTextField(30);
+        JTextField newNgayBDField = new JTextField(10);
+        JTextField newPhongField = new JTextField(10);
+        JTextField newTruongDeanField = new JTextField(10);
 
-        constraints.gridx = 0;
-        constraints.gridy = 0;
-        if ("Cập nhật".equals(entityType) || "Thêm".equals(entityType)) {
+        JButton button = new JButton(operationType);
 
-            if ("Cập nhật".equals(entityType)) {
-                panel.add(new JLabel("Mã Đề án cần update"), constraints);
-                constraints.gridx++;
-                panel.add(oldMADA, constraints);
+        this.subRightSplits.setBottomComponent(new JPanel() {
+            {
+                setLayout(new GridBagLayout());
+
+                GridBagConstraints constraints = new GridBagConstraints();
+                constraints.insets = new Insets(5, 10, 5, 10);
+                constraints.anchor = GridBagConstraints.WEST;
+
+                constraints.gridx = 0;
+                constraints.gridy = 0;
+
+                if ("Cập nhật".equals(operationType) || "Xóa".equals(operationType)) {
+                    JPanel oldInfoPanel = new JPanel();
+                    oldInfoPanel.setBorder(BorderFactory.createTitledBorder("Đề án cũ"));
+
+                    oldInfoPanel.setLayout(new GridBagLayout());
+                    GridBagConstraints oldInfoConstraints = new GridBagConstraints();
+                    oldInfoConstraints.insets = new Insets(5, 10, 5, 10);
+                    oldInfoConstraints.anchor = GridBagConstraints.WEST;
+
+                    oldInfoConstraints.gridx = 0;
+                    oldInfoConstraints.gridy = 0;
+                    oldInfoPanel.add(new JLabel(String.format("Mã Đề án cần %s", operationType)), oldInfoConstraints);
+                    oldInfoConstraints.gridx++;
+                    oldInfoPanel.add(oldMADAField, oldInfoConstraints);
+                    oldInfoConstraints.gridy++;
+
+                    add(oldInfoPanel, constraints);
+                    constraints.gridy++;
+                }
+
+
+                if (!"Xóa".equals(operationType)) {
+                    JPanel newInfoPanel = new JPanel();
+                    newInfoPanel.setBorder(BorderFactory.createTitledBorder("Đề án mới"));
+
+                    newInfoPanel.setLayout(new GridBagLayout());
+                    GridBagConstraints newInfoConstraints = new GridBagConstraints();
+
+                    newInfoConstraints.insets = new Insets(5, 10, 5, 10);
+                    newInfoConstraints.anchor = GridBagConstraints.WEST;
+
+                    newInfoConstraints.gridx = 0;
+                    newInfoConstraints.gridy = 0;
+                    newInfoPanel.add(new JLabel("Mã đề án"), newInfoConstraints);
+                    newInfoConstraints.gridx++;
+                    newInfoPanel.add(newMADAField, newInfoConstraints);
+
+                    newInfoConstraints.gridx = 0;
+                    newInfoConstraints.gridy++;
+                    newInfoPanel.add(new JLabel("Tên đề án"), newInfoConstraints);
+                    newInfoConstraints.gridx++;
+                    newInfoPanel.add(newTenDAField, newInfoConstraints);
+
+                    newInfoConstraints.gridx = 0;
+                    newInfoConstraints.gridy++;
+                    newInfoPanel.add(new JLabel("Ngày bắt đầu đề án"), newInfoConstraints);
+                    newInfoConstraints.gridx++;
+                    newInfoPanel.add(newNgayBDField, newInfoConstraints);
+
+                    newInfoConstraints.gridx = 0;
+                    newInfoConstraints.gridy++;
+                    newInfoPanel.add(new JLabel("Phòng ban quản lí"), newInfoConstraints);
+                    newInfoConstraints.gridx++;
+                    newInfoPanel.add(newPhongField, newInfoConstraints);
+
+                    newInfoConstraints.gridx = 0;
+                    newInfoConstraints.gridy++;
+                    newInfoPanel.add(new JLabel("Trưởng đề án"), newInfoConstraints);
+                    newInfoConstraints.gridx++;
+                    newInfoPanel.add(newTruongDeanField, newInfoConstraints);
+
+                    constraints.gridx = 0;
+                    constraints.gridy++;
+                    constraints.gridwidth = 2;
+                    add(newInfoPanel, constraints);
+                    constraints.gridy++;
+                    constraints.gridwidth = 1;
+                }
+
+                constraints.gridx = 1;
+                constraints.gridy++;
+                add(button, constraints);
+                button.addActionListener(this::buttonActionPerformed);
             }
-            constraints.gridx = 0;
-            constraints.gridy++;
-            panel.add(new JLabel("Mã Đề án "), constraints);
-            constraints.gridx++;
-            panel.add(MADA, constraints);
 
-            constraints.gridx = 0;
-            constraints.gridy++;
-            panel.add(new JLabel("Tên Đề án "), constraints);
-            constraints.gridx++;
-            panel.add(TENDA, constraints);
+            private void buttonActionPerformed(ActionEvent e) {
+                JButton button = (JButton) e.getSource();
+                String command = button.getText();
 
-            constraints.gridx = 0;
-            constraints.gridy++;
-            panel.add(new JLabel("Ngày "), constraints);
-            constraints.gridx++;
-            panel.add(DATE, constraints);
+                switch (command) {
+                    case "Thêm": {
+                        String maDA = newMADAField.getText();
+                        String tenDA = newTenDAField.getText();
+                        String ngayBD = newNgayBDField.getText();
+                        String phong = newPhongField.getText();
+                        String truongDeAn = newTruongDeanField.getText();
 
-            constraints.gridx = 0;
-            constraints.gridy++;
-            panel.add(new JLabel("Phòng "), constraints);
-            constraints.gridx++;
-            panel.add(PHONG, constraints);
+                        try {
+                            dbc.insertDeAnRecord(maDA, tenDA, ngayBD, phong, truongDeAn);
+                            JOptionPane.showMessageDialog(this, "Đã thêm đề án: " + tenDA, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                            handleShowPHONGBAN();
+                        } catch (SQLException ex) {
+                            JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
+                        } catch (ParseException ex) {
+                            JOptionPane.showMessageDialog(this, ex.getMessage() + ": Date must be format dd/MM/yyyy", "Date Error", JOptionPane.ERROR_MESSAGE);
+                        }
 
-            constraints.gridx = 0;
-            constraints.gridy++;
-            panel.add(new JLabel("Trưởng đề án "), constraints);
-            constraints.gridx++;
-            panel.add(TRUONGDA, constraints);
+                        break;
+                    }
+                    case "Cập nhật": {
+                        String oldMaDA = oldMADAField.getText();
+                        String maDA = newMADAField.getText();
+                        String tenDA = newTenDAField.getText();
+                        String ngayBD = newNgayBDField.getText();
+                        String phong = newPhongField.getText();
+                        String truongDeAn = newTruongDeanField.getText();
 
-            constraints.gridx = 1;
-            constraints.gridy++;
-            panel.add(updateButton, constraints);
+                        try {
+                            dbc.updateDeAnRecord(oldMaDA, maDA, tenDA, ngayBD, phong, truongDeAn);
+                            JOptionPane.showMessageDialog(this, "Đã cập nhật đề án: " + tenDA, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                            handleShowPHONGBAN();
+                        } catch (SQLException ex) {
+                            JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
+                        } catch (ParseException ex) {
+                            JOptionPane.showMessageDialog(this, ex.getMessage() + ": Date must be format dd/MM/yyyy", "Date Error", JOptionPane.ERROR_MESSAGE);
+                        }
 
-            updateButton.addActionListener(this);
-        } else if ("Xóa".equals(entityType)) {
-            panel.add(new JLabel("Mã Đề án cần xóa"), constraints);
-            constraints.gridx++;
-            panel.add(oldMADA, constraints);
+                        break;
+                    }
+                    case "Xóa": {
+                        String oldMaDA = oldMADAField.getText();
 
-            constraints.gridx = 1;
-            constraints.gridy++;
-            panel.add(delButton, constraints);
-            delButton.addActionListener(this);
-        }
-        this.subRightSplits.setBottomComponent(panel);
+                        try {
+                            dbc.deleteDeAnRecord(oldMaDA);
+                            JOptionPane.showMessageDialog(this, "Đã xóa đề án: " + oldMaDA, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                            handleShowPHONGBAN();
+                        } catch (SQLException ex) {
+                            JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
+                        }
+
+                        break;
+                    }
+                    default: {
+                        JOptionPane.showMessageDialog(this, "Invalid operation", "Operation Error", JOptionPane.ERROR_MESSAGE);
+                        break;
+                    }
+                }
+            }
+        });
+
         this.rightPanel.revalidate();
         this.rightPanel.repaint();
     }
