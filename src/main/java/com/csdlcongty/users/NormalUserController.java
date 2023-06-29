@@ -1211,24 +1211,31 @@ public class NormalUserController extends JFrame implements ActionListener {
                 newconstraints.gridx = 2;
                 newconstraints.gridy++;
                 nhanvienPanel.add(updateButton, newconstraints);
-                updateButton.addActionListener(this::buttonUpdateActionPerformed);
+                updateButton.addActionListener(this::buttonActionPerformed);
             }else
             {
                 newconstraints.gridx = 2;
                 newconstraints.gridy++;
                 nhanvienPanel.add(insertButton, newconstraints);
-                insertButton.addActionListener(this::buttonInsertActionPerformed);                
+                insertButton.addActionListener(this::buttonActionPerformed);                
             }
             add(nhanvienPanel, constraints);
         }   
         
-            private void buttonUpdateActionPerformed(ActionEvent e) {
-        
+            private void buttonActionPerformed(ActionEvent e) {
+                JButton button = (JButton) e.getSource();
+                String command = button.getText();
+                
+                if("Thêm".equals(command))
+                {
+                    
+                }else if("Cập nhật".equals(command))
+                {
+                    
+                }
             }
             
-            private void buttonInsertActionPerformed(ActionEvent e){
-            
-            }
+
         });
                     
         this.rightPanel.revalidate();
