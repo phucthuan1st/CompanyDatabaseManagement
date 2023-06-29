@@ -250,8 +250,8 @@ BEGIN
   -- Kiểm tra nếu người dùng không thuộc vai trò "Tài chính" 
   IF vaitro <> 'Tài chính' THEN
     -- Ghi thông tin audit vào bảng audit_updateluongpc
-    INSERT INTO COMPANY_PUBLIC.audit_updateluongpc (username, object_name, policy_name, statement_type, timestamp)
-    VALUES (SYS_CONTEXT('USERENV', 'SESSION_USER'), object_name, policy_name, statement_type, SYSTIMESTAMP);
+    INSERT INTO COMPANY_PUBLIC.audit_updateluongpc (username, object_name, policy_name, statement_type)
+    VALUES (SYS_CONTEXT('USERENV', 'SESSION_USER'), object_name, policy_name, statement_type);
   END IF;
   
   RETURN NULL;
@@ -278,7 +278,7 @@ END;
 CREATE TABLE COMPANY_PUBLIC.audit_log (
   username        VARCHAR2(100),
   object_name     VARCHAR2(100),
-  policy_name     IN VARCHAR2,
+  policy_name     VARCHAR2(100),
   statement_type  VARCHAR2(100)
 );
 /
