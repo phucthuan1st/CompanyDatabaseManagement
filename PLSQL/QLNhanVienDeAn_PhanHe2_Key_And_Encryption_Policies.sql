@@ -23,6 +23,30 @@ BEGIN
   IF v_session_user = 'COMPANY_PUBLIC' THEN
         RETURN '1=1';
   END IF;
+  
+  IF schema_name = 'COMPANY_PUBLIC' AND object_name = 'LUUTRU' THEN
+        RETURN 'MANV = SYS_CONTEXT(''USERENV'', ''SESSION_USER'')';
+  END IF;
+
+  RETURN '0=1';
+END;
+/
+
+CREATE OR REPLACE FUNCTION secretKeyReadRight (
+  schema_name   IN VARCHAR2,
+  object_name   IN VARCHAR2
+)
+RETURN VARCHAR2
+AS
+    v_session_user VARCHAR2(100);
+    v_vaitro VARCHAR2(20);
+BEGIN
+
+  v_session_user := SYS_CONTEXT('USERENV', 'SESSION_USER');
+  
+  IF v_session_user = 'COMPANY_PUBLIC' THEN
+        RETURN '1=1';
+  END IF;
     
   -- Lay vai tro cua user
   SELECT VAITRO INTO v_vaitro FROM COMPANY_PUBLIC.VAITRO_NHANVIEN WHERE MANV = v_session_user;
@@ -36,6 +60,20 @@ BEGIN
   END IF;
 
   RETURN '0=1';
+END;
+/
+
+BEGIN
+  DBMS_RLS.ADD_POLICY(
+    object_schema    => 'COMPANY_PUBLIC',
+    object_name      => 'LUUTRU',
+    policy_name      => 'SECRET_KEY_READ_POLICY',
+    policy_function  => 'secretKeyReadRight',
+    statement_types  => 'SELECT',
+    sec_relevant_cols => 'SECRET_KEY',
+    update_check     => true,
+    enable           => TRUE
+  );
 END;
 /
 
