@@ -420,7 +420,7 @@ public class NormalUserController extends JFrame implements ActionListener {
                 newInfoPanel.add(curentMaNVField, newInfoConstraints);
 
                 newInfoConstraints.gridx = 0;
-                newInfoConstraints.gridy = 0;
+                newInfoConstraints.gridy++;
                 newInfoPanel.add(new JLabel("Lương"), newInfoConstraints);
                 newInfoConstraints.gridx++;
                 newInfoPanel.add(newLuongField, newInfoConstraints);
