@@ -361,12 +361,6 @@ public class NormalUserController extends JFrame implements ActionListener {
                 handleShowNHANVIEN();
             } else if ("Xem Lương và Phụ cấp".equals(command)) {
                 handleShowLUONGPHUCAP();
-            } else if("Thay đổi thông tin các Phòng ban".equals(command)){
-                handleUpdatePHONGBAN();
-            }else if("Thay đổi các đề án".equals(command)){
-                handleUpdateDEAN();
-            } else if("Cập nhật phân công".equals(command)){
-                handleUpdatePHANCONG();
             } else if ("Thay đổi thông tin các Phòng ban".equals(command)) {
                 handleModifyPHONGBAN();
             } else if ("Thay đổi các đề án".equals(command)) {
