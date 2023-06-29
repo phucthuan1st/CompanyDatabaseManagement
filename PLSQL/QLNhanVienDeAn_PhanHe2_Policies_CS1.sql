@@ -48,8 +48,14 @@ RETURN VARCHAR2
 IS
   vaitro VARCHAR2(20);
 BEGIN
+  IF SYS_CONTEXT('USERENV', 'SESSION_USER') = 'COMPANY_PUBLIC' THEN
+        RETURN '1=1';
+  END IF;
+
+
   -- Lấy vai trò của user hiện tại
   SELECT VAITRO INTO vaitro FROM COMPANY_PUBLIC.VAITRO_NHANVIEN WHERE MANV = SYS_CONTEXT('USERENV', 'SESSION_USER');
+
   
   -- Truy cập dòng liên quan đến nhân viên đó
   IF object_name = 'NHANVIEN' THEN
@@ -70,7 +76,7 @@ BEGIN
     END IF;
   END IF;
 
-  RETURN NULL;
+  RETURN '1=1';
 END;
 /
 

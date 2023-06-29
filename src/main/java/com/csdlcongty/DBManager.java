@@ -1,21 +1,20 @@
 package com.csdlcongty;
 
-import java.sql.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.csdlcongty.helper.CryptographyUtilities;
 import com.csdlcongty.helper.NhanVienRecord;
-
-import static com.csdlcongty.helper.MockGenerator.generateQLRecords;
-import static com.csdlcongty.helper.MockGenerator.generateNVRecords;
-import static com.csdlcongty.helper.MockGenerator.generateTPRecords;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static com.csdlcongty.helper.MockGenerator.*;
 
 /*
    Read note in Resources folder to learn more about ojdbc driver
@@ -29,6 +28,8 @@ public class DBManager {
     public Connection cnt;
     protected Statement st;
     protected CallableStatement cst;
+
+    protected PreparedStatement prt;
     protected String previousStatement;
 
     private static final String COUNTSQL = "SELECT COUNT(*) FROM (%s)";
@@ -157,10 +158,9 @@ public class DBManager {
             cst.setString(2, pass);
             cst.execute();
             commit();
-            
+
             return 1;
-        }
-        catch (SQLException ex) {
+        } catch (SQLException ex) {
             Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
             return 0;
         }
@@ -179,7 +179,7 @@ public class DBManager {
 
         return successful;
     }
-    
+
     private void updateStatisticsForSchema() {
         try {
             CallableStatement stmt = cnt.prepareCall("{call gather_statistics_for_schema}");
@@ -192,22 +192,22 @@ public class DBManager {
     public int createTable(String tableName, String columnNames, String dataTypes, String primaryKey, String notNullColumn) {
         try {
             CallableStatement cstmt = cnt.prepareCall("{call create_table(?, ?, ?, ?, ?)}");
-            
+
             cstmt.setString(1, tableName);
             cstmt.setString(2, columnNames);
             cstmt.setString(3, dataTypes);
             cstmt.setString(4, primaryKey);
             cstmt.setString(5, notNullColumn);
-            
+
             cstmt.execute();
-            
+
             // Check if any error occurred during table creation
             SQLWarning warning = cstmt.getWarnings();
             if (warning != null) {
                 System.out.println("Error creating table: " + warning.getMessage());
                 return 0;
             }
-            
+
             System.out.println("Table created successfully.");
             commit();
             return 1;
@@ -281,9 +281,9 @@ public class DBManager {
 
         cst.execute();
     }
-    
+
     public ResultSet selectFromTable(String tableName) throws SQLException {
-        String sql = "SELECT * FROM COMPANY_PUBLIC." +tableName;
+        String sql = "SELECT * FROM COMPANY_PUBLIC." + tableName;
         ResultSet result;
 
         st = cnt.createStatement();
@@ -303,117 +303,6 @@ public class DBManager {
         previousStatement = String.format(DBManager.COUNTSQL, sql);
         return result;
     }
-    
-    public int updatePHONGBAN(String oldma, String mapb, String tenpb, String tentrphg  ) throws SQLException{
-        String sql = "UPDATE COMPANY_PUBLIC.PHONGBAN SET";
-        int count=0;
-        // kiểm tra
-        try{
-                if (mapb!= "")
-            {
-                sql= sql +"MAPB= ? ,";
-                count++;
-            }
-            if (tenpb!="" )
-            {
-                sql= sql + "  TENPB= ? ,";
-                count++;
-            }  
-
-            if (tentrphg!="")
-            {
-                sql= sql + "TRPHG= ? , ";
-            }
-            sql = sql.substring(0, sql.length() - 1);
-            sql= sql+ " WHERE MAPB = ? ;";
-            cst = cnt.prepareCall(sql);
-            int parameterIndex=1;
-            // gán giá trị
-            if (mapb != "") {
-            cst.setString(parameterIndex++, mapb);
-            }
-            if (tenpb != "") {
-                cst.setString(parameterIndex++, tenpb);
-            }
-            if (tentrphg != "") {
-                cst.setString(parameterIndex++, tentrphg);
-            }
-            cst.setString(parameterIndex, mapb);
-            cst.execute();
-                        SQLWarning warning = cst.getWarnings();
-                if (warning != null) {
-                    System.out.println("Error creating table: " + warning.getMessage());
-                    return 0;
-                }
-            
-            System.out.println("Table created successfully.");
-            commit();
-            return 1;
-        } catch (SQLException e) {
-            System.out.println("Error creating table: " + e.getMessage());
-            return 0;
-        }
-    }
-    
-    
-    
-//    public void insertMockRecordToNhanVien() {
-//        var data = generateNVRecords(300);
-//        data.addAll(generateQLRecords(20));
-//        data.addAll(generateTPRecords(8));
-//
-//        String sqlNhanVien = "{call INSERT_NHANVIEN_RECORD(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
-//
-//        try {
-//            cst = cnt.prepareCall(sqlNhanVien);
-//
-//            for (NhanVienRecord record : data) {
-//                cst.setString(1, record.MANV);
-//                cst.setString(2, record.TENNV);
-//                cst.setString(3, record.PHAI);
-//                cst.setDate(4, new java.sql.Date(record.NGAYSINH.getTime()));
-//                cst.setString(5, record.DIACHI);
-//                cst.setString(6, record.SODT);
-//
-//                // Encrypt LUONG and PHUCAP using AES in CryptographyUtilities
-//                String md5Hash = CryptographyUtilities.hashMD5(record.SODT);
-//                String encryptedLuong = CryptographyUtilities.encryptAES(record.LUONG, md5Hash);
-//                String encryptedPhuCap = CryptographyUtilities.encryptAES(record.PHUCAP, md5Hash);
-//
-//                cst.setString(7, encryptedLuong);
-//                cst.setString(8, encryptedPhuCap);
-//                cst.setString(9, record.VAITRO);
-//                cst.setString(10, record.MANQL);
-//                cst.setString(11, record.PHG);
-//
-//                cst.execute();
-//            }
-//
-//            commit();
-//            System.out.println("Records inserted to NHANVIEN successfully.");
-//        } catch (SQLException | NoSuchAlgorithmException ex) {
-//            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
-//
-//        sqlNhanVien = "{call INSERT_LUUTRU_RECORD(?, ?)}";
-//        try {
-//            cst = cnt.prepareCall(sqlNhanVien);
-//
-//            for (NhanVienRecord record : data) {
-//                cst.setString(1, record.MANV);
-//                cst.setString(2,  CryptographyUtilities.hashMD5(record.SODT));
-//                cst.execute();
-//            }
-//
-//            commit();
-//            System.out.println("Records inserted to LUUTRU successfully.");
-//        } catch (Exception ex) {
-//            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//    }
-
 
     public ResultSet selectLuongPhuCap() throws SQLException {
         String sql = String.format("SELECT LUONG, PHUCAP FROM COMPANY_PUBLIC.NHANVIEN");
@@ -426,9 +315,8 @@ public class DBManager {
         return result;
     }
 
-    public ResultSet getPersonalInfomation(String id) throws SQLException{
+    public ResultSet getPersonalInfomation(String id) throws SQLException {
         String sql = String.format("SELECT * FROM COMPANY_PUBLIC.NHANVIEN WHERE MANV = '%s'", id);
-        System.out.println(sql);
         ResultSet result;
 
         st = cnt.createStatement();
@@ -577,4 +465,157 @@ public class DBManager {
         }
     }
 
+    public void insertPhanCongRecord(String maNV, String maDA, String thoiGian) throws SQLException, ParseException {
+        String sql = "INSERT INTO COMPANY_PUBLIC.PHANCONG(MANV, MADA, THOIGIAN) VALUES (?, ?, ?)";
+        prt = cnt.prepareStatement(sql);
+
+        prt.setString(1, maNV);
+        prt.setString(2, maDA);
+        prt.setDate(3, new Date((new SimpleDateFormat("dd/MM/yyyy")).parse(thoiGian).getTime()));
+
+        prt.execute();
+        commit();
+    }
+
+    public void deletePhanCongRecord(String maNV, String maDA) throws SQLException {
+        String sql = "DELETE FROM COMPANY_PUBLIC.PHANCONG WHERE MANV = ? AND MADA = ?";
+        prt = cnt.prepareStatement(sql);
+
+        prt.setString(1, maNV);
+        prt.setString(2, maDA);
+
+        prt.execute();
+        commit();
+    }
+
+    public void updatePhanCongRecord(String oldMaNV, String oldMaDA, String newMaNV, String newMaDA, String newThoiGian) throws SQLException, ParseException {
+        String sql = """
+                                UPDATE COMPANY_PUBLIC.PHANCONG
+                                SET MANV = ?, MADA = ?, THOIGIAN = ?
+                                WHERE MANV = ? AND MADA = ?
+                """;
+
+        prt = cnt.prepareStatement(sql);
+
+        prt.setString(1, newMaNV);
+        prt.setString(2, newMaDA);
+        prt.setDate(3, new Date((new SimpleDateFormat("dd/MM/yyyy")).parse(newThoiGian).getTime()));
+        prt.setString(4, oldMaNV);
+        prt.setString(5, oldMaDA);
+
+        prt.execute();
+        commit();
+    }
+
+    public void insertPhongBanRecord(String maPB, String tenPB, String trPhg) throws SQLException {
+        String sql = "INSERT INTO COMPANY_PUBLIC.PHONGBAN(MAPB, TENPB, TRPHG) VALUES (?, ?, ?)";
+        prt = cnt.prepareStatement(sql);
+
+        prt.setString(1, maPB);
+        prt.setString(2, tenPB);
+        prt.setString(3, trPhg);
+
+        prt.execute();
+        commit();
+    }
+
+    public void updatePhongBanRecord(String oldMaPB, String maPB, String tenPB, String trPhg) throws SQLException {
+        String sql = """
+                                UPDATE COMPANY_PUBLIC.PHONGBAN
+                                SET MAPB = ?, TENPB = ?, TRPHG = ?
+                                WHERE MAPB = ?
+                """;
+
+        prt = cnt.prepareStatement(sql);
+
+        prt.setString(1, maPB);
+        prt.setString(2, tenPB);
+        prt.setString(3, trPhg);
+        prt.setString(4, oldMaPB);
+
+        prt.execute();
+        commit();
+    }
+
+    public void insertDeAnRecord(String maDA, String tenDA, String ngayBD, String phong, String truongDeAn) throws SQLException, ParseException {
+        String sql = "INSERT INTO COMPANY_PUBLIC.DEAN(MADA, TENDA, NGAYBD, PHONG, TRUONGDEAN) VALUES (?, ?, ?, ?, ?)";
+        prt = cnt.prepareStatement(sql);
+
+        prt.setString(1, maDA);
+        prt.setString(2, tenDA);
+        prt.setDate(3, new Date((new SimpleDateFormat("dd/MM/yyyy")).parse(ngayBD).getTime()));
+        prt.setString(4, phong);
+        prt.setString(5, truongDeAn);
+
+        prt.execute();
+        commit();
+    }
+
+    public void updateDeAnRecord(String oldMaDA, String maDA, String tenDA, String ngayBD, String phong, String truongDeAn) throws SQLException, ParseException {
+        String sql = """
+                                UPDATE COMPANY_PUBLIC.DEAN
+                                SET MADA = ?, TENDA = ?, NGAYBD = ?, PHONG = ?, TRUONGDEAN = ?
+                                WHERE MADA = ?
+                """;
+
+        prt = cnt.prepareStatement(sql);
+
+        prt.setString(1, maDA);
+        prt.setString(2, tenDA);
+        prt.setDate(3, new Date((new SimpleDateFormat("dd/MM/yyyy")).parse(ngayBD).getTime()));
+        prt.setString(4, phong);
+        prt.setString(5, truongDeAn);
+        prt.setString(6, oldMaDA);
+
+        prt.execute();
+        commit();
+    }
+
+    public void deleteDeAnRecord(String oldMaDA) throws SQLException {
+        String sql = "DELETE FROM COMPANY_PUBLIC.DEAN WHERE MADA = ?";
+        prt = cnt.prepareStatement(sql);
+
+        prt.setString(1, oldMaDA);
+
+        prt.execute();
+        commit();
+    }
+
+    public void updatePersonalInfoRecord(String newNgaySinh, String newDiaChi, String newSoDT) throws SQLException, ParseException {
+        String sql = """
+                                UPDATE COMPANY_PUBLIC.NHANVIEN
+                                SET NGAYSINH = ?, DIACHI = ?, SODT = ?
+                                WHERE MANV = SYS_CONTEXT('USERENV', 'SESSION_USER')
+                """;
+
+        prt = cnt.prepareStatement(sql);
+
+        prt.setDate(1, new Date((new SimpleDateFormat("dd/MM/yyyy")).parse(newNgaySinh).getTime()));
+        prt.setString(2, newDiaChi);
+        prt.setString(3, newSoDT);
+
+        prt.execute();
+        commit();
+    }
+
+    public void updateSalaryAndAllowance(String maNV, String newLuong, String newPhuCap) throws Exception {
+        String sql = """
+                                UPDATE COMPANY_PUBLIC.NHANVIEN
+                                SET LUONG = ?, PHUCAP = ?
+                                WHERE MANV = ?
+                """;
+
+        prt = cnt.prepareStatement(sql);
+
+        prt.setString(3, maNV);
+
+        ResultSet result = this.selectFromTable("LUUTRU");
+        String key = result.getString("SECRET_KEY");
+
+        String encryptedLuong = CryptographyUtilities.encryptAES(newLuong, key);
+        String encryptedPhuCap = CryptographyUtilities.encryptAES(newPhuCap, key);
+
+        prt.execute();
+        commit();
+    }
 }

@@ -47,6 +47,11 @@ IS
     STR VARCHAR2(100);
 BEGIN
     USR:= SYS_CONTEXT('USERENV', 'SESSION_USER');
+    
+    IF USR = 'COMPANY_PUBLIC' THEN
+        RETURN '1=1';
+    END IF;
+    
     SELECT NV.VAITRO INTO ROL FROM COMPANY_PUBLIC.VAITRO_NHANVIEN NV WHERE MANV= USR;
     
     IF ROL ='Trưởng đề án' THEN
@@ -58,7 +63,7 @@ BEGIN
             RETURN STR;
         END IF;
     END IF;
-    RETURN NULL;
+    RETURN '1=1';
 END;
 /
 -- *NOTE: đối với hàm chính sách, return NULL để có vô hiệu hóa điều kiện, để có thể gắn thêm các chính sách khác (các CS2 --> 6)

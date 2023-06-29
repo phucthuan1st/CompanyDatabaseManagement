@@ -9,6 +9,11 @@ BEGIN
   DBMS_OUTPUT.PUT_LINE('Service Name: ' || v_service_name);
 END;
 /
+
+GRANT SELECT ON NHANVIEN TO COMPANY_PUBLIC;
+GRANT SELECT ON PHANCONG TO COMPANY_PUBLIC;
+GRANT SELECT ON DEAN TO COMPANY_PUBLIC;
+GRANT SELECT ON PHONGBAN TO COMPANY_PUBLIC;
 -------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------OLS----------------------------------------
 --Tạo chính sách
@@ -135,7 +140,7 @@ STARTUP;
     Những nguời dã cập nhật trường THOIGIAN trong quan hệ PHANCONG.
 */
 --Tạo bảng audit_thoigian để ghi lại thông tin audit
-CREATE TABLE audit_thoigian (
+CREATE TABLE COMPANY_PUBLIC.audit_thoigian (
   username       VARCHAR2(100),
   object_name    VARCHAR2(100),
   policy_name    VARCHAR2(100),
@@ -156,7 +161,7 @@ CREATE OR REPLACE FUNCTION audit_1 (
 ) RETURN VARCHAR2 AS
 BEGIN
     -- Ghi thông tin audit vào bảng audit_thoigian
-    INSERT INTO audit_thoigian (username, object_name, policy_name, statement_type, new_thoigian, old_thoigian)
+    INSERT INTO COMPANY_PUBLIC.audit_thoigian (username, object_name, policy_name, statement_type, new_thoigian, old_thoigian)
     VALUES (SYS_CONTEXT('USERENV', 'SESSION_USER'), object_name, policy_name, statement_type, TO_TIMESTAMP(new_value), TO_TIMESTAMP(old_value));
     
     RETURN NULL;
@@ -169,7 +174,6 @@ BEGIN
     object_name     => 'PHANCONG',
     policy_name     => 'AUDIT_THOIGIAN_UPDATE',
     audit_column    => 'THOIGIAN',
-    handler_schema  => 'COMPANY_PUBLIC', 
     handler_module  => 'audit_1',
     enable          => TRUE,
     statement_types => 'UPDATE'
@@ -181,7 +185,7 @@ END;
   Những người đã đọc trên trường LUONG và PHUCAP của người khác
 */
 --Tạo bảng audit_luongpc để ghi lại thông tin audit
-CREATE TABLE audit_luongpc (
+CREATE TABLE COMPANY_PUBLIC.audit_luongpc (
   username       VARCHAR2(100),
   object_name    VARCHAR2(100),
   policy_name    VARCHAR2(100),
@@ -198,7 +202,7 @@ CREATE OR REPLACE FUNCTION audit_2 (
 ) RETURN VARCHAR2 AS
 BEGIN
     -- Ghi thông tin audit vào bảng audit_luongpc
-    INSERT INTO audit_luongpc (username, object_name, policy_name, statement_type)
+    INSERT INTO COMPANY_PUBLIC.audit_luongpc (username, object_name, policy_name, statement_type)
     VALUES (SYS_CONTEXT('USERENV', 'SESSION_USER'), object_name, policy_name, statement_type);
     
     RETURN NULL;
@@ -211,7 +215,6 @@ BEGIN
     object_name     => 'NHANVIEN',
     policy_name     => 'AUDIT_NHANVIEN_READ',
     audit_column    => 'LUONG,PHUCAP',
-    handler_schema  => 'COMPANY_PUBLIC', 
     handler_module  => 'audit_2',
     enable          => TRUE,
     statement_types => 'SELECT'
@@ -223,7 +226,7 @@ END;
   Một người không thuộc vai trò “Tài chính” nhưng đã cập nhật thành công trên trường LUONG và PHUCAP.
 */
 --Tạo bảng audit_updateluongpc để ghi lại thông tin audit
-CREATE TABLE audit_updateluongpc (
+CREATE TABLE COMPANY_PUBLIC.audit_updateluongpc (
     username     VARCHAR2(100),
     object_name  VARCHAR2(100),
     policy_name  VARCHAR2(100),
@@ -247,7 +250,7 @@ BEGIN
   -- Kiểm tra nếu người dùng không thuộc vai trò "Tài chính" 
   IF vaitro <> 'Tài chính' THEN
     -- Ghi thông tin audit vào bảng audit_updateluongpc
-    INSERT INTO audit_updateluongpc (username, object_name, policy_name, statement_type, timestamp)
+    INSERT INTO COMPANY_PUBLIC.audit_updateluongpc (username, object_name, policy_name, statement_type, timestamp)
     VALUES (SYS_CONTEXT('USERENV', 'SESSION_USER'), object_name, policy_name, statement_type, SYSTIMESTAMP);
   END IF;
   
@@ -261,7 +264,6 @@ BEGIN
     object_name     => 'NHANVIEN',
     policy_name     => 'AUDIT_LUONG_PHUCAP',
     audit_column    => 'LUONG,PHUCAP',
-    handler_schema  => 'COMPANY_PUBLIC',
     handler_module  => 'audit_3',
     enable          => TRUE,
     statement_types => 'UPDATE'
@@ -273,7 +275,7 @@ END;
     Kiểm tra nhật ký hệ thống
 */
 ----Tạo bảng audit_log để ghi lại thông tin audit
-CREATE TABLE audit_log (
+CREATE TABLE COMPANY_PUBLIC.audit_log (
   username        VARCHAR2(100),
   object_name     VARCHAR2(100),
   policy_name     IN VARCHAR2,
@@ -289,7 +291,7 @@ CREATE OR REPLACE FUNCTION audit_4 (
 ) RETURN BOOLEAN AS
 BEGIN
   -- Ghi thông tin audit vào bảng audit_log
-  INSERT INTO audit_log (username, object_name, policy_name, statement_type)
+  INSERT INTO COMPANY_PUBLIC.audit_log (username, object_name, policy_name, statement_type)
   VALUES (SYS_CONTEXT('USERENV', 'SESSION_USER'), object_name, policy_name, statement_type);
   
   RETURN TRUE;
@@ -303,7 +305,6 @@ BEGIN
     policy_name       => 'SYSTEM_AUDIT_POLICY',
     audit_condition   => NULL,
     audit_column      => NULL,
-    handler_schema    => 'COMPANY_PUBLIC', 
     handler_module    => 'audit_4',
     enable            => TRUE,
     statement_types   => 'SELECT, INSERT, UPDATE, DELETE'
