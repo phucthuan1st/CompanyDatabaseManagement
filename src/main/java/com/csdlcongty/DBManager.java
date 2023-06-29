@@ -585,7 +585,7 @@ public class DBManager {
         String sql = """
                                 UPDATE COMPANY_PUBLIC.NHANVIEN
                                 SET NGAYSINH = ?, DIACHI = ?, SODT = ?
-                                WHERE MADA = SYS_CONTEXT('USERENV', 'SESSION_USER')
+                                WHERE MANV = SYS_CONTEXT('USERENV', 'SESSION_USER')
                 """;
 
         prt = cnt.prepareStatement(sql);
