@@ -597,6 +597,24 @@ public class DBManager {
         prt.execute();
         commit();
     }
+    
+    public void insertNhanVienRecord(String newMaNV, String newTenNV, String phai, String newNgaySinh, String newDiaChi, String newSoDT, String newMaNQL, String newPhong, String newVaiTro) throws SQLException, ParseException{
+        String sql= "INSERT INTO COMPANY_PUBLIC.NHANVIEN(MANV, TENNV, PHAI, NGAYSINH, DIACHI, SODT, MANQL, PHG)"
+                + " VALUES(?, ? , ? , ? , ? , ? , ? , ?);";
+        
+        prt = cnt.prepareStatement(sql);
+        
+        prt.setString(1,newMaNV);
+        prt.setString(2,newTenNV);
+        prt.setString(3,phai);
+        prt.setDate(4, new Date((new SimpleDateFormat("dd/MM/yyyy")).parse(newNgaySinh).getTime()));
+        prt.setString(5,newDiaChi);
+        prt.setString(6,newSoDT);
+        prt.setString(7,newMaNQL);
+        prt.setString(8,newPhong);
+        prt.execute();
+        commit();
+    }
 
     public void updateSalaryAndAllowance(String maNV, String newLuong, String newPhuCap) throws Exception {
         String sql = """
