@@ -996,14 +996,13 @@ public class NormalUserController extends JFrame implements ActionListener {
 
                     try {
                         dbc.updatePersonalInfoRecord(newNgaySinh, newDiaChi, newSoDT);
-                        JOptionPane.showMessageDialog(this, "Cập nhật phân công thành công", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                        handleShowPHANCONG();
+                        JOptionPane.showMessageDialog(this, "Cập nhật thông tin cá nhân thành công", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                        fetchPersonalInformation(manvField.getText());
                     } catch (SQLException ex) {
                         JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
                     } catch (ParseException ex) {
                         JOptionPane.showMessageDialog(this, ex.getMessage() + ": Date must be format dd/MM/yyyy", "Date Error", JOptionPane.ERROR_MESSAGE);
                     }
-
                 }
 
             }
