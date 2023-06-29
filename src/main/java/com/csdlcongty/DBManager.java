@@ -303,7 +303,7 @@ public class DBManager {
         previousStatement = String.format(DBManager.COUNTSQL, sql);
         return result;
     }
-    
+
     public ResultSet selectLuongPhuCap() throws SQLException {
         String sql = String.format("SELECT LUONG, PHUCAP FROM COMPANY_PUBLIC.NHANVIEN");
         ResultSet result;
@@ -474,6 +474,7 @@ public class DBManager {
         prt.setDate(3, new Date((new SimpleDateFormat("dd/MM/yyyy")).parse(thoiGian).getTime()));
 
         prt.execute();
+        commit();
     }
 
     public void deletePhanCongRecord(String maNV, String maDA) throws SQLException {
@@ -484,6 +485,7 @@ public class DBManager {
         prt.setString(2, maDA);
 
         prt.execute();
+        commit();
     }
 
     public void updatePhanCongRecord(String oldMaNV, String oldMaDA, String newMaNV, String newMaDA, String newThoiGian) throws SQLException, ParseException {
@@ -502,6 +504,7 @@ public class DBManager {
         prt.setString(5, oldMaDA);
 
         prt.execute();
+        commit();
     }
 
     public void insertPhongBanRecord(String maPB, String tenPB, String trPhg) throws SQLException {
@@ -513,6 +516,7 @@ public class DBManager {
         prt.setString(3, trPhg);
 
         prt.execute();
+        commit();
     }
 
     public void updatePhongBanRecord(String oldMaPB, String maPB, String tenPB, String trPhg) throws SQLException {
@@ -530,5 +534,6 @@ public class DBManager {
         prt.setString(4, oldMaPB);
 
         prt.execute();
+        commit();
     }
 }
