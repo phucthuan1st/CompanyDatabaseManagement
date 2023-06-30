@@ -32,7 +32,7 @@ BEGIN
         OBJECT_SCHEMA=> 'COMPANY_PUBLIC',
         OBJECT_NAME=> 'NHANVIEN',
         POLICY_NAME=> 'AUDIT_NHANVIEN',
-        AUDIT_CONDITION=> 'MANV = SYS_CONTEXT(''USERENV'', ''SESSION_USER'')',
+        AUDIT_CONDITION=> 'MANV != SYS_CONTEXT(''USERENV'', ''SESSION_USER'')',
         AUDIT_COLUMN=> 'LUONG, PHUCAP',
         ENABLE => TRUE,
         STATEMENT_TYPES => 'SELECT'
@@ -42,7 +42,6 @@ END;
 /
 -------------------------------------câu c
 --Một người không thuộc vai trò “Tài chính” nhưng đã cập nhật thành công trên trường LUONG và PHUCAP.
-
 CREATE OR REPLACE FUNCTION checkrole
 (maNV in nvarchar2)
 RETURN VARCHAR2 

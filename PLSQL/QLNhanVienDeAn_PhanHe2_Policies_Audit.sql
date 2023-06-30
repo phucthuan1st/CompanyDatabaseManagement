@@ -21,6 +21,12 @@ GRANT SELECT ON PHONGBAN TO COMPANY_PUBLIC;
 --STARTUP;
 
 --Tạo bảng audit_thoigian để ghi lại thông tin audit
+drop table audit_thoigian;
+drop table audit_luongpc;
+drop table audit_updateluongpc;
+drop table audit_log;
+
+
 CREATE TABLE COMPANY_PUBLIC.audit_thoigian (
   username       VARCHAR2(100),
   object_name    VARCHAR2(100),

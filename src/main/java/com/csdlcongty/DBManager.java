@@ -601,21 +601,21 @@ public class DBManager {
         prt.execute();
         commit();
     }
-    
-    public void insertNhanVienRecord(String newMaNV, String newTenNV, String phai, String newNgaySinh, String newDiaChi, String newSoDT, String newMaNQL, String newPhong, String newVaiTro) throws SQLException, ParseException{
-        String sql= "INSERT INTO COMPANY_PUBLIC.NHANVIEN(MANV, TENNV, PHAI, NGAYSINH, DIACHI, SODT, MANQL, PHG)"
+
+    public void insertNhanVienRecord(String newMaNV, String newTenNV, String phai, String newNgaySinh, String newDiaChi, String newSoDT, String newMaNQL, String newPhong, String newVaiTro) throws SQLException, ParseException {
+        String sql = "INSERT INTO COMPANY_PUBLIC.NHANVIEN(MANV, TENNV, PHAI, NGAYSINH, DIACHI, SODT, MANQL, PHG)"
                 + " VALUES(?, ? , ? , ? , ? , ? , ? , ?);";
-        
+
         prt = cnt.prepareStatement(sql);
-        
-        prt.setString(1,newMaNV);
-        prt.setString(2,newTenNV);
-        prt.setString(3,phai);
+
+        prt.setString(1, newMaNV);
+        prt.setString(2, newTenNV);
+        prt.setString(3, phai);
         prt.setDate(4, new Date((new SimpleDateFormat("dd/MM/yyyy")).parse(newNgaySinh).getTime()));
-        prt.setString(5,newDiaChi);
-        prt.setString(6,newSoDT);
-        prt.setString(7,newMaNQL);
-        prt.setString(8,newPhong);
+        prt.setString(5, newDiaChi);
+        prt.setString(6, newSoDT);
+        prt.setString(7, newMaNQL);
+        prt.setString(8, newPhong);
         prt.execute();
         commit();
     }
@@ -647,5 +647,68 @@ public class DBManager {
 
         prt.execute();
         commit();
+    }
+
+    public ResultSet showSystemAudit() throws SQLException {
+        String sql = "SELECT TIMESTAMP, DB_USER, SQL_TEXT, CURRENT_USER FROM DBA_FGA_AUDIT_TRAIL WHERE OBJECT_SCHEMA=? and policy_name=?";
+        prt = cnt.prepareStatement(sql);
+
+        String schema = "COMPANY_PUBLIC";
+        String policy_name = "AUDIT_LOGFILE_DATA";
+        prt.setString(1, schema);
+        prt.setString(2, policy_name);
+
+        ResultSet resultSet = prt.executeQuery();
+        previousStatement = String.format(DBManager.COUNTSQL, sql);
+
+        return resultSet;
+    }
+
+    public ResultSet showInvalidUpdateAuditOnNhanVien() throws SQLException {
+        String sql = "SELECT TIMESTAMP, DB_USER, SQL_TEXT, CURRENT_USER FROM DBA_FGA_AUDIT_TRAIL WHERE OBJECT_SCHEMA=? and policy_name=?";
+        ;
+        prt = cnt.prepareStatement(sql);
+
+        String schema = "COMPANY_PUBLIC";
+        String policy_name = "AUDIT_UPDATE_LUONG_PHUCAP";
+        prt.setString(1, schema);
+        prt.setString(2, policy_name);
+
+        ResultSet resultSet = prt.executeQuery();
+        previousStatement = String.format(DBManager.COUNTSQL, sql);
+
+        return resultSet;
+    }
+
+    public ResultSet ShowReadAuditOnNhanVien() throws SQLException {
+        String sql = "SELECT TIMESTAMP, DB_USER, SQL_TEXT, CURRENT_USER FROM DBA_FGA_AUDIT_TRAIL WHERE OBJECT_SCHEMA=? and policy_name=?";
+        ;
+        prt = cnt.prepareStatement(sql);
+
+        String schema = "COMPANY_PUBLIC";
+        String policy_name = "AUDIT_NHANVIEN";
+        prt.setString(1, schema);
+        prt.setString(2, policy_name);
+
+        ResultSet resultSet = prt.executeQuery();
+        previousStatement = String.format(DBManager.COUNTSQL, sql);
+
+        return resultSet;
+    }
+
+    public ResultSet showUpdateAuditInPhanCong() throws SQLException {
+        String sql = "SELECT TIMESTAMP, DB_USER, SQL_TEXT, CURRENT_USER FROM DBA_FGA_AUDIT_TRAIL WHERE OBJECT_SCHEMA=? and policy_name=?";
+        ;
+        prt = cnt.prepareStatement(sql);
+
+        String schema = "COMPANY_PUBLIC";
+        String policy_name = "AUDIT_PHANCONG";
+        prt.setString(1, schema);
+        prt.setString(2, policy_name);
+
+        ResultSet resultSet = prt.executeQuery();
+        previousStatement = String.format(DBManager.COUNTSQL, sql);
+
+        return resultSet;
     }
 }

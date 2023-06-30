@@ -6,18 +6,16 @@
 package com.csdlcongty.dba;
 
 import com.csdlcongty.DBManager;
-import java.sql.SQLException;
-import javax.swing.*;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
+import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class DBAdminController extends JFrame implements ActionListener {
@@ -49,6 +47,12 @@ public class DBAdminController extends JFrame implements ActionListener {
 
     private final JButton grantRoleToUserButton;
     private final JButton revokeRoleFromUserButton;
+
+    // New buttons
+    private final JButton showUpdateThoiGianButton;
+    private final JButton showReadLuongPhucapButton;
+    private final JButton showInvalidUpdateLuongPhucapButton;
+    private final JButton showReadSystemLogButton;
 
     static private final String ERRORTITLE = "ERROR";
 
@@ -129,8 +133,8 @@ public class DBAdminController extends JFrame implements ActionListener {
         leftPanel.add(createNewRoleButton, constraint);
 
         createNewTableButton = new JButton("Create new table");
-        constraint.gridx = 3;
-        constraint.gridy = 4;
+        constraint.gridx = 1;
+        constraint.gridy = 3;
         leftPanel.add(createNewTableButton, constraint);
 
         grantPrivilegeButton = new JButton("Grant privilege");
@@ -152,6 +156,33 @@ public class DBAdminController extends JFrame implements ActionListener {
         constraint.gridx = 2;
         constraint.gridy = 6;
         leftPanel.add(revokeRoleFromUserButton, constraint);
+
+        // New button labels
+        showUpdateThoiGianButton = new JButton("Show UPDATE THOIGIAN in PHANCONG");
+        showReadLuongPhucapButton = new JButton("Show READ in LUONG and PHUCAP");
+        showInvalidUpdateLuongPhucapButton = new JButton("Show invalid UPDATE LUONG and PHUCAP");
+        showReadSystemLogButton = new JButton("Show READ in system log");
+
+        // Add buttons to the left panel
+        constraint.gridx = 1;
+        constraint.gridy = 7;
+
+        leftPanel.add(showUpdateThoiGianButton, constraint);
+
+        constraint.gridx = 1;
+        constraint.gridy = 8;
+
+        leftPanel.add(showReadLuongPhucapButton, constraint);
+
+        constraint.gridx = 1;
+        constraint.gridy = 9;
+
+        leftPanel.add(showInvalidUpdateLuongPhucapButton, constraint);
+
+        constraint.gridx = 2;
+        constraint.gridy = 7;
+
+        leftPanel.add(showReadSystemLogButton, constraint);
 
         // initilize action on left component
         this.setVisible(true);
@@ -180,6 +211,11 @@ public class DBAdminController extends JFrame implements ActionListener {
 
         grantRoleToUserButton.addActionListener(this);
         revokeRoleFromUserButton.addActionListener(this);
+
+        showUpdateThoiGianButton.addActionListener(this);
+        showReadLuongPhucapButton.addActionListener(this);
+        showInvalidUpdateLuongPhucapButton.addActionListener(this);
+        showReadSystemLogButton.addActionListener(this);
     }
 
     // Helper method to convert a ResultSet to a TableModel
@@ -293,6 +329,14 @@ public class DBAdminController extends JFrame implements ActionListener {
                 this.handleGrantRoleToUserButton();
             } else if (e.getSource() == revokeRoleFromUserButton) {
                 this.handleRevokeRoleFromUser();
+            } else if (e.getSource() == showUpdateThoiGianButton) {
+                this.handleShowUpdateThoiGianButton();
+            } else if (e.getSource() == showReadLuongPhucapButton) {
+                this.handleShowReadLuongPhucapButton();
+            } else if (e.getSource() == showInvalidUpdateLuongPhucapButton) {
+                this.handleShowInvalidUpdateLuongPhucapButton();
+            } else if (e.getSource() == showReadSystemLogButton) {
+                this.handleShowReadSystemLogButton();
             }
         } catch (SQLException ex) {
             String message = "Error when communicate with database: " + ex.getMessage();
@@ -302,6 +346,30 @@ public class DBAdminController extends JFrame implements ActionListener {
             JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
         }
 
+    }
+
+    private void handleShowReadSystemLogButton() throws SQLException {
+        result = dbm.showSystemAudit();
+        int num_rows = 100;
+        displayRightPaneTable(num_rows);
+    }
+
+    private void handleShowInvalidUpdateLuongPhucapButton() throws SQLException {
+        result = dbm.showInvalidUpdateAuditOnNhanVien();
+        int num_rows = 100;
+        displayRightPaneTable(num_rows);
+    }
+
+    private void handleShowReadLuongPhucapButton() throws SQLException {
+        result = dbm.ShowReadAuditOnNhanVien();
+        int num_rows = 100;
+        displayRightPaneTable(num_rows);
+    }
+
+    private void handleShowUpdateThoiGianButton() throws SQLException {
+        result = dbm.showUpdateAuditInPhanCong();
+        int num_rows = 100;
+        displayRightPaneTable(num_rows);
     }
 
     void handleShowUserListButton() throws SQLException {
@@ -365,8 +433,8 @@ public class DBAdminController extends JFrame implements ActionListener {
         JTextField password = new JPasswordField();
 
         Object[] message = {
-            "Username: ", username,
-            "Password: ", password
+                "Username: ", username,
+                "Password: ", password
         };
 
         int choose = JOptionPane.showConfirmDialog(this, message, "Create new user",
@@ -425,22 +493,22 @@ public class DBAdminController extends JFrame implements ActionListener {
 
         // type of variable in oracle
         String[] valueTypeSelection = {"INT", "FLOAT", "VARCHAR2", "NVARCHAR2", "VARCHAR",
-            " NVARCHAR ", " DATE "};
+                " NVARCHAR ", " DATE "};
         String[] valueNullConstraint = {"", "NOT NULL", "PRIMARY KEY"};
 
         JComboBox<String> valueTypeSelectionField = new JComboBox<>(valueTypeSelection);
         JComboBox<String> valueNullConstraintField = new JComboBox<>(valueNullConstraint);
 
         Object[] message = {
-            "Table Name:", tableNameField,
-            "Numbers of Column:", numberOfColumnsField
+                "Table Name:", tableNameField,
+                "Numbers of Column:", numberOfColumnsField
         };
 
         Object[] field = {
-            "Column Name:", columnNameField,
-            "Type of Column:", valueTypeSelectionField,
-            "Data Length:", dataLengthField,
-            "Is NULL:", valueNullConstraintField
+                "Column Name:", columnNameField,
+                "Type of Column:", valueTypeSelectionField,
+                "Data Length:", dataLengthField,
+                "Is NULL:", valueNullConstraintField
         };
 
         int choose = JOptionPane.showConfirmDialog(this, message, "Create new table",
@@ -521,8 +589,8 @@ public class DBAdminController extends JFrame implements ActionListener {
         JTextField rolename = new JTextField();
 
         Object[] message = {
-            "Username: ", username,
-            "Role: ", rolename
+                "Username: ", username,
+                "Role: ", rolename
         };
 
         int choose = JOptionPane.showConfirmDialog(this, message, "Revoke role from user",
@@ -597,8 +665,8 @@ public class DBAdminController extends JFrame implements ActionListener {
         JTextField rolename = new JTextField();
 
         Object[] message = {
-            "Username: ", username,
-            "Role: ", rolename
+                "Username: ", username,
+                "Role: ", rolename
         };
 
         int choose = JOptionPane.showConfirmDialog(this, message, "Grant role to user",
