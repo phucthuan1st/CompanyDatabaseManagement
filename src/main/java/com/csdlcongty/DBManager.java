@@ -698,7 +698,7 @@ public class DBManager {
 
     public ResultSet showUpdateAuditInPhanCong() throws SQLException {
         String sql = "SELECT TIMESTAMP, DB_USER, SQL_TEXT FROM DBA_FGA_AUDIT_TRAIL WHERE OBJECT_SCHEMA=? and policy_name=?";
-        ;
+
         prt = cnt.prepareStatement(sql);
 
         String schema = "COMPANY_PUBLIC";
@@ -710,5 +710,35 @@ public class DBManager {
         previousStatement = String.format(DBManager.COUNTSQL, sql);
 
         return resultSet;
+    }
+
+    public Boolean updateSecretKey(String username, String currentKey, String newKey) throws Exception {
+        String sql = "UPDATE COMPANY_PUBLIC.LUUTRU SET SECRET_KEY = ? WHERE SYS_CONTEXT('USERENV', 'SESSION_USER') = MANV";
+        String currentKeyHashed = CryptographyUtilities.hashMD5(currentKey);
+
+        ResultSet result = this.selectFromTable("LUUTRU");
+        String savedKey;
+        if (result.next())
+            savedKey = result.getString("SECRET_KEY");
+        else
+            throw new Exception("Cannot access the secret key");
+
+        if (savedKey.equals(currentKeyHashed)) {
+            String newHashedKey = CryptographyUtilities.hashMD5(newKey);
+            prt = cnt.prepareStatement(sql);
+            prt.setString(1, newHashedKey);
+
+            String LUONG, PHUCAP;
+            LUONG = CryptographyUtilities.decryptAES(result.getString("LUONG"), currentKeyHashed);
+            PHUCAP = CryptographyUtilities.decryptAES(result.getString("PHUCAP"), currentKeyHashed);
+
+            prt.execute();
+            commit();
+
+            updateSalaryAndAllowance(username, LUONG, PHUCAP);
+            return true;
+        }
+
+        return false;
     }
 }

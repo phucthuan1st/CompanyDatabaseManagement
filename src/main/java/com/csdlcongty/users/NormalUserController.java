@@ -18,6 +18,7 @@ import java.text.ParseException;
 
 public class NormalUserController extends JFrame implements ActionListener {
     private final DBManager dbc;
+    private final String username;
     private ResultSet result;
     private final JFrame father;
     private JSplitPane subRightSplits;
@@ -41,6 +42,8 @@ public class NormalUserController extends JFrame implements ActionListener {
 
         this.dbc = new DBManager(username, password);
         this.father = father;
+
+        this.username = username;
         this.initComponents();
         this.fetchPersonalInformation(username);
     }
@@ -164,6 +167,7 @@ public class NormalUserController extends JFrame implements ActionListener {
         constraints.gridy = 0;
         group6Panel.add(group6Label, constraints);
         JButton changeSecretKeyButton = new JButton("Đổi khóa bí mật mới");
+        changeSecretKeyButton.addActionListener(this);
         JButton forgetSecretKeyButton = new JButton("Quên khóa bí mật?");
         constraints.gridy++;
         group6Panel.add(changeSecretKeyButton, constraints);
@@ -373,11 +377,12 @@ public class NormalUserController extends JFrame implements ActionListener {
                 handleShowAdminMessage();
             } else if ("Cập nhật Lương và Phụ cấp".equals(command)) {
                 handleUpdateSalaryAndAllowanceButton();
-            } else if("Thêm nhân viên mới".equals(command)){
+            } else if ("Thêm nhân viên mới".equals(command)) {
                 handleModifyNHANVIEN("Thêm");
-            } else if("Cập nhật thông tin nhân viên".equals(command))
-            {
+            } else if ("Cập nhật thông tin nhân viên".equals(command)) {
                 handleModifyNHANVIEN("Cập nhật");
+            } else if ("Đổi khóa bí mật mới".equals(command)) {
+                handleChangeSecretKey();
             }
         } catch (SQLException ex) {
             String message = "Error when communicate with database: " + ex.getMessage();
@@ -385,6 +390,83 @@ public class NormalUserController extends JFrame implements ActionListener {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    private void handleChangeSecretKey() {
+        JTextField currentKeyField = new JTextField(30);
+        JTextField newKeyField = new JTextField(30);
+
+        JButton button = new JButton("Cập nhật");
+        this.subRightSplits.setBottomComponent(new JPanel() {
+            {
+                setLayout(new GridBagLayout());
+
+                GridBagConstraints constraints = new GridBagConstraints();
+                constraints.insets = new Insets(5, 10, 5, 10);
+                constraints.anchor = GridBagConstraints.WEST;
+
+                constraints.gridx = 0;
+                constraints.gridy = 0;
+
+                JPanel newInfoPanel = new JPanel();
+                newInfoPanel.setBorder(BorderFactory.createTitledBorder("Thông tin mới"));
+
+                newInfoPanel.setLayout(new GridBagLayout());
+                GridBagConstraints newInfoConstraints = new GridBagConstraints();
+
+                newInfoConstraints.insets = new Insets(5, 10, 5, 10);
+                newInfoConstraints.anchor = GridBagConstraints.WEST;
+
+                newInfoConstraints.gridx = 0;
+                newInfoConstraints.gridy++;
+                newInfoPanel.add(new JLabel("Khóa bí mật cũ"), newInfoConstraints);
+                newInfoConstraints.gridx++;
+                newInfoPanel.add(currentKeyField, newInfoConstraints);
+
+                newInfoConstraints.gridx = 0;
+                newInfoConstraints.gridy++;
+                newInfoPanel.add(new JLabel("Khóa bí mật mới"), newInfoConstraints);
+                newInfoConstraints.gridx++;
+                newInfoPanel.add(newKeyField, newInfoConstraints);
+
+                constraints.gridx = 0;
+                constraints.gridy++;
+                constraints.gridwidth = 2;
+
+                add(newInfoPanel, constraints);
+                constraints.gridy++;
+                constraints.gridwidth = 1;
+
+                constraints.gridx = 1;
+                constraints.gridy++;
+                add(button, constraints);
+                button.addActionListener(this::buttonActionPerformed);
+            }
+
+            private void buttonActionPerformed(ActionEvent e) {
+                JButton button = (JButton) e.getSource();
+                String command = button.getText();
+
+                if ("Cập nhật".equals(command)) {
+                    String currentKey = currentKeyField.getText();
+                    String newKey = newKeyField.getText();
+
+                    try {
+                        Boolean isChanged = dbc.updateSecretKey(username, currentKey, newKey);
+                        JOptionPane.showMessageDialog(this, "Cập nhật thông tin cá nhân thành công", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                        fetchPersonalInformation(manvField.getText());
+                    } catch (SQLException ex) {
+                        JOptionPane.showMessageDialog(this, ex, "SQL Error", JOptionPane.ERROR_MESSAGE);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(this, "Sai khóa bí mật hoặc dữ liệu đã bị hỏng", "Lỗi mã hóa", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+
+            }
+        });
+
+        this.rightPanel.revalidate();
+        this.rightPanel.repaint();
     }
 
     private void handleUpdateSalaryAndAllowanceButton() {
@@ -1099,8 +1181,8 @@ public class NormalUserController extends JFrame implements ActionListener {
         this.rightPanel.revalidate();
         this.rightPanel.repaint();
     }
-    
-    private void handleModifyNHANVIEN(String operation){
+
+    private void handleModifyNHANVIEN(String operation) {
         JTextField manvOldField = new JTextField(10);
         JTextField manvField = new JTextField(10);
         JTextField tennvField = new JTextField(35);
@@ -1114,26 +1196,25 @@ public class NormalUserController extends JFrame implements ActionListener {
         JButton insertButton = new JButton("Thêm");
         JButton updateButton = new JButton("Cập nhật");
         this.subRightSplits.setBottomComponent(new JPanel() {
-        {
-            setLayout(new GridBagLayout());
-            GridBagConstraints constraints=new GridBagConstraints();
+            {
+                setLayout(new GridBagLayout());
+                GridBagConstraints constraints = new GridBagConstraints();
                 constraints.insets = new Insets(5, 10, 5, 10);
                 constraints.anchor = GridBagConstraints.WEST;
 
 
                 constraints.gridx = 0;
                 constraints.gridy = 0;
-            JPanel nhanvienPanel= new JPanel();
-            nhanvienPanel.setBorder(BorderFactory.createTitledBorder("Thông tin mới"));
+                JPanel nhanvienPanel = new JPanel();
+                nhanvienPanel.setBorder(BorderFactory.createTitledBorder("Thông tin mới"));
 
-            nhanvienPanel.setLayout(new GridBagLayout());
-            GridBagConstraints newconstraints = new GridBagConstraints();
+                nhanvienPanel.setLayout(new GridBagLayout());
+                GridBagConstraints newconstraints = new GridBagConstraints();
 
-            newconstraints.insets = new Insets(5, 10, 5, 10);
-            newconstraints.anchor = GridBagConstraints.WEST;
+                newconstraints.insets = new Insets(5, 10, 5, 10);
+                newconstraints.anchor = GridBagConstraints.WEST;
 
-            if(operation== "Cập nhật")
-            {
+                if (operation == "Cập nhật") {
                     JPanel oldInfoPanel = new JPanel();
                     oldInfoPanel.setBorder(BorderFactory.createTitledBorder("Nhân viên cần cập nhật"));
 
@@ -1151,115 +1232,113 @@ public class NormalUserController extends JFrame implements ActionListener {
 
                     add(oldInfoPanel, constraints);
                     constraints.gridy++;
-            
-            }
-            newconstraints.gridx = 1;
-            newconstraints.gridy = 0;
-            nhanvienPanel.add(new JLabel("Mã số"), newconstraints);
-            newconstraints.gridx++;
-            nhanvienPanel.add(manvField, newconstraints);
 
-            newconstraints.gridy++;
-            newconstraints.gridx = 1;
-            nhanvienPanel.add(new JLabel("Họ tên"), newconstraints);
-            newconstraints.gridx++;
-            nhanvienPanel.add(tennvField, newconstraints);
+                }
+                newconstraints.gridx = 1;
+                newconstraints.gridy = 0;
+                nhanvienPanel.add(new JLabel("Mã số"), newconstraints);
+                newconstraints.gridx++;
+                nhanvienPanel.add(manvField, newconstraints);
 
-            newconstraints.gridx = 1;
-            newconstraints.gridy++;
-            nhanvienPanel.add(new JLabel("Ngày sinh"), newconstraints);
-            newconstraints.gridx++;
-            nhanvienPanel.add(ngaysinhField, newconstraints);
-
-            newconstraints.gridx = 1;
-            newconstraints.gridy++;
-            nhanvienPanel.add(new JLabel("Giới tính"), newconstraints);
-            newconstraints.gridx++;
-            nhanvienPanel.add(phaiField, newconstraints);
-
-            newconstraints.gridx = 1;
-            newconstraints.gridy++;
-            nhanvienPanel.add(new JLabel("Chức vụ"), newconstraints);
-            newconstraints.gridx++;
-            nhanvienPanel.add(vaitroField, newconstraints);
-
-            newconstraints.gridx = 1;
-            newconstraints.gridy++;
-            nhanvienPanel.add(new JLabel("Địa chỉ"), newconstraints);
-            newconstraints.gridx++;
-            nhanvienPanel.add(diachiField, newconstraints);
-
-            newconstraints.gridx = 1;
-            newconstraints.gridy++;
-            nhanvienPanel.add(new JLabel("Số điện thoại"), newconstraints);
-            newconstraints.gridx++;
-            nhanvienPanel.add(sodtField, newconstraints);
-
-            newconstraints.gridx = 1;
-            newconstraints.gridy++;
-            nhanvienPanel.add(new JLabel("Mã phòng ban"), newconstraints);
-            newconstraints.gridx++;
-            nhanvienPanel.add(phgField, newconstraints);
-
-            newconstraints.gridx = 1;
-            newconstraints.gridy++;
-            nhanvienPanel.add(new JLabel("Mã người quản lí"), newconstraints);
-            newconstraints.gridx++;
-            nhanvienPanel.add(manqlField, newconstraints);
-            
-            if(operation =="Cập nhật"){
-                newconstraints.gridx = 2;
                 newconstraints.gridy++;
-                nhanvienPanel.add(updateButton, newconstraints);
-                updateButton.addActionListener(this::buttonActionPerformed);
-            }else
-            {
-                newconstraints.gridx = 2;
+                newconstraints.gridx = 1;
+                nhanvienPanel.add(new JLabel("Họ tên"), newconstraints);
+                newconstraints.gridx++;
+                nhanvienPanel.add(tennvField, newconstraints);
+
+                newconstraints.gridx = 1;
                 newconstraints.gridy++;
-                nhanvienPanel.add(insertButton, newconstraints);
-                insertButton.addActionListener(this::buttonActionPerformed);                
+                nhanvienPanel.add(new JLabel("Ngày sinh"), newconstraints);
+                newconstraints.gridx++;
+                nhanvienPanel.add(ngaysinhField, newconstraints);
+
+                newconstraints.gridx = 1;
+                newconstraints.gridy++;
+                nhanvienPanel.add(new JLabel("Giới tính"), newconstraints);
+                newconstraints.gridx++;
+                nhanvienPanel.add(phaiField, newconstraints);
+
+                newconstraints.gridx = 1;
+                newconstraints.gridy++;
+                nhanvienPanel.add(new JLabel("Chức vụ"), newconstraints);
+                newconstraints.gridx++;
+                nhanvienPanel.add(vaitroField, newconstraints);
+
+                newconstraints.gridx = 1;
+                newconstraints.gridy++;
+                nhanvienPanel.add(new JLabel("Địa chỉ"), newconstraints);
+                newconstraints.gridx++;
+                nhanvienPanel.add(diachiField, newconstraints);
+
+                newconstraints.gridx = 1;
+                newconstraints.gridy++;
+                nhanvienPanel.add(new JLabel("Số điện thoại"), newconstraints);
+                newconstraints.gridx++;
+                nhanvienPanel.add(sodtField, newconstraints);
+
+                newconstraints.gridx = 1;
+                newconstraints.gridy++;
+                nhanvienPanel.add(new JLabel("Mã phòng ban"), newconstraints);
+                newconstraints.gridx++;
+                nhanvienPanel.add(phgField, newconstraints);
+
+                newconstraints.gridx = 1;
+                newconstraints.gridy++;
+                nhanvienPanel.add(new JLabel("Mã người quản lí"), newconstraints);
+                newconstraints.gridx++;
+                nhanvienPanel.add(manqlField, newconstraints);
+
+                if (operation == "Cập nhật") {
+                    newconstraints.gridx = 2;
+                    newconstraints.gridy++;
+                    nhanvienPanel.add(updateButton, newconstraints);
+                    updateButton.addActionListener(this::buttonActionPerformed);
+                } else {
+                    newconstraints.gridx = 2;
+                    newconstraints.gridy++;
+                    nhanvienPanel.add(insertButton, newconstraints);
+                    insertButton.addActionListener(this::buttonActionPerformed);
+                }
+                add(nhanvienPanel, constraints);
             }
-            add(nhanvienPanel, constraints);
-        }   
-        
+
             private void buttonActionPerformed(ActionEvent e) {
                 JButton button = (JButton) e.getSource();
                 String command = button.getText();
-                
-                String oldNV = manvOldField.getText().trim();
-                String manv= manvField.getText().trim();
-                String tennv= tennvField.getText().trim();
-                String phai= phaiField.getText().trim();
-                String ngaysinh= ngaysinhField.getText().trim();
-                String diachi= diachiField.getText().trim();
-                String sodt=sodtField.getText().trim();
-                String manql= manqlField.getText().trim();
-                String phg= phgField.getText().trim();
-                String vaitro =vaitroField.getText().trim();
 
-                if("Thêm".equals(command))
-                {
+                String oldNV = manvOldField.getText().trim();
+                String manv = manvField.getText().trim();
+                String tennv = tennvField.getText().trim();
+                String phai = phaiField.getText().trim();
+                String ngaysinh = ngaysinhField.getText().trim();
+                String diachi = diachiField.getText().trim();
+                String sodt = sodtField.getText().trim();
+                String manql = manqlField.getText().trim();
+                String phg = phgField.getText().trim();
+                String vaitro = vaitroField.getText().trim();
+
+                if ("Thêm".equals(command)) {
                     try {
                         dbc.insertNhanVienRecord(manv, tennv, phai, ngaysinh, diachi, sodt, manql, phg, vaitro);
                         JOptionPane.showMessageDialog(this, "Cập nhật thông tin cá nhân thành công", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                        } catch (SQLException ex) {
+                    } catch (SQLException ex) {
                         JOptionPane.showMessageDialog(this, ex.getMessage(), "SQL Error", JOptionPane.ERROR_MESSAGE);
                     } catch (ParseException ex) {
                         JOptionPane.showMessageDialog(this, ex.getMessage() + ": Date must be format dd/MM/yyyy", "Date Error", JOptionPane.ERROR_MESSAGE);
                     }
-                    
-                    }else if("Cập nhật".equals(command))
-                {
-                    
+
+                } else if ("Cập nhật".equals(command)) {
+
                 }
             }
-            
+
 
         });
-                    
+
         this.rightPanel.revalidate();
         this.rightPanel.repaint();
     }
+
     private void applyLineBorder(JPanel panel) {
         Border lineBorder = BorderFactory.createLineBorder(Color.BLACK);
         panel.setBorder(lineBorder);
