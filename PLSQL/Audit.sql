@@ -68,4 +68,19 @@ BEGIN
     );
 END;
 /
---------------------------------
+--------------------------------cau d
+--d. Kiểm tra nhật ký hệ thống.
+CREATE VIEW AUDIT_LOGFILE AS
+SELECT * FROM DBA_FGA_AUDIT_TRAIL WHERE OBJECT_SCHEMA='COMPANY_PUBLIC';
+
+BEGIN 
+    DBMS_FGA.ADD_POLICY(
+        OBJECT_SCHEMA=> 'COMPANY_PUBLIC',
+        OBJECT_NAME=> 'AUDIT_LOGFILE',
+        POLICY_NAME=> 'AUDIT_LOGFILE_DATA',
+        ENABLE => TRUE,
+        STATEMENT_TYPES => 'SELECT'       
+    );
+
+END;
+/
