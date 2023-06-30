@@ -650,7 +650,7 @@ public class DBManager {
     }
 
     public ResultSet showSystemAudit() throws SQLException {
-        String sql = "SELECT TIMESTAMP, DB_USER, SQL_TEXT, CURRENT_USER FROM DBA_FGA_AUDIT_TRAIL WHERE OBJECT_SCHEMA=? and policy_name=?";
+        String sql = "SELECT TIMESTAMP, DB_USER, SQL_TEXT FROM DBA_FGA_AUDIT_TRAIL WHERE OBJECT_SCHEMA=? and policy_name=?";
         prt = cnt.prepareStatement(sql);
 
         String schema = "COMPANY_PUBLIC";
@@ -665,7 +665,7 @@ public class DBManager {
     }
 
     public ResultSet showInvalidUpdateAuditOnNhanVien() throws SQLException {
-        String sql = "SELECT TIMESTAMP, DB_USER, SQL_TEXT, CURRENT_USER FROM DBA_FGA_AUDIT_TRAIL WHERE OBJECT_SCHEMA=? and policy_name=?";
+        String sql = "SELECT TIMESTAMP, DB_USER, SQL_TEXT FROM DBA_FGA_AUDIT_TRAIL WHERE OBJECT_SCHEMA=? and policy_name=?";
         ;
         prt = cnt.prepareStatement(sql);
 
@@ -681,7 +681,7 @@ public class DBManager {
     }
 
     public ResultSet ShowReadAuditOnNhanVien() throws SQLException {
-        String sql = "SELECT TIMESTAMP, DB_USER, SQL_TEXT, CURRENT_USER FROM DBA_FGA_AUDIT_TRAIL WHERE OBJECT_SCHEMA=? and policy_name=?";
+        String sql = "SELECT TIMESTAMP, DB_USER, SQL_TEXT FROM DBA_FGA_AUDIT_TRAIL WHERE OBJECT_SCHEMA=? and policy_name=?";
         ;
         prt = cnt.prepareStatement(sql);
 
@@ -697,7 +697,7 @@ public class DBManager {
     }
 
     public ResultSet showUpdateAuditInPhanCong() throws SQLException {
-        String sql = "SELECT TIMESTAMP, DB_USER, SQL_TEXT, CURRENT_USER FROM DBA_FGA_AUDIT_TRAIL WHERE OBJECT_SCHEMA=? and policy_name=?";
+        String sql = "SELECT TIMESTAMP, DB_USER, SQL_TEXT FROM DBA_FGA_AUDIT_TRAIL WHERE OBJECT_SCHEMA=? and policy_name=?";
         ;
         prt = cnt.prepareStatement(sql);
 
