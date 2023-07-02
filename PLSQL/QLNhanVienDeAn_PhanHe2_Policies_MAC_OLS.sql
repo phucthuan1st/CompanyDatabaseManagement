@@ -10,10 +10,6 @@ BEGIN
 END;
 /
 
-GRANT SELECT ON NHANVIEN TO COMPANY_PUBLIC;
-GRANT SELECT ON PHANCONG TO COMPANY_PUBLIC;
-GRANT SELECT ON DEAN TO COMPANY_PUBLIC;
-GRANT SELECT ON PHONGBAN TO COMPANY_PUBLIC;
 -------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------OLS----------------------------------------
 --Tạo chính sách
@@ -24,6 +20,14 @@ BEGIN
     );
 END;
 /
+----------------------------------------
+--GÁN QUYỀN
+GRANT OLS_POLICY_DBA TO COMPANY_PUBLIC;
+GRANT EXECUTE ON SA_COMPONENTS TO COMPANY_PUBLIC;
+GRANT EXECUTE ON SA_LABEL_ADMIN TO COMPANY_PUBLIC;
+GRANT EXECUTE ON SA_POLICY_ADMIN TO COMPANY_PUBLIC;
+GRANT EXECUTE ON SA_USER_ADMIN TO COMPANY_PUBLIC;
+GRANT EXECUTE ON CHAR_TO_LABEL TO COMPANY_PUBLIC;
 
 --Tạo level theo 3 mức độ Giám đốc, Trường phòng và Nhân viên
 BEGIN
