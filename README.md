@@ -70,18 +70,27 @@ CS#6: Những người dùng có VAITRO là “Trưởng đề án” cho biết
 
 Using SQL Developer or any SQL Tool that could connect to Oracle Database
 - Connect to database as SYS as SYSDBA
-- Run all script in QLNhanVienDeAn_Open_Connect_To_PDB.sql
-- Run all script in QLNhanVienDeAn_PhanHe1.sql
-- Run all script in QLNhanVienDeAn_PhanHe2_TableStructure.sql
-- Run all script in QLNhanVienDeAn_PhanHe2_TablesRecords.sql (Optional)
-- Run all script in QLNhanVienDeAn_PhanHe2_HelperProceduresAndFunctions.sql
-- Run all script in QLNhanVienDeAn_PhanHe2_Policies.sql
+- Run all script in QLNhanVienDeAn_Open_Connect_To_PDB.sql --> make the PDB running
+- Run all script in QLNhanVienDeAn_PhanHe1.sql --> procedure and function for subsystem 01
+- Run all script in QLNhanVienDeAn_PhanHe2_TableStructure.sql --> table in subsystem 02
+- Run all script in QLNhanVienDeAn_PhanHe2_TablesRecords.sql (Optional, use in the first times) --> test record
+- Run all script in QLNhanVienDeAn_PhanHe2_HelperProceduresAndFunctions.sql --> helper for subsystem 02
+- You should run the app with DBA mode and uncomment the line in the LoginController in case you need to insert some mock record
+- Run all script in QLNhanVienDeAn_PhanHe2_Policies_CSi.sql with i from 1 --> 6 --> apply policies to db. You should do this after insert mock record
+- Run all script in QLNhanVienDeAn_PhanHe2_Policies_Audit.sql --> enable auditing
+- Run all script in QLNhanVienDeAn_PhanHe2_Policies_MAC_OLS.sql --> enable OLS
+- Run all script in QLNhanVienDeAn_PhanHe2_Key_And_Encryption_Policies.sql --> enable some encryption feature
+- Run all script in QLNhanVienDeAn_PhanHe2_Message.sql --> enable Messaging between DBA and user
+- Run all script in QLNhanVienDeAn_PhanHe2_TableConstraintsAndTrigger.sql --> enable foreign key (and trigger)
 
 Now you can connect to database using the application or anything
 
 Notice that the dba user for our database (for test purpose) is COMPANY_PUBLIC with pasword [astrongpassword]
 
 ## Build application
+You can build it with NetBeans or Intellij IDEA (or any IDE that supports MAVEN packaging). 
+- In netBeans, you just need to open the project and press Build
+- In Intellij IDEA, you need to config the Maven to build setting, then build the 'package'
 
 ## Wrap jar to exe
-
+Using Launch4j, using ![JRE 1.8.0](https://www.oracle.com/java/technologies/javase/javase8-archive-downloads.html) wrap within the executable file. User does not need to install java to run this app
